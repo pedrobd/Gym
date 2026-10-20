@@ -7,26 +7,37 @@
   <meta name="description" content="Plano de treino adaptado a hérnias e anca, com registo de pesos semanais e evolução.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;600&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,500..900&family=Manrope:wght@400;500;700&display=swap">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="top">
-    <h1>Treino 2×/semana</h1>
-    <p class="sub">Protocolo adaptado às hérnias e à anca · 2 séries × 6 exercícios</p>
-    <nav class="tabs" role="tablist">
-      <button data-tab="A" class="active">Treino A</button>
-      <button data-tab="B">Treino B</button>
-      <button data-tab="progress">Evolução</button>
-      <button data-tab="info">Regras</button>
-    </nav>
+    <div class="bar">
+      <span class="brand">2×<small>/semana</small></span>
+      <nav class="tabs" role="tablist">
+        <button data-tab="A" class="active">Treino A</button>
+        <button data-tab="B">Treino B</button>
+        <button data-tab="progress">Evolução</button>
+        <button data-tab="info">Regras</button>
+      </nav>
+    </div>
   </header>
 
   <main>
-    <p id="sync" class="sync"></p>
+    <section class="hero">
+      <p class="eyebrow">Protocolo adaptado às hérnias e à anca</p>
+      <h1>Treina menos.<br>Progride mais.</h1>
+      <ul class="stats">
+        <li><b>2</b><span>treinos por semana</span></li>
+        <li><b>6</b><span>exercícios por sessão</span></li>
+        <li><b>2</b><span>séries cada</span></li>
+      </ul>
+      <p id="sync" class="sync"></p>
+    </section>
+
     <section id="tab-workout" class="tab-panel">
       <div class="session-bar">
-        <div>
+        <div class="session-title">
           <h2 id="workout-title"></h2>
           <span id="workout-day" class="muted"></span>
         </div>

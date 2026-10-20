@@ -388,6 +388,7 @@
     $("#tab-info").hidden = tab !== "info";
     if (isWorkout) {
       currentWorkout = tab;
+      $("#tab-workout").dataset.workout = tab;
       $("#save-status").textContent = sessionFor(tab, $("#session-date").value || today()) ? "A editar o registo desta data." : "";
       renderWorkout();
     } else if (tab === "progress") {
