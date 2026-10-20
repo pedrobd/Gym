@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Treino 2×/semana</title>
+  <meta name="description" content="Plano de treino adaptado a hérnias e anca, com registo de pesos semanais e evolução.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <h1>Treino 2×/semana</h1>
+    <p class="sub">Protocolo adaptado às hérnias e à anca · 2 séries × 6 exercícios</p>
+    <nav class="tabs" role="tablist">
+      <button data-tab="A" class="active">Treino A</button>
+      <button data-tab="B">Treino B</button>
+      <button data-tab="progress">Evolução</button>
+      <button data-tab="info">Regras</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="tab-workout" class="tab-panel">
+      <div class="session-bar">
+        <div>
+          <h2 id="workout-title"></h2>
+          <span id="workout-day" class="muted"></span>
+        </div>
+        <label class="date-field">Data
+          <input type="date" id="session-date">
+        </label>
+      </div>
+
+      <div class="callout warn">
+        <strong>Aquecimento:</strong> 5 min de bicicleta. Nos três primeiros exercícios: 1 série a 50% × 6 e 1 a 70% × 3 (valores calculados em cada cartão).
+      </div>
+
+      <div id="exercise-list"></div>
+
+      <label class="notes-field">Notas da sessão
+        <textarea id="session-notes" rows="2" placeholder="Como te sentiste? Alguma dor, cansaço…"></textarea>
+      </label>
+      <div class="actions">
+        <button id="save-session" class="primary">Guardar treino</button>
+        <span id="save-status" class="muted"></span>
+      </div>
+    </section>
+
+    <section id="tab-progress" class="tab-panel" hidden>
+      <h2>Evolução</h2>
+      <label class="select-field">Exercício
+        <select id="progress-exercise"></select>
+      </label>
+      <div id="progress-chart" class="chart"></div>
+      <div id="progress-table"></div>
+
+      <h3>Histórico de sessões</h3>
+      <div id="session-history"></div>
+
+      <h3>Cópia de segurança</h3>
+      <p class="muted">Os dados ficam guardados só neste browser. Exporta de vez em quando para não os perderes.</p>
+      <div class="actions">
+        <button id="export-btn">Exportar (JSON)</button>
+        <label class="button-like">Importar
+          <input type="file" id="import-file" accept="application/json" hidden>
+        </label>
+      </div>
+    </section>
+
+    <section id="tab-info" class="tab-panel" hidden>
+      <h2>Adaptações principais</h2>
+      <ul class="rules">
+        <li><strong>Sem carga axial na coluna:</strong> nada de agachamento com barra, peso morto, remada inclinada com barra nem press de pé. Máquinas com apoio nas costas ou no peito.</li>
+        <li><strong>Sem flexão da coluna com carga:</strong> o crunch sai — é das piores coisas para discos lombares.</li>
+        <li><strong>Anca:</strong> flexão limitada a ~90°, sem descer fundo no leg press.</li>
+        <li><strong>Cervical:</strong> puxadas sempre à frente, nada atrás da nuca, sem extensões de tríceps acima da cabeça.</li>
+        <li><strong>Intensidade:</strong> nos compostos, parar a 1–2 repetições da falha (quando a técnica começa a degradar). Nas máquinas de isolamento podes ir à falha.</li>
+        <li><strong>Repetições nos compostos:</strong> 8–10 (top set) e 10–12 (back-off). Carga absoluta menor, estímulo praticamente igual.</li>
+      </ul>
+
+      <h2>Descanso e aquecimento</h2>
+      <ul class="rules">
+        <li>Descansa <strong>3–4 min</strong> nos compostos e <strong>1–2 min</strong> nos de isolamento (usa o cronómetro em cada cartão).</li>
+        <li>5 min de bicicleta. Nos três primeiros exercícios: 50% do peso de trabalho × 6, depois 70% × 3.</li>
+      </ul>
+
+      <h2>Progressão dupla</h2>
+      <p>Mantém o peso até chegares ao topo da faixa de repetições e só então sobe a carga. Exemplo no leg press: 100 kg×8 → 100×9 → 100×10 → 105 kg×8. Regista tudo — este princípio gera 90% dos resultados. O site mostra uma sugestão em cada exercício com base no último registo.</p>
+
+      <h2>Restantes dias</h2>
+      <p>Caminhadas de 8–10 mil passos e 10 min de estabilização lombar (bird dog, side plank, dead bug). Os dias livres não devem virar mais ginásio: a recuperação é a peça central do protocolo, e com 1600 kcal já está limitada.</p>
+      <div class="chips">
+        <a target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=bird+dog+exercise+technique">▶ Bird dog</a>
+        <a target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=side+plank+technique">▶ Side plank</a>
+        <a target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=dead+bug+exercise+technique">▶ Dead bug</a>
+      </div>
+
+      <div class="callout danger">
+        <h2>Sinais para parar</h2>
+        <p>Para <strong>imediatamente</strong> se tiveres dor que irradia para a perna ou o braço, formigueiro, dormência ou perda de força. Confirma com o teu fisioterapeuta ou cirurgião os limites exatos de amplitude da anca, porque dependem do tipo de cirurgia que fizeste.</p>
+      </div>
+      <p class="muted small">Fonte do protocolo base: boxlifemagazine.</p>
+    </section>
+  </main>
+
+  <div id="timer" class="timer" hidden>
+    <span id="timer-label"></span>
+    <strong id="timer-time">0:00</strong>
+    <button id="timer-stop" aria-label="Parar cronómetro">✕</button>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
