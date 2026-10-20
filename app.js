@@ -6,6 +6,9 @@
   const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
 
   // ---------- armazenamento ----------
+  // Por omissão guarda no browser (localStorage). Quando o site corre como
+  // Artifact no claude.ai, passa a guardar na base de dados privada do
+  // utilizador (sincroniza entre aparelhos) e as fotos/vídeos ficam em assets.
   function load(key, fallback) {
     try {
       const raw = localStorage.getItem(key);
@@ -14,7 +17,7 @@
       return fallback;
     }
   }
-  function save(key, value) {
+  function saveLocal(key, value) {
     try {
       localStorage.setItem(key, JSON.stringify(value));
       return true;
@@ -24,8 +27,36 @@
   }
 
   let sessions = load(STORE_SESSIONS, []);
-  let videos = load(STORE_VIDEOS, {});
+  // media[exId] = { link?: url, asset?: id, type?: contentType }
+  let media = normalizeMedia(load(STORE_VIDEOS, {}));
+  let remote = null; // { col } quando a base de dados está disponível
+  let assets = null;
   let currentWorkout = "A";
+  let dirty = false;
+
+  function normalizeMedia(m) {
+    const out = {};
+    Object.entries(m || {}).forEach(([k, v]) => (out[k] = typeof v === "string" ? { link: v } : v));
+    return out;
+  }
+
+  const sessionId = (workout, date) => `s_${workout}_${date}`;
+
+  async function persistSession(s) {
+    if (remote) {
+      await remote.col.doc(s.id).set({ ...s, kind: "session" });
+      return true;
+    }
+    return saveLocal(STORE_SESSIONS, sessions);
+  }
+  async function removeSession(id) {
+    if (remote) await remote.col.doc(id).delete();
+    else saveLocal(STORE_SESSIONS, sessions);
+  }
+  async function persistMedia() {
+    if (remote) await remote.col.doc("media").set({ kind: "media", items: media });
+    else saveLocal(STORE_VIDEOS, media);
+  }
 
   const allExercises = Object.entries(WORKOUTS).flatMap(([w, def]) =>
     def.exercises.map((ex) => ({ ...ex, workout: w }))
@@ -70,27 +101,54 @@
     return `Mantém <strong>${kg ? fmtKg(kg) : "a carga"}</strong> e tenta <strong>${top.reps + 1} reps</strong> (objetivo: ${range.max}).`;
   }
 
-  // ---------- vídeos ----------
+  // ---------- vídeos e fotos ----------
+  const inViewer = !!(window.claude && window.claude.use);
   function youtubeId(url) {
     const m = String(url).match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/);
     return m ? m[1] : null;
   }
+  function safeUrl(url) {
+    return /^https?:\/\//i.test(url) ? url : null;
+  }
   function demoHtml(ex) {
-    const custom = videos[ex.id];
-    const id = custom && youtubeId(custom);
+    const m = media[ex.id] || {};
     const search = (q) => "https://www.youtube.com/results?search_query=" + encodeURIComponent(q);
-    let media = "";
-    if (id) {
-      media = `<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/${id}" title="${escapeHtml(ex.name)}" loading="lazy" allowfullscreen allow="encrypted-media; picture-in-picture"></iframe></div>`;
-    } else if (custom) {
-      media = `<div class="video"><img src="${escapeHtml(custom)}" alt="${escapeHtml(ex.name)}" loading="lazy"></div>`;
+    let block = "";
+    if (m.asset) {
+      const src = "/_blob/" + m.asset;
+      block = /^video\//.test(m.type || "")
+        ? `<div class="video"><video src="${src}" controls playsinline muted loop></video></div>`
+        : `<div class="video"><img src="${src}" alt="${escapeHtml(ex.name)}" loading="lazy"></div>`;
+    } else if (m.link && !inViewer && youtubeId(m.link)) {
+      // Fora do claude.ai o vídeo do YouTube aparece embutido.
+      block = `<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/${youtubeId(m.link)}" title="${escapeHtml(ex.name)}" loading="lazy" allowfullscreen allow="encrypted-media; picture-in-picture"></iframe></div>`;
+    } else if (m.link && !inViewer && (/^data:image\//.test(m.link) || /\.(png|jpe?g|gif|webp)(\?|$)/i.test(m.link))) {
+      block = `<div class="video"><img src="${escapeHtml(m.link)}" alt="${escapeHtml(ex.name)}" loading="lazy"></div>`;
     }
+    const link = m.link && safeUrl(m.link);
     return `
-      ${media}
+      ${block}
       <div class="chips">
         <a target="_blank" rel="noopener" href="${search(ex.video)}">▶ Vídeos de demonstração</a>
         ${ex.alt ? `<a target="_blank" rel="noopener" href="${search(ex.alt + " technique")}">▶ Alternativa: ${escapeHtml(ex.alt)}</a>` : ""}
-        <button class="link set-video" data-ex="${ex.id}">${custom ? "Trocar vídeo/foto" : "Fixar vídeo/foto aqui"}</button>
+        ${link ? `<a target="_blank" rel="noopener" href="${escapeHtml(link)}">▶ O meu vídeo</a>` : ""}
+        <button class="link set-video" data-ex="${ex.id}" aria-expanded="false">${m.link || m.asset ? "Trocar vídeo/foto" : "Fixar vídeo/foto"}</button>
+      </div>
+      <div class="media-panel" data-panel="${ex.id}" hidden>
+        <div class="row">
+          <input type="url" id="link-${ex.id}" placeholder="Link de um vídeo (YouTube, Instagram…)" value="${escapeHtml(m.link || "")}">
+          <button data-save-link="${ex.id}">Guardar link</button>
+        </div>
+        ${
+          assets || !inViewer
+            ? `<div class="row">
+                <label class="button-like small" for="file-${ex.id}">${assets ? "Carregar foto ou vídeo" : "Escolher foto"}</label>
+                <input type="file" id="file-${ex.id}" data-upload="${ex.id}" accept="image/*,video/mp4,video/webm" hidden>
+              </div>`
+            : ""
+        }
+        ${m.link || m.asset ? `<div class="row"><button data-clear-media="${ex.id}">Remover vídeo/foto</button></div>` : ""}
+        <span class="msg" data-msg="${ex.id}"></span>
       </div>`;
   }
 
@@ -105,11 +163,11 @@
     if (!dateInput.value) dateInput.value = today();
     const date = dateInput.value;
     const existing = sessionFor(currentWorkout, date);
+    dirty = false;
 
     $("#workout-title").textContent = def.name;
     $("#workout-day").textContent = def.day;
     $("#session-notes").value = existing ? existing.notes || "" : "";
-    $("#save-status").textContent = existing ? "A editar o registo desta data." : "";
 
     $("#exercise-list").innerHTML = def.exercises
       .map((ex, i) => {
@@ -123,9 +181,9 @@
             return `
               <div class="set-row">
                 <span class="set-label">${set.label}<small>${set.min}–${set.max} reps</small></span>
-                <label><span>kg</span><input type="number" inputmode="decimal" step="0.5" min="0" data-ex="${ex.id}" data-set="${si}" data-field="kg"
+                <label><span>kg</span><input type="number" inputmode="decimal" step="0.5" min="0" id="in-${ex.id}-${si}-kg" data-ex="${ex.id}" data-set="${si}" data-field="kg"
                   value="${cur && cur.kg !== "" ? cur.kg : ""}" placeholder="${prev && prev.kg !== "" ? prev.kg : "–"}"></label>
-                <label><span>reps</span><input type="number" inputmode="numeric" step="1" min="0" data-ex="${ex.id}" data-set="${si}" data-field="reps"
+                <label><span>reps</span><input type="number" inputmode="numeric" step="1" min="0" id="in-${ex.id}-${si}-reps" data-ex="${ex.id}" data-set="${si}" data-field="reps"
                   value="${cur && cur.reps ? cur.reps : ""}" placeholder="${prev && prev.reps ? prev.reps : "–"}"></label>
               </div>`;
           })
@@ -184,22 +242,30 @@
     return entries;
   }
 
-  function saveSession() {
+  async function saveSession() {
     const date = $("#session-date").value || today();
     const entries = collectSession();
     const status = $("#save-status");
     if (!Object.keys(entries).length) {
-      status.textContent = "Nada para guardar — preenche pelo menos uma série.";
+      status.textContent = "Nada para guardar. Preenche pelo menos uma série.";
       return;
     }
     const notes = $("#session-notes").value.trim();
-    const existing = sessionFor(currentWorkout, date);
-    if (existing) {
-      Object.assign(existing, { entries, notes, savedAt: Date.now() });
+    let s = sessionFor(currentWorkout, date);
+    if (s) {
+      Object.assign(s, { entries, notes, savedAt: Date.now() });
     } else {
-      sessions.push({ id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()), workout: currentWorkout, date, entries, notes, savedAt: Date.now() });
+      s = { id: sessionId(currentWorkout, date), workout: currentWorkout, date, entries, notes, savedAt: Date.now() };
+      sessions.push(s);
     }
-    status.textContent = save(STORE_SESSIONS, sessions) ? `Guardado ✓ (${fmtDate(date)})` : "Erro: não foi possível guardar neste browser.";
+    status.textContent = "A guardar…";
+    try {
+      const ok = await persistSession(s);
+      dirty = false;
+      status.textContent = ok ? `Guardado (${fmtDate(date)})` : "Não foi possível guardar neste browser.";
+    } catch (err) {
+      status.textContent = "Não foi possível guardar. Verifica a ligação e tenta outra vez.";
+    }
   }
 
   // ---------- evolução ----------
@@ -255,12 +321,12 @@
         </div>`
           )
           .join("")
-      : `<p class="muted">Ainda não há treinos registados.</p>`;
+      : `<p class="muted">Ainda não há treinos registados. Abre o Treino A ou B, preenche os pesos e carrega em "Guardar treino".</p>`;
   }
 
   function chartSvg(points) {
     if (!points.length) return `<p class="empty">Sem registos para este exercício. Guarda um treino para começar a ver a evolução.</p>`;
-    const W = 640, H = 260, P = { l: 44, r: 16, t: 20, b: 36 };
+    const W = 640, H = 260, P = { l: 44, r: 16, t: 24, b: 36 };
     const kgs = points.map((p) => p.kg);
     let min = Math.min(...kgs), max = Math.max(...kgs);
     if (min === max) { min -= 5; max += 5; }
@@ -303,8 +369,8 @@
       if (!left) {
         clearInterval(timerInt);
         box.classList.add("done");
-        $("#timer-label").textContent = "Descanso terminado — próxima série!";
-        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+        $("#timer-label").textContent = "Descanso terminado. Próxima série!";
+        try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch {}
       }
     };
     tick();
@@ -312,7 +378,9 @@
   }
 
   // ---------- navegação ----------
+  let currentTab = "A";
   function showTab(tab) {
+    currentTab = tab;
     $$(".tabs button").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
     const isWorkout = tab === "A" || tab === "B";
     $("#tab-workout").hidden = !isWorkout;
@@ -320,6 +388,7 @@
     $("#tab-info").hidden = tab !== "info";
     if (isWorkout) {
       currentWorkout = tab;
+      $("#save-status").textContent = sessionFor(tab, $("#session-date").value || today()) ? "A editar o registo desta data." : "";
       renderWorkout();
     } else if (tab === "progress") {
       renderProgress();
@@ -327,17 +396,29 @@
     try { localStorage.setItem("gym.tab", tab); } catch {}
   }
 
+  // Volta a desenhar depois de chegarem dados novos, sem apagar o que está a ser escrito.
+  function refresh() {
+    if (currentTab === "progress") renderProgress();
+    else if ((currentTab === "A" || currentTab === "B") && !dirty) renderWorkout();
+  }
+
   // ---------- eventos ----------
   $(".tabs").addEventListener("click", (e) => {
     const b = e.target.closest("button[data-tab]");
     if (b) showTab(b.dataset.tab);
   });
-  $("#session-date").addEventListener("change", renderWorkout);
+  $("#session-date").addEventListener("change", () => {
+    $("#save-status").textContent = sessionFor(currentWorkout, $("#session-date").value) ? "A editar o registo desta data." : "";
+    renderWorkout();
+  });
   $("#save-session").addEventListener("click", saveSession);
+  $("#session-notes").addEventListener("input", () => (dirty = true));
   $("#progress-exercise").addEventListener("change", renderProgress);
 
   $("#exercise-list").addEventListener("input", (e) => {
     const inp = e.target;
+    if (!inp.dataset.field) return;
+    dirty = true;
     if (inp.dataset.field === "kg" && inp.dataset.set === "0") {
       const ex = allExercises.find((x) => x.id === inp.dataset.ex);
       updateWarmup(ex);
@@ -349,18 +430,74 @@
     }
   });
 
+  async function setMedia(exId, value) {
+    if (value) media[exId] = value;
+    else delete media[exId];
+    try {
+      await persistMedia();
+    } catch {
+      const msg = $(`[data-msg="${exId}"]`);
+      if (msg) msg.textContent = "Não foi possível guardar. Tenta outra vez.";
+      return;
+    }
+    if (!dirty) renderWorkout();
+  }
+
   $("#exercise-list").addEventListener("click", (e) => {
     const rest = e.target.closest("[data-rest]");
     if (rest) startTimer(Number(rest.dataset.rest), rest.dataset.name);
+
     const sv = e.target.closest(".set-video");
     if (sv) {
-      const id = sv.dataset.ex;
-      const url = prompt("Cola o link de um vídeo do YouTube ou de uma imagem/GIF (deixa vazio para remover):", videos[id] || "");
-      if (url === null) return;
-      if (url.trim()) videos[id] = url.trim();
-      else delete videos[id];
-      save(STORE_VIDEOS, videos);
-      renderWorkout();
+      const panel = $(`[data-panel="${sv.dataset.ex}"]`);
+      panel.hidden = !panel.hidden;
+      sv.setAttribute("aria-expanded", String(!panel.hidden));
+    }
+
+    const saveLink = e.target.closest("[data-save-link]");
+    if (saveLink) {
+      const id = saveLink.dataset.saveLink;
+      const url = $(`#link-${id}`).value.trim();
+      const msg = $(`[data-msg="${id}"]`);
+      if (!safeUrl(url)) {
+        msg.textContent = "O link tem de começar por https://";
+        return;
+      }
+      setMedia(id, { link: url });
+    }
+
+    const clear = e.target.closest("[data-clear-media]");
+    if (clear) setMedia(clear.dataset.clearMedia, null);
+  });
+
+  $("#exercise-list").addEventListener("change", async (e) => {
+    const inp = e.target.closest("[data-upload]");
+    if (!inp || !inp.files[0]) return;
+    const id = inp.dataset.upload;
+    const file = inp.files[0];
+    const msg = $(`[data-msg="${id}"]`);
+    if (assets) {
+      msg.textContent = "A carregar…";
+      try {
+        const res = await assets.upload(file);
+        setMedia(id, { asset: res.id, type: res.contentType });
+      } catch (err) {
+        msg.textContent =
+          err && err.code === "too_large"
+            ? "Ficheiro demasiado grande (máx. 20 MB)."
+            : err && err.code === "unsupported_type"
+            ? "Formato não suportado. Usa JPG, PNG, GIF, WebP, MP4 ou WebM."
+            : "Não foi possível carregar. Tenta outra vez.";
+      }
+    } else {
+      // Fora do claude.ai: guarda a imagem no browser como data URL (só imagens pequenas).
+      if (!file.type.startsWith("image/") || file.size > 1.5e6) {
+        msg.textContent = "Aqui só dá para guardar imagens até 1,5 MB.";
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => setMedia(id, { link: reader.result });
+      reader.readAsDataURL(file);
     }
   });
 
@@ -369,12 +506,26 @@
     $("#timer").hidden = true;
   });
 
-  $("#session-history").addEventListener("click", (e) => {
+  $("#session-history").addEventListener("click", async (e) => {
     const del = e.target.closest("[data-delete]");
     const open = e.target.closest("[data-open]");
-    if (del && confirm("Apagar este treino?")) {
+    if (del) {
+      // Confirmação em dois cliques (sem janelas do browser).
+      if (!del.dataset.armed) {
+        del.dataset.armed = "1";
+        del.textContent = "Confirmar apagar";
+        setTimeout(() => {
+          if (del.isConnected) {
+            delete del.dataset.armed;
+            del.textContent = "Apagar";
+          }
+        }, 4000);
+        return;
+      }
       sessions = sessions.filter((s) => s.id !== del.dataset.delete);
-      save(STORE_SESSIONS, sessions);
+      try {
+        await removeSession(del.dataset.delete);
+      } catch {}
       renderProgress();
     }
     if (open) {
@@ -384,34 +535,120 @@
     }
   });
 
-  $("#export-btn").addEventListener("click", () => {
-    const blob = new Blob([JSON.stringify({ sessions, videos }, null, 2)], { type: "application/json" });
+  let downloads = null;
+  $("#export-btn").addEventListener("click", async () => {
+    const data = JSON.stringify({ sessions, videos: media }, null, 2);
+    const filename = `treino-backup-${today()}.json`;
+    const status = $("#backup-status");
+    if (downloads) {
+      try {
+        await downloads.save({ filename, data });
+        status.textContent = "Cópia exportada.";
+      } catch {
+        status.textContent = "Exportação cancelada.";
+      }
+      return;
+    }
+    if (inViewer) {
+      try {
+        await navigator.clipboard.writeText(data);
+        status.textContent = "Dados copiados para a área de transferência.";
+      } catch {
+        status.textContent = "Não foi possível exportar nesta vista.";
+      }
+      return;
+    }
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `treino-backup-${today()}.json`;
+    a.href = URL.createObjectURL(new Blob([data], { type: "application/json" }));
+    a.download = filename;
     a.click();
     URL.revokeObjectURL(a.href);
   });
 
   $("#import-file").addEventListener("change", async (e) => {
     const file = e.target.files[0];
+    const status = $("#backup-status");
     if (!file) return;
     try {
       const data = JSON.parse(await file.text());
       if (!Array.isArray(data.sessions)) throw new Error();
-      if (!confirm(`Importar ${data.sessions.length} treinos? Os dados atuais serão substituídos.`)) return;
-      sessions = data.sessions;
-      videos = data.videos || {};
-      save(STORE_SESSIONS, sessions);
-      save(STORE_VIDEOS, videos);
+      // Junta aos treinos existentes (o do ficheiro ganha se for a mesma data e treino).
+      let n = 0;
+      for (const raw of data.sessions) {
+        if (!raw || !WORKOUTS[raw.workout] || !/^\d{4}-\d{2}-\d{2}$/.test(raw.date) || typeof raw.entries !== "object") continue;
+        const s = { id: sessionId(raw.workout, raw.date), workout: raw.workout, date: raw.date, entries: raw.entries, notes: String(raw.notes || ""), savedAt: Number(raw.savedAt) || Date.now() };
+        sessions = sessions.filter((x) => !(x.workout === s.workout && x.date === s.date));
+        sessions.push(s);
+        if (remote) await persistSession(s);
+        n++;
+      }
+      if (!remote) saveLocal(STORE_SESSIONS, sessions);
+      if (data.videos) {
+        media = { ...media, ...normalizeMedia(data.videos) };
+        await persistMedia();
+      }
+      status.textContent = `Importados ${n} treinos.`;
       renderProgress();
     } catch {
-      alert("Ficheiro inválido.");
+      status.textContent = "Ficheiro inválido. Escolhe um ficheiro exportado por este site.";
     }
     e.target.value = "";
   });
 
+  // ---------- ligação à base de dados (claude.ai) ----------
+  async function connectRemote() {
+    const sync = $("#sync");
+    if (!inViewer) {
+      sync.textContent = "Os dados ficam guardados neste browser.";
+      return;
+    }
+    sync.textContent = "A ligar…";
+    let db = null, user = null;
+    try {
+      [db, user, assets, downloads] = await Promise.all(["db", "user", "assets", "downloads"].map((n) => window.claude.use(n)));
+    } catch {}
+    const uid = user && (await user.id().catch(() => null));
+    if (!db || !uid) {
+      sync.textContent = "Sem sessão iniciada: os dados ficam só neste browser.";
+      refresh();
+      return;
+    }
+    const col = db.collection("data/users/" + uid);
+    let first = true;
+    col.onSnapshot(
+      (snap) => {
+        const docs = snap.docs.map((d) => d.data());
+        const remoteSessions = docs.filter((d) => d.kind === "session").map(({ kind, ...s }) => s);
+        const m = docs.find((d) => d.kind === "media");
+        if (first) {
+          first = false;
+          remote = { col };
+          // Primeira ligação: envia o que já estava guardado neste browser.
+          const known = new Set(remoteSessions.map((s) => s.id));
+          const pending = sessions.filter((s) => !known.has(s.id));
+          if (pending.length) {
+            (async () => {
+              for (const s of pending) await persistSession(s).catch(() => {});
+            })();
+            remoteSessions.push(...pending);
+          }
+        }
+        sessions = remoteSessions;
+        if (m) media = normalizeMedia(m.items);
+        sync.textContent = "Guardado na tua conta, sincroniza entre aparelhos.";
+        sync.classList.add("ok");
+        refresh();
+      },
+      () => {
+        remote = null;
+        sync.classList.remove("ok");
+        sync.textContent = "Sem ligação à conta: os dados ficam só neste browser.";
+      }
+    );
+  }
+
   let startTab = "A";
   try { startTab = localStorage.getItem("gym.tab") || "A"; } catch {}
   showTab(["A", "B", "progress", "info"].includes(startTab) ? startTab : "A");
+  connectRemote();
 })();

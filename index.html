@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Treino 2×/semana</title>
   <meta name="description" content="Plano de treino adaptado a hérnias e anca, com registo de pesos semanais e evolução.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;600&display=swap">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -20,6 +23,7 @@
   </header>
 
   <main>
+    <p id="sync" class="sync"></p>
     <section id="tab-workout" class="tab-panel">
       <div class="session-bar">
         <div>
@@ -58,13 +62,14 @@
       <div id="session-history"></div>
 
       <h3>Cópia de segurança</h3>
-      <p class="muted">Os dados ficam guardados só neste browser. Exporta de vez em quando para não os perderes.</p>
+      <p class="muted" id="backup-note">Exporta de vez em quando para teres uma cópia. Importar junta os treinos do ficheiro aos que já tens.</p>
       <div class="actions">
         <button id="export-btn">Exportar (JSON)</button>
-        <label class="button-like">Importar
+        <label class="button-like" for="import-file">Importar
           <input type="file" id="import-file" accept="application/json" hidden>
         </label>
       </div>
+      <p id="backup-status" class="muted small"></p>
     </section>
 
     <section id="tab-info" class="tab-panel" hidden>
