@@ -1,3 +1,4 @@
+// Fotos em img/<id>-0.jpg (início) e img/<id>-1.jpg (fim), de free-exercise-db (domínio público).
 // Plano de treino: 2x/semana, 2 séries por exercício, adaptado a hérnias e anca.
 const WORKOUTS = {
   A: {
@@ -18,6 +19,7 @@ const WORKOUTS = {
           "Lombar sempre colada ao encosto — se descolar, desceste demais.",
         ],
         video: "leg press feet high wide technique",
+        photoNote: "Na foto a descida vai mais fundo do que deves: para a ~90° no joelho.",
       },
       {
         id: "puxada",
@@ -124,6 +126,7 @@ const WORKOUTS = {
           "Queixo ligeiramente recolhido.",
         ],
         video: "hip thrust machine technique",
+        photoNote: "Foto com barra; na máquina o movimento é o mesmo.",
         alt: "glute bridge",
       },
       {

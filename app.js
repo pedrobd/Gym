@@ -126,7 +126,16 @@
       block = `<div class="video"><img src="${escapeHtml(m.link)}" alt="${escapeHtml(ex.name)}" loading="lazy"></div>`;
     }
     const link = m.link && safeUrl(m.link);
+    const photos = `
+      <figure class="photos">
+        <div class="photo-pair">
+          <div><img src="img/${ex.id}-0.jpg" alt="${escapeHtml(ex.name)}: fase 1" loading="lazy" width="640" height="427"><span>Fase 1</span></div>
+          <div><img src="img/${ex.id}-1.jpg" alt="${escapeHtml(ex.name)}: fase 2" loading="lazy" width="640" height="427"><span>Fase 2</span></div>
+        </div>
+        ${ex.photoNote ? `<figcaption>${escapeHtml(ex.photoNote)}</figcaption>` : ""}
+      </figure>`;
     return `
+      ${photos}
       ${block}
       <div class="chips">
         <a target="_blank" rel="noopener" href="${search(ex.video)}">▶ Vídeos de demonstração</a>

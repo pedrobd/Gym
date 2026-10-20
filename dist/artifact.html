@@ -160,6 +160,16 @@ input::placeholder, textarea::placeholder { color: #a5a59e; }
 .video { position: relative; aspect-ratio: 16 / 9; max-width: 100%; border-radius: var(--r-md); overflow: hidden; background: var(--ink); margin: .75rem 0; }
 .video iframe, .video img, .video video { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; object-fit: cover; }
 
+.photos { margin: 1.1rem 0 .25rem; }
+.photo-pair { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+.photo-pair > div { position: relative; border-radius: var(--r-md); overflow: hidden; background: var(--surface-2); aspect-ratio: 3 / 2; max-width: 100%; }
+.photo-pair img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo-pair span {
+  position: absolute; left: .5rem; bottom: .5rem; background: var(--bg); color: var(--ink);
+  font: 700 .68rem/1 var(--font-body); text-transform: uppercase; letter-spacing: .06em;
+  padding: .35rem .6rem; border-radius: 999px;
+}
+.photos figcaption { font-size: .8rem; color: var(--muted); margin-top: .5rem; }
 .chips { display: flex; flex-wrap: wrap; gap: .45rem; margin: .75rem 0; }
 .chips a, .chips button {
   font: 700 .8rem/1 var(--font-body); text-decoration: none; cursor: pointer;
@@ -372,7 +382,7 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
         <h2>Sinais para parar</h2>
         <p>Para <strong>imediatamente</strong> se tiveres dor que irradia para a perna ou o braço, formigueiro, dormência ou perda de força. Confirma com o teu fisioterapeuta ou cirurgião os limites exatos de amplitude da anca, porque dependem do tipo de cirurgia que fizeste.</p>
       </div>
-      <p class="muted small">Fonte do protocolo base: boxlifemagazine.</p>
+      <p class="muted small">Fonte do protocolo base: boxlifemagazine. Fotos dos exercícios: <a href="https://github.com/yuhonas/free-exercise-db" target="_blank" rel="noopener">free-exercise-db</a> (domínio público).</p>
     </section>
   </main>
 
@@ -382,6 +392,7 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
     <button id="timer-stop" aria-label="Parar cronómetro">✕</button>
   </div>
 <script>
+// Fotos em img/<id>-0.jpg (início) e img/<id>-1.jpg (fim), de free-exercise-db (domínio público).
 // Plano de treino: 2x/semana, 2 séries por exercício, adaptado a hérnias e anca.
 const WORKOUTS = {
   A: {
@@ -402,6 +413,7 @@ const WORKOUTS = {
           "Lombar sempre colada ao encosto — se descolar, desceste demais.",
         ],
         video: "leg press feet high wide technique",
+        photoNote: "Na foto a descida vai mais fundo do que deves: para a ~90° no joelho.",
       },
       {
         id: "puxada",
@@ -508,6 +520,7 @@ const WORKOUTS = {
           "Queixo ligeiramente recolhido.",
         ],
         video: "hip thrust machine technique",
+        photoNote: "Foto com barra; na máquina o movimento é o mesmo.",
         alt: "glute bridge",
       },
       {
@@ -696,7 +709,16 @@ const WORKOUTS = {
       block = `<div class="video"><img src="${escapeHtml(m.link)}" alt="${escapeHtml(ex.name)}" loading="lazy"></div>`;
     }
     const link = m.link && safeUrl(m.link);
+    const photos = `
+      <figure class="photos">
+        <div class="photo-pair">
+          <div><img src="img/${ex.id}-0.jpg" alt="${escapeHtml(ex.name)}: fase 1" loading="lazy" width="640" height="427"><span>Fase 1</span></div>
+          <div><img src="img/${ex.id}-1.jpg" alt="${escapeHtml(ex.name)}: fase 2" loading="lazy" width="640" height="427"><span>Fase 2</span></div>
+        </div>
+        ${ex.photoNote ? `<figcaption>${escapeHtml(ex.photoNote)}</figcaption>` : ""}
+      </figure>`;
     return `
+      ${photos}
       ${block}
       <div class="chips">
         <a target="_blank" rel="noopener" href="${search(ex.video)}">▶ Vídeos de demonstração</a>

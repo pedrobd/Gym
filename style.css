@@ -156,6 +156,16 @@ input::placeholder, textarea::placeholder { color: #a5a59e; }
 .video { position: relative; aspect-ratio: 16 / 9; max-width: 100%; border-radius: var(--r-md); overflow: hidden; background: var(--ink); margin: .75rem 0; }
 .video iframe, .video img, .video video { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; object-fit: cover; }
 
+.photos { margin: 1.1rem 0 .25rem; }
+.photo-pair { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+.photo-pair > div { position: relative; border-radius: var(--r-md); overflow: hidden; background: var(--surface-2); aspect-ratio: 3 / 2; max-width: 100%; }
+.photo-pair img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo-pair span {
+  position: absolute; left: .5rem; bottom: .5rem; background: var(--bg); color: var(--ink);
+  font: 700 .68rem/1 var(--font-body); text-transform: uppercase; letter-spacing: .06em;
+  padding: .35rem .6rem; border-radius: 999px;
+}
+.photos figcaption { font-size: .8rem; color: var(--muted); margin-top: .5rem; }
 .chips { display: flex; flex-wrap: wrap; gap: .45rem; margin: .75rem 0; }
 .chips a, .chips button {
   font: 700 .8rem/1 var(--font-body); text-decoration: none; cursor: pointer;

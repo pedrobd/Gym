@@ -11,6 +11,8 @@ Site estático com o plano de treino (A/B) adaptado a hérnias e à anca, com:
 
 Os dados ficam guardados no `localStorage` do browser.
 
+Fotos dos exercícios em `img/`, do [free-exercise-db](https://github.com/yuhonas/free-exercise-db) (Unlicense / domínio público).
+
 ## Usar
 
 Abre `index.html` no browser, ou publica com GitHub Pages (Settings → Pages → Deploy from branch).
