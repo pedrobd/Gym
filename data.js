@@ -3,7 +3,7 @@
 const WORKOUTS = {
   A: {
     name: "Treino A",
-    day: "ex.: segunda",
+    day: "Segunda-feira",
     exercises: [
       {
         id: "leg-press",
@@ -96,7 +96,7 @@ const WORKOUTS = {
   },
   B: {
     name: "Treino B",
-    day: "ex.: quinta",
+    day: "Sexta-feira",
     exercises: [
       {
         id: "supino-inclinado",
@@ -185,3 +185,16 @@ const WORKOUTS = {
     ],
   },
 };
+
+// Semana: 0 = domingo … 6 = sábado (como Date.getDay()).
+const STEPS_GOAL = 11000;
+const FLOW_CHANNEL = "https://www.youtube.com/@strengthsidefollowalongs";
+const WEEK = [
+  { dow: 1, type: "workout", workout: "A", title: "Treino A" },
+  { dow: 2, type: "steps", title: `${STEPS_GOAL.toLocaleString("pt-PT")} passos` },
+  { dow: 3, type: "flow", title: "Animal Flow" },
+  { dow: 4, type: "steps", title: `${STEPS_GOAL.toLocaleString("pt-PT")} passos` },
+  { dow: 5, type: "workout", workout: "B", title: "Treino B" },
+  { dow: 6, type: "rest", title: "Descanso" },
+  { dow: 0, type: "rest", title: "Descanso" },
+];

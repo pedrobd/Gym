@@ -1,6 +1,7 @@
 (() => {
   const STORE_SESSIONS = "gym.sessions.v1";
   const STORE_VIDEOS = "gym.videos.v1";
+  const STORE_DAYS = "gym.days.v1";
 
   const $ = (sel, el = document) => el.querySelector(sel);
   const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
@@ -29,6 +30,8 @@
   let sessions = load(STORE_SESSIONS, []);
   // media[exId] = { link?: url, asset?: id, type?: contentType }
   let media = normalizeMedia(load(STORE_VIDEOS, {}));
+  // days[date] = { date, steps?, flowDone?, flowMin?, coreDone?, notes? }
+  let days = load(STORE_DAYS, {});
   let remote = null; // { col } quando a base de dados está disponível
   let assets = null;
   let currentWorkout = "A";
@@ -52,6 +55,10 @@
   async function removeSession(id) {
     if (remote) await remote.col.doc(id).delete();
     else saveLocal(STORE_SESSIONS, sessions);
+  }
+  async function persistDay(d) {
+    if (remote) await remote.col.doc("d_" + d.date).set({ ...d, kind: "day" });
+    else saveLocal(STORE_DAYS, days);
   }
   async function persistMedia() {
     if (remote) await remote.col.doc("media").set({ kind: "media", items: media });
@@ -386,8 +393,144 @@
     timerInt = setInterval(tick, 500);
   }
 
+  // ---------- semana ----------
+  const DOW_NAMES = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+  let weekOffset = 0;
+
+  const isoDate = (d) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+  function weekDates(offset) {
+    const d = new Date();
+    d.setHours(12, 0, 0, 0);
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7) + offset * 7); // segunda-feira
+    return Array.from({ length: 7 }, (_, i) => {
+      const x = new Date(d);
+      x.setDate(d.getDate() + i);
+      return x;
+    });
+  }
+
+  function dayStatus(plan, date) {
+    const d = days[date] || {};
+    if (plan.type === "workout") {
+      const s = sessionFor(plan.workout, date);
+      return { done: !!s, label: s ? `Feito · ${Object.keys(s.entries).length} exercícios registados` : "" };
+    }
+    if (plan.type === "steps") {
+      const n = Number(d.steps) || 0;
+      return { done: n >= STEPS_GOAL, label: n ? `${n.toLocaleString("pt-PT")} passos` : "" };
+    }
+    if (plan.type === "flow") return { done: !!d.flowDone, label: d.flowDone ? `Feito${d.flowMin ? ` · ${d.flowMin} min` : ""}` : "" };
+    return { done: !!d.coreDone, label: d.coreDone ? "Estabilização lombar feita" : "" };
+  }
+
+  function coreCheck(date, d) {
+    return `<label class="check"><input type="checkbox" id="core-${date}" data-day="${date}" data-field="coreDone" ${d.coreDone ? "checked" : ""}>
+      <span>10 min de estabilização lombar (bird dog, side plank, dead bug)</span></label>`;
+  }
+
+  function dayBody(plan, date) {
+    const d = days[date] || {};
+    if (plan.type === "workout") {
+      const def = WORKOUTS[plan.workout];
+      return `
+        <p class="day-desc">${def.exercises.length} exercícios · 2 séries · ~60 min com aquecimento.</p>
+        <button class="pill-btn dark" data-open-workout="${plan.workout}" data-date="${date}">Abrir ${def.name}</button>`;
+    }
+    if (plan.type === "steps") {
+      const n = Number(d.steps) || 0;
+      const pct = Math.min(100, Math.round((n / STEPS_GOAL) * 100));
+      return `
+        <p class="day-desc">Pelo menos ${STEPS_GOAL.toLocaleString("pt-PT")} passos ao longo do dia. Divide em 2–3 caminhadas se for mais fácil.</p>
+        <div class="steps-row">
+          <label for="steps-${date}">Passos</label>
+          <input type="number" inputmode="numeric" min="0" step="100" id="steps-${date}" data-day="${date}" data-field="steps" value="${n || ""}" placeholder="0">
+        </div>
+        <div class="bar-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><span style="width:${pct}%"></span></div>
+        <p class="bar-label">${pct}% do objetivo</p>
+        ${coreCheck(date, d)}`;
+    }
+    if (plan.type === "flow") {
+      return `
+        <p class="day-desc">Sessão follow-along de 20–30 min, a intensidade leve a moderada: deves acabar com energia, não exausto.</p>
+        <div class="chips">
+          <a target="_blank" rel="noopener" href="${FLOW_CHANNEL}/videos">▶ Strength Side · follow-alongs</a>
+          <a target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${encodeURIComponent("animal flow beginner wrist prep")}">▶ Preparação dos pulsos</a>
+        </div>
+        <details class="flow-tips">
+          <summary>Cuidados com as hérnias e a anca</summary>
+          <ul>
+            <li>Começa pelos vídeos para iniciantes e escolhe os mais curtos nas primeiras semanas.</li>
+            <li><strong>Boas escolhas:</strong> beast hold e beast crawl (coluna neutra, abdominal ativo), crab hold, wrist prep e os movimentos de ativação.</li>
+            <li><strong>Com cuidado ou adaptados:</strong> side kickthrough e crab reach envolvem rotação e extensão da coluna. Faz amplitude curta e lenta, ou salta-os.</li>
+            <li><strong>Evitar no início:</strong> scorpion reach (extensão com rotação da lombar) e o ape em agachamento profundo (passa os ~90° de flexão da anca).</li>
+            <li>Mantém o pescoço neutro, sem atirar a cabeça para trás no crab.</li>
+            <li>Os mesmos sinais para parar: dor que irradia, formigueiro, dormência ou perda de força.</li>
+            <li>Mostra um dos vídeos ao teu fisioterapeuta para confirmar o que podes fazer.</li>
+          </ul>
+        </details>
+        <div class="flow-row">
+          <label class="check"><input type="checkbox" id="flow-${date}" data-day="${date}" data-field="flowDone" ${d.flowDone ? "checked" : ""}><span>Sessão feita</span></label>
+          <label class="inline-num" for="flowmin-${date}">Minutos
+            <input type="number" inputmode="numeric" min="0" step="5" id="flowmin-${date}" data-day="${date}" data-field="flowMin" value="${d.flowMin || ""}" placeholder="–">
+          </label>
+        </div>
+        <input type="text" id="flownotes-${date}" data-day="${date}" data-field="notes" value="${escapeHtml(d.notes || "")}" placeholder="Que vídeo fizeste? Como te sentiste?">`;
+    }
+    return `
+      <p class="day-desc">Recuperação. Caminhada leve se te apetecer, sem ginásio.</p>
+      ${coreCheck(date, d)}`;
+  }
+
+  function renderWeek() {
+    const dates = weekDates(weekOffset);
+    const todayIso = today();
+    const fmt = (d) => d.toLocaleDateString("pt-PT", { day: "numeric", month: "short" });
+    $("#week-range").textContent = `${fmt(dates[0])} – ${fmt(dates[6])}`;
+    $("#week-today").disabled = weekOffset === 0;
+
+    let planned = 0, done = 0, stepsTotal = 0, stepsDays = 0;
+    const cards = dates.map((dt) => {
+      const date = isoDate(dt);
+      const plan = WEEK.find((w) => w.dow === dt.getDay());
+      const st = dayStatus(plan, date);
+      if (plan.type !== "rest") {
+        planned++;
+        if (st.done) done++;
+      }
+      const n = Number((days[date] || {}).steps) || 0;
+      if (n) { stepsTotal += n; stepsDays++; }
+      const tone = plan.type === "workout" ? `workout-${plan.workout}` : plan.type;
+      return `
+        <article class="day ${date === todayIso ? "today" : ""} ${st.done ? "done" : ""}" data-tone="${tone}">
+          <header class="day-head">
+            <div class="day-date"><span>${DOW_NAMES[dt.getDay()]}</span><b>${dt.getDate()}</b></div>
+            <div class="day-title">
+              <h3>${escapeHtml(plan.title)}</h3>
+              <span class="day-status">${date === todayIso ? `<em>Hoje</em>` : ""}${st.done ? `<i class="ok">✓ ${escapeHtml(st.label)}</i>` : st.label ? escapeHtml(st.label) : plan.type === "rest" ? "" : "Por fazer"}</span>
+            </div>
+          </header>
+          <div class="day-body">${dayBody(plan, date)}</div>
+        </article>`;
+    });
+    $("#week-days").innerHTML = cards.join("");
+    $("#week-stats").innerHTML = `
+      <li><b>${done}/${planned}</b><span>dias cumpridos</span></li>
+      <li><b>${stepsDays ? Math.round(stepsTotal / stepsDays).toLocaleString("pt-PT") : "–"}</b><span>média de passos</span></li>
+      <li><b>${dates.filter((dt) => { const p = WEEK.find((w) => w.dow === dt.getDay()); return p.type === "workout" && sessionFor(p.workout, isoDate(dt)); }).length}/2</b><span>treinos de força</span></li>`;
+  }
+
+  async function saveDayField(date, field, value) {
+    const d = { ...(days[date] || {}), date, [field]: value };
+    days[date] = d;
+    try {
+      await persistDay(d);
+    } catch {}
+  }
+
   // ---------- navegação ----------
-  let currentTab = "A";
+  let currentTab = "week";
   function showTab(tab) {
     currentTab = tab;
     $$(".tabs button").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
@@ -395,6 +538,8 @@
     $("#tab-workout").hidden = !isWorkout;
     $("#tab-progress").hidden = tab !== "progress";
     $("#tab-info").hidden = tab !== "info";
+    $("#tab-week").hidden = tab !== "week";
+    if (tab === "week") renderWeek();
     if (isWorkout) {
       currentWorkout = tab;
       $("#tab-workout").dataset.workout = tab;
@@ -409,10 +554,31 @@
   // Volta a desenhar depois de chegarem dados novos, sem apagar o que está a ser escrito.
   function refresh() {
     if (currentTab === "progress") renderProgress();
+    else if (currentTab === "week" && !$("#tab-week").contains(document.activeElement)) renderWeek();
     else if ((currentTab === "A" || currentTab === "B") && !dirty) renderWorkout();
   }
 
   // ---------- eventos ----------
+  $("#week-prev").addEventListener("click", () => { weekOffset--; renderWeek(); });
+  $("#week-next").addEventListener("click", () => { weekOffset++; renderWeek(); });
+  $("#week-today").addEventListener("click", () => { weekOffset = 0; renderWeek(); });
+  $("#week-days").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-open-workout]");
+    if (!b) return;
+    $("#session-date").value = b.dataset.date;
+    showTab(b.dataset.openWorkout);
+    window.scrollTo({ top: 0 });
+  });
+  $("#week-days").addEventListener("change", async (e) => {
+    const inp = e.target.closest("[data-day]");
+    if (!inp) return;
+    const { day, field } = inp.dataset;
+    const value = inp.type === "checkbox" ? inp.checked : inp.type === "number" ? Number(inp.value) || 0 : inp.value.trim();
+    await saveDayField(day, field, value);
+    inp.blur();
+    renderWeek();
+  });
+
   $(".tabs").addEventListener("click", (e) => {
     const b = e.target.closest("button[data-tab]");
     if (b) showTab(b.dataset.tab);
@@ -547,7 +713,7 @@
 
   let downloads = null;
   $("#export-btn").addEventListener("click", async () => {
-    const data = JSON.stringify({ sessions, videos: media }, null, 2);
+    const data = JSON.stringify({ sessions, videos: media, days }, null, 2);
     const filename = `treino-backup-${today()}.json`;
     const status = $("#backup-status");
     if (downloads) {
@@ -593,6 +759,14 @@
         n++;
       }
       if (!remote) saveLocal(STORE_SESSIONS, sessions);
+      if (data.days && typeof data.days === "object") {
+        for (const [date, d] of Object.entries(data.days)) {
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !d || typeof d !== "object") continue;
+          days[date] = { ...d, date };
+          if (remote) await persistDay(days[date]);
+        }
+        if (!remote) saveLocal(STORE_DAYS, days);
+      }
       if (data.videos) {
         media = { ...media, ...normalizeMedia(data.videos) };
         await persistMedia();
@@ -630,6 +804,8 @@
         const docs = snap.docs.map((d) => d.data());
         const remoteSessions = docs.filter((d) => d.kind === "session").map(({ kind, ...s }) => s);
         const m = docs.find((d) => d.kind === "media");
+        const remoteDays = {};
+        docs.filter((d) => d.kind === "day").forEach(({ kind, ...d }) => (remoteDays[d.date] = d));
         if (first) {
           first = false;
           remote = { col };
@@ -642,8 +818,16 @@
             })();
             remoteSessions.push(...pending);
           }
+          const pendingDays = Object.values(days).filter((d) => !remoteDays[d.date]);
+          if (pendingDays.length) {
+            (async () => {
+              for (const d of pendingDays) await persistDay(d).catch(() => {});
+            })();
+            pendingDays.forEach((d) => (remoteDays[d.date] = d));
+          }
         }
         sessions = remoteSessions;
+        days = remoteDays;
         if (m) media = normalizeMedia(m.items);
         sync.textContent = "Guardado na tua conta, sincroniza entre aparelhos.";
         sync.classList.add("ok");
@@ -657,8 +841,6 @@
     );
   }
 
-  let startTab = "A";
-  try { startTab = localStorage.getItem("gym.tab") || "A"; } catch {}
-  showTab(["A", "B", "progress", "info"].includes(startTab) ? startTab : "A");
+  showTab("week");
   connectRemote();
 })();

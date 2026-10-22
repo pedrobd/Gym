@@ -15,7 +15,8 @@
     <div class="bar">
       <span class="brand">2×<small>/semana</small></span>
       <nav class="tabs" role="tablist">
-        <button data-tab="A" class="active">Treino A</button>
+        <button data-tab="week" class="active">Semana</button>
+        <button data-tab="A">Treino A</button>
         <button data-tab="B">Treino B</button>
         <button data-tab="progress">Evolução</button>
         <button data-tab="info">Regras</button>
@@ -28,14 +29,30 @@
       <p class="eyebrow">Protocolo adaptado às hérnias e à anca</p>
       <h1>Treina menos.<br>Progride mais.</h1>
       <ul class="stats">
-        <li><b>2</b><span>treinos por semana</span></li>
-        <li><b>6</b><span>exercícios por sessão</span></li>
-        <li><b>2</b><span>séries cada</span></li>
+        <li><b>2</b><span>treinos de força</span></li>
+        <li><b>2</b><span>dias de 11 mil passos</span></li>
+        <li><b>1</b><span>sessão de Animal Flow</span></li>
       </ul>
       <p id="sync" class="sync"></p>
     </section>
 
-    <section id="tab-workout" class="tab-panel">
+    <section id="tab-week" class="tab-panel" hidden>
+      <div class="week-head">
+        <div class="session-title">
+          <h2>A tua semana</h2>
+          <span id="week-range"></span>
+        </div>
+        <div class="week-nav">
+          <button id="week-prev" aria-label="Semana anterior">‹</button>
+          <button id="week-today">Esta semana</button>
+          <button id="week-next" aria-label="Semana seguinte">›</button>
+        </div>
+      </div>
+      <ul class="week-stats" id="week-stats"></ul>
+      <div id="week-days" class="week-days"></div>
+    </section>
+
+    <section id="tab-workout" class="tab-panel" hidden>
       <div class="session-bar">
         <div class="session-title">
           <h2 id="workout-title"></h2>
@@ -104,7 +121,12 @@
       <p>Mantém o peso até chegares ao topo da faixa de repetições e só então sobe a carga. Exemplo no leg press: 100 kg×8 → 100×9 → 100×10 → 105 kg×8. Regista tudo — este princípio gera 90% dos resultados. O site mostra uma sugestão em cada exercício com base no último registo.</p>
 
       <h2>Restantes dias</h2>
-      <p>Caminhadas de 8–10 mil passos e 10 min de estabilização lombar (bird dog, side plank, dead bug). Os dias livres não devem virar mais ginásio: a recuperação é a peça central do protocolo, e com 1600 kcal já está limitada.</p>
+      <ul class="rules">
+        <li><strong>Terça e quinta:</strong> pelo menos 11 000 passos ao longo do dia. Regista o número no separador Semana.</li>
+        <li><strong>Quarta:</strong> Animal Flow, 20–30 min a intensidade leve a moderada, com os vídeos do <a href="https://www.youtube.com/@strengthsidefollowalongs" target="_blank" rel="noopener">Strength Side</a>. Vê os cuidados no separador Semana.</li>
+        <li><strong>Sábado e domingo:</strong> descanso. Caminhada leve se te apetecer e 10 min de estabilização lombar (bird dog, side plank, dead bug).</li>
+      </ul>
+      <p>Os dias livres não devem virar mais ginásio: a recuperação é a peça central do protocolo, e com 1600 kcal já está limitada.</p>
       <div class="chips">
         <a target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=bird+dog+exercise+technique">▶ Bird dog</a>
         <a target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=side+plank+technique">▶ Side plank</a>
