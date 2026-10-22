@@ -300,6 +300,7 @@ const PROTEIN_FOODS = [
   { name: "Atum em lata (1 lata escorrida)", g: 20 },
   { name: "Whey (1 dose, 30 g)", g: 23 },
   { name: "Queijo fresco (1 unidade, 100 g)", g: 10 },
+  { name: "Requeijão (100 g)", g: 10 },
   { name: "Leite (1 copo, 250 ml)", g: 8 },
   { name: "Leguminosas (1 chávena cozida)", g: 15 },
 ];
