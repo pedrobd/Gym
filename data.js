@@ -189,6 +189,22 @@ const WORKOUTS = {
 // Semana: 0 = domingo … 6 = sábado (como Date.getDay()).
 const STEPS_GOAL = 11000;
 const FLOW_CHANNEL = "https://www.youtube.com/@strengthsidefollowalongs";
+const FLOW_START = "2026-10-26"; // primeira quarta-feira conta a partir desta semana
+
+// Vídeos de Animal Flow para iniciantes, por ordem de progressão.
+// "weeks" = semanas do programa em que o vídeo é o recomendado.
+const FLOW_VIDEOS = [
+  { id: "IePHbQBJriQ", title: "ABC's of Animal Flow for beginners", level: "Fundamentos", length: "Técnica", weeks: [1, 2],
+    note: "Aprende as posições base (beast, crab, ape) com calma antes de fazer sequências." },
+  { id: "fNuhrglhdgI", title: "Animal Flow Workout for Beginners · Follow Along 1", level: "Iniciante", length: "30 s / 10 s", weeks: [3, 4],
+    note: "Blocos de 30 s de trabalho e 10 s de descanso. Faz as pausas que precisares." },
+  { id: "q-FYsDLuyEM", title: "Animal Flow Workout · 20 min Beginner Friendly", level: "Iniciante", length: "20 min", weeks: [5, 6],
+    note: "Sem material. Ritmo controlado, foca-te na técnica." },
+  { id: "r1YqcnkpLG8", title: "Follow Along Animal Flow Routine · 20 min for Beginners", level: "Iniciante", length: "20 min", weeks: [7, 8],
+    note: "Explica cada movimento passo a passo." },
+  { id: "wWnrgF3VA9w", title: "Animal Flow 30-Minute Beginner Level Class", level: "Aula completa", length: "30 min", weeks: [9],
+    note: "Aula guiada com preparação dos pulsos, movimentos base e um flow para iniciantes." },
+];
 const WEEK = [
   { dow: 1, type: "workout", workout: "A", title: "Treino A" },
   { dow: 2, type: "steps", title: `${STEPS_GOAL.toLocaleString("pt-PT")} passos` },

@@ -348,6 +348,33 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
   .day { padding: 1rem; }
   .week-stats b { font-size: 1.3rem; }
 }
+
+/* vídeos de Animal Flow */
+.vids { width: 100%; display: grid; gap: .6rem; }
+.vids .video { margin: 0; }
+.vid {
+  display: flex; gap: .9rem; align-items: center; text-decoration: none; color: var(--ink);
+  background: var(--bg); border-radius: var(--r-md); padding: .85rem 1rem; border: 1.5px solid transparent;
+  transition: border-color .15s;
+}
+.vid:hover { border-color: var(--ink); }
+.vid-play {
+  flex: none; width: 2.8rem; height: 2.8rem; border-radius: 50%; background: var(--ink); position: relative;
+}
+.vid-play::after {
+  content: ""; position: absolute; left: 54%; top: 50%; transform: translate(-50%, -50%);
+  border-style: solid; border-width: .45rem 0 .45rem .75rem; border-color: transparent transparent transparent var(--on-ink);
+}
+.vid.featured { background: var(--ink); color: var(--on-ink); padding: 1.1rem 1.1rem; }
+.vid.featured .vid-play { background: var(--accent); width: 3.4rem; height: 3.4rem; }
+.vid.featured:hover { border-color: var(--accent); }
+.vid-text { display: flex; flex-direction: column; gap: .2rem; min-width: 0; }
+.vid-text em { font-style: normal; font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--accent); }
+.vid-text strong { font-size: .95rem; line-height: 1.25; }
+.vid-text small { font-size: .78rem; opacity: .7; }
+.vid-note { font-size: .82rem; opacity: .85; margin-top: .2rem; }
+.vid-more summary { cursor: pointer; font-weight: 700; font-size: .88rem; padding: .3rem 0; }
+.vid-list { display: grid; gap: .5rem; margin-top: .5rem; }
 </style>
 <header class="top">
     <div class="bar">
@@ -676,6 +703,22 @@ const WORKOUTS = {
 // Semana: 0 = domingo … 6 = sábado (como Date.getDay()).
 const STEPS_GOAL = 11000;
 const FLOW_CHANNEL = "https://www.youtube.com/@strengthsidefollowalongs";
+const FLOW_START = "2026-10-26"; // primeira quarta-feira conta a partir desta semana
+
+// Vídeos de Animal Flow para iniciantes, por ordem de progressão.
+// "weeks" = semanas do programa em que o vídeo é o recomendado.
+const FLOW_VIDEOS = [
+  { id: "IePHbQBJriQ", title: "ABC's of Animal Flow for beginners", level: "Fundamentos", length: "Técnica", weeks: [1, 2],
+    note: "Aprende as posições base (beast, crab, ape) com calma antes de fazer sequências." },
+  { id: "fNuhrglhdgI", title: "Animal Flow Workout for Beginners · Follow Along 1", level: "Iniciante", length: "30 s / 10 s", weeks: [3, 4],
+    note: "Blocos de 30 s de trabalho e 10 s de descanso. Faz as pausas que precisares." },
+  { id: "q-FYsDLuyEM", title: "Animal Flow Workout · 20 min Beginner Friendly", level: "Iniciante", length: "20 min", weeks: [5, 6],
+    note: "Sem material. Ritmo controlado, foca-te na técnica." },
+  { id: "r1YqcnkpLG8", title: "Follow Along Animal Flow Routine · 20 min for Beginners", level: "Iniciante", length: "20 min", weeks: [7, 8],
+    note: "Explica cada movimento passo a passo." },
+  { id: "wWnrgF3VA9w", title: "Animal Flow 30-Minute Beginner Level Class", level: "Aula completa", length: "30 min", weeks: [9],
+    note: "Aula guiada com preparação dos pulsos, movimentos base e um flow para iniciantes." },
+];
 const WEEK = [
   { dow: 1, type: "workout", workout: "A", title: "Treino A" },
   { dow: 2, type: "steps", title: `${STEPS_GOAL.toLocaleString("pt-PT")} passos` },
@@ -1119,6 +1162,42 @@ const WEEK = [
       <span>10 min de estabilização lombar (bird dog, side plank, dead bug)</span></label>`;
   }
 
+  // Semana do programa (1 = semana de FLOW_START) para escolher o vídeo recomendado.
+  function programWeek(date) {
+    const ms = new Date(date + "T12:00:00") - new Date(FLOW_START + "T12:00:00");
+    return Math.max(1, Math.floor(ms / (7 * 864e5)) + 1);
+  }
+
+  function flowVideosHtml(date) {
+    const wk = programWeek(date);
+    const pick =
+      FLOW_VIDEOS.find((v) => v.weeks.includes(wk)) || FLOW_VIDEOS[FLOW_VIDEOS.length - 1];
+    const url = (v) => "https://www.youtube.com/watch?v=" + v.id;
+    const card = (v, featured) => `
+      <a class="vid ${featured ? "featured" : ""}" href="${url(v)}" target="_blank" rel="noopener">
+        <span class="vid-play" aria-hidden="true"></span>
+        <span class="vid-text">
+          ${featured ? `<em>Recomendado · semana ${wk}</em>` : ""}
+          <strong>${escapeHtml(v.title)}</strong>
+          <small>${escapeHtml(v.level)} · ${escapeHtml(v.length)}</small>
+          ${featured ? `<span class="vid-note">${escapeHtml(v.note)}</span>` : ""}
+        </span>
+      </a>`;
+    const embed =
+      !inViewer
+        ? `<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/${pick.id}" title="${escapeHtml(pick.title)}" loading="lazy" allowfullscreen allow="encrypted-media; picture-in-picture"></iframe></div>`
+        : "";
+    return `
+      <div class="vids">
+        ${embed}
+        ${card(pick, true)}
+        <details class="vid-more">
+          <summary>Outros vídeos para iniciantes</summary>
+          <div class="vid-list">${FLOW_VIDEOS.filter((v) => v !== pick).map((v) => card(v, false)).join("")}</div>
+        </details>
+      </div>`;
+  }
+
   function dayBody(plan, date) {
     const d = days[date] || {};
     if (plan.type === "workout") {
@@ -1143,14 +1222,15 @@ const WEEK = [
     if (plan.type === "flow") {
       return `
         <p class="day-desc">Sessão follow-along de 20–30 min, a intensidade leve a moderada: deves acabar com energia, não exausto.</p>
+        ${flowVideosHtml(date)}
         <div class="chips">
-          <a target="_blank" rel="noopener" href="${FLOW_CHANNEL}/videos">▶ Strength Side · follow-alongs</a>
-          <a target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${encodeURIComponent("animal flow beginner wrist prep")}">▶ Preparação dos pulsos</a>
+          <a target="_blank" rel="noopener" href="${FLOW_CHANNEL}/videos">▶ Mais vídeos: Strength Side</a>
         </div>
         <details class="flow-tips">
           <summary>Cuidados com as hérnias e a anca</summary>
           <ul>
-            <li>Começa pelos vídeos para iniciantes e escolhe os mais curtos nas primeiras semanas.</li>
+            <li>Segue a ordem dos vídeos recomendados: primeiro as posições base, depois sessões mais longas.</li>
+            <li>Sempre que o vídeo tiver ape ou agachamento profundo, desce só até a anca ficar a ~90°.</li>
             <li><strong>Boas escolhas:</strong> beast hold e beast crawl (coluna neutra, abdominal ativo), crab hold, wrist prep e os movimentos de ativação.</li>
             <li><strong>Com cuidado ou adaptados:</strong> side kickthrough e crab reach envolvem rotação e extensão da coluna. Faz amplitude curta e lenta, ou salta-os.</li>
             <li><strong>Evitar no início:</strong> scorpion reach (extensão com rotação da lombar) e o ape em agachamento profundo (passa os ~90° de flexão da anca).</li>
