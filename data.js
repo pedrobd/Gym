@@ -291,6 +291,8 @@ const WEEK = [
 const PROTEIN_FACTORS = [1.6, 1.8, 2.0, 2.2]; // g por kg de peso corporal
 const PROTEIN_FOODS = [
   { name: "1 ovo", g: 6 },
+  { name: "1 clara de ovo", g: 4 },
+  { name: "Claras líquidas (100 ml)", g: 11 },
   { name: "Iogurte proteico / skyr (150 g)", g: 15 },
   { name: "Frango ou peru (100 g cozinhado)", g: 30 },
   { name: "Peixe (150 g cozinhado)", g: 30 },
