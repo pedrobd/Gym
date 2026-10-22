@@ -2,6 +2,7 @@
   const STORE_SESSIONS = "gym.sessions.v1";
   const STORE_VIDEOS = "gym.videos.v1";
   const STORE_DAYS = "gym.days.v1";
+  const STORE_FOODS = "gym.foods.v1";
 
   const $ = (sel, el = document) => el.querySelector(sel);
   const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
@@ -32,6 +33,9 @@
   let media = normalizeMedia(load(STORE_VIDEOS, {}));
   // days[date] = { date, steps?, flowDone?, flowMin?, coreDone?, notes? }
   let days = load(STORE_DAYS, {});
+  // Atalhos de proteína (editáveis); começam com os valores de data.js.
+  let foods = load(STORE_FOODS, null) || PROTEIN_FOODS.map((f) => ({ ...f }));
+  let foodsCustomized = !!load(STORE_FOODS, null);
   let remote = null; // { col } quando a base de dados está disponível
   let assets = null;
   let currentWorkout = "A";
@@ -59,6 +63,11 @@
   async function persistDay(d) {
     if (remote) await remote.col.doc("d_" + d.date).set({ ...d, kind: "day" });
     else saveLocal(STORE_DAYS, days);
+  }
+  async function persistFoods() {
+    foodsCustomized = true;
+    if (remote) await remote.col.doc("foods").set({ kind: "foods", items: foods });
+    else saveLocal(STORE_FOODS, foods);
   }
   async function persistMedia() {
     if (remote) await remote.col.doc("media").set({ kind: "media", items: media });
@@ -698,14 +707,21 @@
       : total >= goal
       ? "Objetivo cumprido."
       : `Faltam ${goal - total} g (${fmt1(proteinFactor)} g × ${fmt1(latestWeight(date) || latestWeight())} kg).`;
-    $("#food-grid").innerHTML = PROTEIN_FOODS.map(
-      (f, i) => `<button class="food-btn" data-food="${i}"><span>${escapeHtml(f.name)}</span><b>+${f.g} g</b></button>`
-    ).join("");
+    $("#food-grid").hidden = editingFoods;
+    $("#foods-editor").hidden = !editingFoods;
+    $("#foods-edit").textContent = editingFoods ? "Concluído" : "Editar atalhos";
+    if (editingFoods) {
+      if (!$("#foods-editor").contains(document.activeElement)) renderFoodsEditor();
+    } else {
+      $("#food-grid").innerHTML = foods.length
+        ? foods.map((f, i) => `<button class="food-btn" data-food="${i}"><span>${escapeHtml(f.name)}</span><b>+${f.g} g</b></button>`).join("")
+        : `<p class="muted small">Sem atalhos. Carrega em "Editar atalhos" para criar.</p>`;
+    }
     const items = (days[date] || {}).protein || [];
     $("#food-log").innerHTML = items.length
       ? items
           .map(
-            (it, i) => `<li><span>${escapeHtml(it.name)}</span><b>${it.g} g</b><button class="link" data-food-del="${i}" aria-label="Remover ${escapeHtml(it.name)}">✕</button></li>`
+            (it, i) => `<li><span>${escapeHtml(it.name)}</span><label class="log-g"><input type="number" inputmode="numeric" min="0" step="1" id="log-g-${i}" data-food-edit="${i}" value="${it.g}" aria-label="Proteína de ${escapeHtml(it.name)}"> g</label><button class="link" data-food-del="${i}" aria-label="Remover ${escapeHtml(it.name)}">✕</button></li>`
           )
           .join("")
       : `<li class="empty">Ainda nada registado neste dia. Toca num alimento para somar.</li>`;
@@ -781,6 +797,25 @@
           )
           .join("")}</tbody></table>`
       : "";
+  }
+
+  function renderFoodsEditor() {
+    $("#foods-editor").innerHTML = `
+      <p class="muted small">Muda o nome ou os gramas de proteína de cada atalho. Os registos antigos não mudam.</p>
+      ${foods
+        .map(
+          (f, i) => `
+        <div class="food-edit-row">
+          <input type="text" id="fe-name-${i}" data-fe="${i}" data-fe-field="name" value="${escapeHtml(f.name)}" aria-label="Nome do alimento">
+          <label class="log-g"><input type="number" inputmode="numeric" min="0" step="1" id="fe-g-${i}" data-fe="${i}" data-fe-field="g" value="${f.g}" aria-label="Gramas de proteína"> g</label>
+          <button class="link danger-text" data-fe-del="${i}" aria-label="Apagar ${escapeHtml(f.name)}">✕</button>
+        </div>`
+        )
+        .join("")}
+      <div class="foods-editor-actions">
+        <button class="pill-btn" id="fe-add">+ Novo atalho</button>
+        <button class="link" id="fe-reset">Repor valores originais</button>
+      </div>`;
   }
 
   function lineChart(points, unit) {
@@ -864,10 +899,62 @@
     try { localStorage.setItem("gym.proteinFactor", String(proteinFactor)); } catch {}
     renderBody();
   });
+  let editingFoods = false;
+  $("#foods-edit").addEventListener("click", () => {
+    editingFoods = !editingFoods;
+    if (editingFoods) renderFoodsEditor();
+    renderBody();
+  });
+  $("#foods-editor").addEventListener("change", (e) => {
+    const inp = e.target.closest("[data-fe]");
+    if (!inp) return;
+    const i = Number(inp.dataset.fe);
+    if (inp.dataset.feField === "name") foods[i].name = inp.value.trim() || foods[i].name;
+    else foods[i].g = Math.max(0, Math.round(Number(inp.value) || 0));
+    persistFoods().catch(() => {});
+  });
+  $("#foods-editor").addEventListener("click", (e) => {
+    const del = e.target.closest("[data-fe-del]");
+    if (del) {
+      foods.splice(Number(del.dataset.feDel), 1);
+      persistFoods().catch(() => {});
+      renderFoodsEditor();
+    }
+    if (e.target.closest("#fe-add")) {
+      foods.push({ name: "Novo alimento", g: 10 });
+      persistFoods().catch(() => {});
+      renderFoodsEditor();
+      const n = $(`#fe-name-${foods.length - 1}`);
+      n.focus();
+      n.select();
+    }
+    const reset = e.target.closest("#fe-reset");
+    if (reset) {
+      if (!reset.dataset.armed) {
+        reset.dataset.armed = "1";
+        reset.textContent = "Confirmar: repor todos os atalhos";
+        return;
+      }
+      foods = PROTEIN_FOODS.map((f) => ({ ...f }));
+      persistFoods().catch(() => {});
+      renderFoodsEditor();
+    }
+  });
+  $("#food-log").addEventListener("change", (e) => {
+    const inp = e.target.closest("[data-food-edit]");
+    if (!inp) return;
+    const date = bodyDate();
+    const list = [...((days[date] || {}).protein || [])];
+    const i = Number(inp.dataset.foodEdit);
+    if (!list[i]) return;
+    list[i] = { ...list[i], g: Math.max(0, Math.round(Number(inp.value) || 0)) };
+    inp.blur();
+    updateDay(date, { protein: list });
+  });
   $("#food-grid").addEventListener("click", (e) => {
     const b = e.target.closest("[data-food]");
     if (!b) return;
-    const f = PROTEIN_FOODS[Number(b.dataset.food)];
+    const f = foods[Number(b.dataset.food)];
     const date = bodyDate();
     updateDay(date, { protein: [...((days[date] || {}).protein || []), { name: f.name, g: f.g }] });
   });
@@ -1086,7 +1173,7 @@
 
   let downloads = null;
   $("#export-btn").addEventListener("click", async () => {
-    const data = JSON.stringify({ sessions, videos: media, days }, null, 2);
+    const data = JSON.stringify({ sessions, videos: media, days, foods }, null, 2);
     const filename = `treino-backup-${today()}.json`;
     const status = $("#backup-status");
     if (downloads) {
@@ -1140,6 +1227,12 @@
         }
         if (!remote) saveLocal(STORE_DAYS, days);
       }
+      if (Array.isArray(data.foods)) {
+        foods = data.foods
+          .filter((f) => f && typeof f.name === "string")
+          .map((f) => ({ name: f.name, g: Math.max(0, Math.round(Number(f.g) || 0)) }));
+        await persistFoods();
+      }
       if (data.videos) {
         media = { ...media, ...normalizeMedia(data.videos) };
         await persistMedia();
@@ -1177,6 +1270,7 @@
         const docs = snap.docs.map((d) => d.data());
         const remoteSessions = docs.filter((d) => d.kind === "session").map(({ kind, ...s }) => s);
         const m = docs.find((d) => d.kind === "media");
+        const fd = docs.find((d) => d.kind === "foods");
         const remoteDays = {};
         docs.filter((d) => d.kind === "day").forEach(({ kind, ...d }) => (remoteDays[d.date] = d));
         if (first) {
@@ -1202,6 +1296,8 @@
         sessions = remoteSessions;
         days = remoteDays;
         if (m) media = normalizeMedia(m.items);
+        if (fd && Array.isArray(fd.items)) foods = fd.items;
+        else if (foodsCustomized) persistFoods().catch(() => {});
         sync.textContent = "Guardado na tua conta, sincroniza entre aparelhos.";
         sync.classList.add("ok");
         refresh();

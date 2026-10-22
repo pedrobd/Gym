@@ -450,3 +450,20 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
   .custom-food .pill-btn { grid-column: 1 / -1; }
   .protein-total b { font-size: 2.4rem; }
 }
+
+/* atalhos editáveis */
+.food-head { display: flex; justify-content: space-between; align-items: center; }
+.food-head > span { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.foods-editor { display: grid; gap: .45rem; }
+.foods-editor > p { margin: 0 0 .25rem; }
+.food-edit-row { display: grid; grid-template-columns: 1fr auto auto; gap: .5rem; align-items: center; background: var(--bg); border-radius: var(--r-sm); padding: .4rem .4rem .4rem .5rem; }
+.food-edit-row input[type="text"] { min-width: 0; border-color: transparent; padding: .5rem; }
+.food-edit-row input[type="text"]:focus { border-color: var(--ink); }
+.log-g { display: inline-flex; align-items: center; gap: .3rem; font-size: .85rem; font-weight: 700; color: var(--ink); text-transform: none; letter-spacing: 0; }
+.log-g input { width: 4.2rem; padding: .4rem .3rem; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+.foods-editor-actions { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; margin-top: .3rem; }
+@media (max-width: 600px) {
+  .food-edit-row { grid-template-columns: 1fr auto; row-gap: .2rem; }
+  .food-edit-row input[type="text"] { grid-column: 1 / -1; font-weight: 600; }
+  .food-edit-row .log-g { padding-left: .5rem; }
+}
