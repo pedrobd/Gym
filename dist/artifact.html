@@ -375,6 +375,30 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
 .vid-note { font-size: .82rem; opacity: .85; margin-top: .2rem; }
 .vid-more summary { cursor: pointer; font-weight: 700; font-size: .88rem; padding: .3rem 0; }
 .vid-list { display: grid; gap: .5rem; margin-top: .5rem; }
+
+/* ---------- plano B ---------- */
+.planb { margin-top: 1rem; }
+.planb-toggle {
+  border: 1.5px dashed var(--ink); background: none; color: var(--ink); cursor: pointer;
+  border-radius: 999px; padding: .55rem 1rem; font: 700 .8rem/1 var(--font-body);
+}
+.planb-toggle:hover, .planb-toggle[aria-expanded="true"] { background: var(--ink); color: var(--on-ink); border-style: solid; }
+.planb-list { display: grid; gap: .5rem; margin-top: .75rem; }
+.planb-opt {
+  display: flex; gap: .75rem; align-items: center; text-align: left; width: 100%;
+  background: var(--bg); color: var(--ink); border: 1.5px solid transparent; border-radius: var(--r-md);
+  padding: .5rem .75rem .5rem .5rem; cursor: pointer; font: 600 .9rem/1.25 var(--font-body);
+}
+.planb-opt:hover { border-color: var(--ink); }
+.planb-opt.active { border-color: var(--ink); background: var(--tint-warm); }
+.planb-opt img, .planb-noimg { flex: none; width: 4.5rem; aspect-ratio: 3 / 2; object-fit: cover; border-radius: 10px; background: var(--surface-2); }
+.planb-opt span { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
+.planb-opt small { font-size: .66rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.planb-tag {
+  font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+  background: var(--tint-warm); color: var(--ink); border-radius: 999px; padding: .3rem .65rem;
+}
+.card.is-alt { box-shadow: inset 0 0 0 2px var(--tint-warm); }
 </style>
 <header class="top">
     <div class="bar">
@@ -448,6 +472,9 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
       <label class="select-field">Exercício
         <select id="progress-exercise"></select>
       </label>
+      <label class="select-field" id="progress-variant-field" hidden>Variante
+        <select id="progress-variant"></select>
+      </label>
       <div id="progress-chart" class="chart"></div>
       <div id="progress-table"></div>
 
@@ -512,6 +539,7 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
     <button id="timer-stop" aria-label="Parar cronómetro">✕</button>
   </div>
 <script>
+// Plano B: cada exercício tem "alts" (fotos em img/alt-<id>-0.jpg / -1.jpg).
 // Fotos em img/<id>-0.jpg (início) e img/<id>-1.jpg (fim), de free-exercise-db (domínio público).
 // Plano de treino: 2x/semana, 2 séries por exercício, adaptado a hérnias e anca.
 const WORKOUTS = {
@@ -533,6 +561,12 @@ const WORKOUTS = {
           "Lombar sempre colada ao encosto — se descolar, desceste demais.",
         ],
         video: "leg press feet high wide technique",
+        alts: [
+          { id: "leg-extension", name: "Extensão de pernas na máquina", q: "leg extension machine technique",
+            cues: ["Costas encostadas, pega nas pegas laterais.", "Sobe controlado e desce em 2–3 s.", "Se tiveres tempo, junta 2 séries de curl femoral sentado."] },
+          { id: "seated-leg-curl", name: "Curl femoral sentado", q: "seated leg curl technique",
+            cues: ["Lombar encostada, almofada por cima dos joelhos bem presa.", "Puxa os calcanhares para baixo sem levantar a anca do banco."] },
+        ],
         photoNote: "Na foto a descida vai mais fundo do que deves: para a ~90° no joelho.",
       },
       {
@@ -549,6 +583,12 @@ const WORKOUTS = {
           "Sem balanço do tronco.",
         ],
         video: "neutral grip lat pulldown technique",
+        alts: [
+          { id: "one-arm-pulldown", name: "Puxada unilateral na polia, sentado", q: "single arm lat pulldown seated technique",
+            cues: ["Puxa à frente, cotovelo em direção à anca.", "Tronco quieto, sem rodar a coluna."] },
+          { id: "straight-arm-pulldown", name: "Pullover na polia com corda", q: "straight arm rope pulldown technique",
+            cues: ["Inclina ligeiramente o tronco a partir da anca, lombar neutra.", "Braços quase esticados, leva a corda até às coxas."] },
+        ],
       },
       {
         id: "shoulder-press",
@@ -564,7 +604,14 @@ const WORKOUTS = {
           "Se o pescoço reclamar, troca por landmine press.",
         ],
         video: "machine shoulder press neutral grip",
-        alt: "landmine press",
+        alts: [
+          { id: "db-shoulder-press", name: "Press com halteres sentado, com encosto", q: "seated dumbbell shoulder press neutral grip",
+            cues: ["Banco quase vertical, costas e cabeça apoiadas.", "Pega neutra (palmas viradas uma para a outra).", "Não bloqueies os cotovelos em cima."] },
+          { id: "cable-shoulder-press", name: "Press de ombros na polia, sentado", q: "seated cable shoulder press",
+            cues: ["Banco com encosto entre as duas polias.", "Empurra para cima e ligeiramente para a frente."] },
+          { id: "landmine", name: "Landmine press", q: "landmine press technique", photo: false,
+            cues: ["Ajoelhado ou em pé, barra apoiada no canto.", "Empurra na diagonal: poupa o pescoço e os ombros."] },
+        ],
       },
       {
         id: "triceps-corda",
@@ -579,6 +626,12 @@ const WORKOUTS = {
           "Nada de extensões acima da cabeça (cervical).",
         ],
         video: "tricep rope pushdown technique",
+        alts: [
+          { id: "vbar-pushdown", name: "Tríceps na polia com barra em V", q: "v bar tricep pushdown technique",
+            cues: ["Cotovelos fixos junto ao corpo.", "Estica completamente sem inclinar o tronco."] },
+          { id: "dip-machine", name: "Tríceps na máquina de dips, sentado", q: "seated dip machine triceps",
+            cues: ["Costas apoiadas, ombros para baixo.", "Desce só até os cotovelos a ~90°."] },
+        ],
       },
       {
         id: "gemeos",
@@ -592,6 +645,12 @@ const WORKOUTS = {
           "Amplitude completa, pausa de 1 s em baixo.",
         ],
         video: "seated calf raise technique",
+        alts: [
+          { id: "calf-leg-press", name: "Gémeos no leg press", q: "calf press on leg press machine",
+            cues: ["Só a ponta dos pés na plataforma, joelhos quase esticados.", "Mantém os travões de segurança à mão."] },
+          { id: "db-seated-calf", name: "Gémeos sentado com halter", q: "seated dumbbell calf raise",
+            cues: ["Ponta do pé num disco ou degrau, halter sobre o joelho.", "Uma perna de cada vez, amplitude completa."] },
+        ],
       },
       {
         id: "face-pull",
@@ -605,6 +664,12 @@ const WORKOUTS = {
           "Rodar os ombros para fora no final.",
         ],
         video: "face pull cable technique",
+        alts: [
+          { id: "reverse-fly", name: "Reverse fly na máquina (pec deck invertido)", q: "reverse pec deck fly technique",
+            cues: ["Peito encostado ao apoio.", "Abre os braços sem encolher os ombros."] },
+          { id: "rear-delt-row", name: "Remada alta para deltóide posterior na polia", q: "cable rope rear delt row",
+            cues: ["Polia à altura do peito, corda.", "Puxa com os cotovelos abertos, em direção à cara."] },
+        ],
       },
     ],
   },
@@ -625,10 +690,16 @@ const WORKOUTS = {
           "Omoplatas retraídas, descer controlado.",
         ],
         video: "incline chest press machine technique",
+        alts: [
+          { id: "incline-db-press", name: "Supino inclinado com halteres", q: "incline dumbbell press technique",
+            cues: ["Banco a 30°, costas e cabeça apoiadas.", "Pega neutra se os ombros reclamarem."] },
+          { id: "machine-chest-press", name: "Chest press em máquina (plano)", q: "machine chest press technique",
+            cues: ["Costas apoiadas, pegas à altura do peito.", "Omoplatas para trás durante toda a série."] },
+        ],
       },
       {
         id: "hip-thrust",
-        name: "Hip thrust em máquina ou glute bridge",
+        name: "Hip thrust em máquina",
         compound: true,
         sets: [
           { label: "Top set", min: 8, max: 10 },
@@ -640,8 +711,13 @@ const WORKOUTS = {
           "Queixo ligeiramente recolhido.",
         ],
         video: "hip thrust machine technique",
+        alts: [
+          { id: "glute-bridge", name: "Glute bridge no chão", q: "glute bridge technique",
+            cues: ["Sem peso, com halter ou barra almofadada na anca.", "Sobe até a anca ficar alinhada, sem arquear a lombar.", "Pausa de 1–2 s em cima."] },
+          { id: "cable-kickback", name: "Kickback de glúteo na polia", q: "cable glute kickback technique",
+            cues: ["Mãos na máquina, abdominal ativo.", "Leva a perna para trás só até onde a lombar não arqueia.", "Uma perna de cada vez; regista o peso de uma perna."] },
+        ],
         photoNote: "Foto com barra; na máquina o movimento é o mesmo.",
-        alt: "glute bridge",
       },
       {
         id: "remada",
@@ -656,7 +732,12 @@ const WORKOUTS = {
           "Puxar com os cotovelos, sem balançar a lombar.",
         ],
         video: "chest supported machine row technique",
-        alt: "seated cable row",
+        alts: [
+          { id: "machine-row", name: "Remada em máquina (outra máquina)", q: "seated machine row technique",
+            cues: ["Peito no apoio, se a máquina tiver.", "Puxa com os cotovelos, sem balançar."] },
+          { id: "db-row", name: "Remada unilateral com halter, apoiado no banco", q: "one arm dumbbell row bench supported",
+            cues: ["Mão e joelho no banco, coluna neutra e quieta.", "Puxa o halter em direção à anca."] },
+        ],
       },
       {
         id: "elevacoes-laterais",
@@ -670,6 +751,12 @@ const WORKOUTS = {
           "Subir até à linha dos ombros, sem encolher.",
         ],
         video: "seated dumbbell lateral raise technique",
+        alts: [
+          { id: "cable-lateral", name: "Elevação lateral na polia, sentado", q: "seated cable lateral raise",
+            cues: ["Um braço de cada vez se só houver uma polia.", "Sobe até à linha do ombro."] },
+          { id: "lying-lateral", name: "Elevação lateral deitado de lado", q: "lying one arm lateral raise",
+            cues: ["Deitado de lado num banco, coluna totalmente apoiada.", "Halter leve, movimento lento."] },
+        ],
       },
       {
         id: "curl",
@@ -680,6 +767,12 @@ const WORKOUTS = {
         ],
         cues: ["Braço apoiado, sem impulso.", "Descida controlada de 2–3 s."],
         video: "preacher curl machine technique",
+        alts: [
+          { id: "machine-curl", name: "Curl de bíceps em máquina", q: "machine bicep curl technique",
+            cues: ["Braços apoiados, costas direitas.", "Descida controlada de 2–3 s."] },
+          { id: "incline-curl", name: "Curl com halteres em banco inclinado", q: "incline dumbbell curl technique",
+            cues: ["Costas e cabeça apoiadas no banco.", "Cotovelos parados, sem impulso."] },
+        ],
       },
       {
         id: "pallof",
@@ -695,6 +788,12 @@ const WORKOUTS = {
           "Abdominal e glúteos contraídos, coluna neutra.",
         ],
         video: "pallof press technique",
+        alts: [
+          { id: "dead-bug", name: "Dead bug", q: "dead bug exercise technique",
+            cues: ["Lombar colada ao chão durante todo o movimento.", "Estende braço e perna opostos devagar."] },
+          { id: "side-bridge", name: "Side plank", q: "side plank technique",
+            cues: ["Corpo em linha reta, apoio no antebraço.", "Regista os segundos em vez das reps."] },
+        ],
       },
     ],
   },
@@ -816,10 +915,22 @@ const WEEK = [
     return [...sessions].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.savedAt - b.savedAt));
   }
 
-  // Último registo de um exercício antes de uma data (exclusive).
-  function lastEntry(exId, beforeDate) {
+  // ---------- plano B ----------
+  // Cada sessão guarda em `variants[exId]` o id da alternativa usada (sem entrada = exercício principal).
+  const variantKey = (s, exId) => (s && s.variants && s.variants[exId]) || "main";
+  let variants = {}; // escolha atual no formulário do treino
+
+  function variantOf(ex, key) {
+    const alt = key && key !== "main" && (ex.alts || []).find((a) => a.id === key);
+    if (!alt) return { key: "main", name: ex.name, cues: ex.cues, q: ex.video, photo: `img/${ex.id}`, photoNote: ex.photoNote };
+    return { key: alt.id, name: alt.name, cues: alt.cues, q: alt.q, photo: alt.photo === false ? null : `img/alt-${alt.id}`, alt: true };
+  }
+
+  // Último registo de um exercício (na mesma variante) antes de uma data (exclusive).
+  function lastEntry(exId, beforeDate, key = "main") {
     const list = sortedSessions().filter(
-      (s) => s.entries[exId] && s.entries[exId].some((r) => r.reps) && (!beforeDate || s.date < beforeDate)
+      (s) =>
+        s.entries[exId] && s.entries[exId].some((r) => r.reps) && (!beforeDate || s.date < beforeDate) && variantKey(s, exId) === key
     );
     const s = list[list.length - 1];
     return s ? { date: s.date, sets: s.entries[exId] } : null;
@@ -849,7 +960,7 @@ const WEEK = [
   function safeUrl(url) {
     return /^https?:\/\//i.test(url) ? url : null;
   }
-  function demoHtml(ex) {
+  function demoHtml(ex, v) {
     const m = media[ex.id] || {};
     const search = (q) => "https://www.youtube.com/results?search_query=" + encodeURIComponent(q);
     let block = "";
@@ -865,20 +976,21 @@ const WEEK = [
       block = `<div class="video"><img src="${escapeHtml(m.link)}" alt="${escapeHtml(ex.name)}" loading="lazy"></div>`;
     }
     const link = m.link && safeUrl(m.link);
-    const photos = `
+    const photos = v.photo
+      ? `
       <figure class="photos">
         <div class="photo-pair">
-          <div><img src="img/${ex.id}-0.jpg" alt="${escapeHtml(ex.name)}: fase 1" loading="lazy" width="640" height="427"><span>Fase 1</span></div>
-          <div><img src="img/${ex.id}-1.jpg" alt="${escapeHtml(ex.name)}: fase 2" loading="lazy" width="640" height="427"><span>Fase 2</span></div>
+          <div><img src="${v.photo}-0.jpg" alt="${escapeHtml(v.name)}: fase 1" loading="lazy" width="640" height="427"><span>Fase 1</span></div>
+          <div><img src="${v.photo}-1.jpg" alt="${escapeHtml(v.name)}: fase 2" loading="lazy" width="640" height="427"><span>Fase 2</span></div>
         </div>
-        ${ex.photoNote ? `<figcaption>${escapeHtml(ex.photoNote)}</figcaption>` : ""}
-      </figure>`;
+        ${v.photoNote ? `<figcaption>${escapeHtml(v.photoNote)}</figcaption>` : ""}
+      </figure>`
+      : "";
     return `
       ${photos}
       ${block}
       <div class="chips">
-        <a target="_blank" rel="noopener" href="${search(ex.video)}">▶ Vídeos de demonstração</a>
-        ${ex.alt ? `<a target="_blank" rel="noopener" href="${search(ex.alt + " technique")}">▶ Alternativa: ${escapeHtml(ex.alt)}</a>` : ""}
+        <a target="_blank" rel="noopener" href="${search(v.q)}">▶ Vídeos de demonstração</a>
         ${link ? `<a target="_blank" rel="noopener" href="${escapeHtml(link)}">▶ O meu vídeo</a>` : ""}
         <button class="link set-video" data-ex="${ex.id}" aria-expanded="false">${m.link || m.asset ? "Trocar vídeo/foto" : "Fixar vídeo/foto"}</button>
       </div>
@@ -917,48 +1029,84 @@ const WEEK = [
     $("#workout-day").textContent = def.day;
     $("#session-notes").value = existing ? existing.notes || "" : "";
 
-    $("#exercise-list").innerHTML = def.exercises
-      .map((ex, i) => {
-        const last = lastEntry(ex.id, date);
-        const current = existing && existing.entries[ex.id];
-        const rest = ex.compound ? 210 : 90;
-        const rows = ex.sets
-          .map((set, si) => {
-            const prev = last && last.sets[si];
-            const cur = current && current[si];
-            return `
-              <div class="set-row">
-                <span class="set-label">${set.label}<small>${set.min}–${set.max} reps</small></span>
-                <label><span>kg</span><input type="number" inputmode="decimal" step="0.5" min="0" id="in-${ex.id}-${si}-kg" data-ex="${ex.id}" data-set="${si}" data-field="kg"
-                  value="${cur && cur.kg !== "" ? cur.kg : ""}" placeholder="${prev && prev.kg !== "" ? prev.kg : "–"}"></label>
-                <label><span>reps</span><input type="number" inputmode="numeric" step="1" min="0" id="in-${ex.id}-${si}-reps" data-ex="${ex.id}" data-set="${si}" data-field="reps"
-                  value="${cur && cur.reps ? cur.reps : ""}" placeholder="${prev && prev.reps ? prev.reps : "–"}"></label>
-              </div>`;
-          })
-          .join("");
-        return `
-          <article class="card" data-ex="${ex.id}">
-            <header>
-              <span class="num">${i + 1}</span>
-              <div>
-                <h3>${escapeHtml(ex.name)}</h3>
-                <span class="tag ${ex.compound ? "compound" : ""}">${ex.compound ? "Composto · parar a 1–2 reps da falha" : "Isolamento · podes ir à falha"}</span>
-              </div>
-            </header>
-            <ul class="cues">${ex.cues.map((c) => `<li>${escapeHtml(c)}</li>`).join("")}</ul>
-            ${demoHtml(ex)}
-            ${i < 3 ? `<div class="warmup" data-warmup="${ex.id}"></div>` : ""}
-            <div class="hint">${last ? `<span class="muted">Último (${fmtDate(last.date)}): ${last.sets
-              .filter((r) => r.reps)
-              .map((r) => `${r.kg !== "" ? r.kg + "×" : ""}${r.reps}`)
-              .join(" · ")}</span><br>` : ""}${suggestion(ex, last)}</div>
-            <div class="sets">${rows}</div>
-            <button class="rest" data-rest="${rest}" data-name="${escapeHtml(ex.name)}">⏱ Descanso ${ex.compound ? "3–4 min" : "1–2 min"}</button>
-          </article>`;
-      })
-      .join("");
+    variants = existing && existing.variants ? { ...existing.variants } : {};
+    $("#exercise-list").innerHTML = def.exercises.map((ex, i) => renderCard(ex, i, date, existing)).join("");
 
     def.exercises.forEach((ex, i) => i < 3 && updateWarmup(ex));
+  }
+
+  function planBHtml(ex, v) {
+    const opts = [variantOf(ex, "main"), ...(ex.alts || []).map((a) => variantOf(ex, a.id))];
+    return `
+      <div class="planb">
+        <button class="planb-toggle" data-planb="${ex.id}" aria-expanded="false">${v.alt ? "Trocar exercício" : "Máquina ocupada? Plano B"}</button>
+        <div class="planb-list" data-planb-list="${ex.id}" hidden>
+          ${opts
+            .map(
+              (o) => `
+            <button class="planb-opt ${o.key === v.key ? "active" : ""}" data-swap-ex="${ex.id}" data-swap="${o.key}">
+              ${o.photo ? `<img src="${o.photo}-0.jpg" alt="" loading="lazy">` : `<span class="planb-noimg" aria-hidden="true"></span>`}
+              <span><small>${o.alt ? "Plano B" : "Principal"}</small>${escapeHtml(o.name)}</span>
+            </button>`
+            )
+            .join("")}
+        </div>
+      </div>`;
+  }
+
+  function renderCard(ex, i, date, existing) {
+    const v = variantOf(ex, variants[ex.id]);
+    const last = lastEntry(ex.id, date, v.key);
+    const current = existing && variantKey(existing, ex.id) === v.key && existing.entries[ex.id];
+    const rest = ex.compound ? 210 : 90;
+    const rows = ex.sets
+      .map((set, si) => {
+        const prev = last && last.sets[si];
+        const cur = current && current[si];
+        return `
+          <div class="set-row">
+            <span class="set-label">${set.label}<small>${set.min}–${set.max} reps</small></span>
+            <label><span>kg</span><input type="number" inputmode="decimal" step="0.5" min="0" id="in-${ex.id}-${si}-kg" data-ex="${ex.id}" data-set="${si}" data-field="kg"
+              value="${cur && cur.kg !== "" ? cur.kg : ""}" placeholder="${prev && prev.kg !== "" ? prev.kg : "–"}"></label>
+            <label><span>reps</span><input type="number" inputmode="numeric" step="1" min="0" id="in-${ex.id}-${si}-reps" data-ex="${ex.id}" data-set="${si}" data-field="reps"
+              value="${cur && cur.reps ? cur.reps : ""}" placeholder="${prev && prev.reps ? prev.reps : "–"}"></label>
+          </div>`;
+      })
+      .join("");
+    return `
+      <article class="card ${v.alt ? "is-alt" : ""}" data-ex="${ex.id}" data-index="${i}">
+        <header>
+          <span class="num">${i + 1}</span>
+          <div>
+            ${v.alt ? `<span class="planb-tag">Plano B · em vez de ${escapeHtml(ex.name)}</span>` : ""}
+            <h3>${escapeHtml(v.name)}</h3>
+            <span class="tag ${ex.compound ? "compound" : ""}">${ex.compound ? "Composto · parar a 1–2 reps da falha" : "Isolamento · podes ir à falha"}</span>
+          </div>
+        </header>
+        ${planBHtml(ex, v)}
+        <ul class="cues">${v.cues.map((c) => `<li>${escapeHtml(c)}</li>`).join("")}</ul>
+        ${demoHtml(ex, v)}
+        ${i < 3 ? `<div class="warmup" data-warmup="${ex.id}"></div>` : ""}
+        <div class="hint">${last ? `<span class="muted">Último (${fmtDate(last.date)}): ${last.sets
+          .filter((r) => r.reps)
+          .map((r) => `${r.kg !== "" ? r.kg + "×" : ""}${r.reps}`)
+          .join(" · ")}</span><br>` : v.alt ? `<span class="muted">Primeira vez com este exercício: começa leve e ajusta.</span><br>` : ""}${last || !v.alt ? suggestion(ex, last) : ""}</div>
+        <div class="sets">${rows}</div>
+        <button class="rest" data-rest="${rest}" data-name="${escapeHtml(v.name)}">⏱ Descanso ${ex.compound ? "3–4 min" : "1–2 min"}</button>
+      </article>`;
+  }
+
+  function swapVariant(exId, key) {
+    const ex = allExercises.find((x) => x.id === exId);
+    const card = $(`.card[data-ex="${exId}"]`);
+    if (!ex || !card) return;
+    if (key === "main") delete variants[exId];
+    else variants[exId] = key;
+    dirty = true;
+    const date = $("#session-date").value || today();
+    card.outerHTML = renderCard(ex, Number(card.dataset.index), date, sessionFor(currentWorkout, date));
+    updateWarmup(ex);
+    $(`.card[data-ex="${exId}"]`).scrollIntoView({ block: "start", behavior: "smooth" });
   }
 
   function topKg(exId) {
@@ -990,6 +1138,12 @@ const WEEK = [
     return entries;
   }
 
+  function collectVariants(entries) {
+    const out = {};
+    Object.keys(entries).forEach((id) => variants[id] && (out[id] = variants[id]));
+    return out;
+  }
+
   async function saveSession() {
     const date = $("#session-date").value || today();
     const entries = collectSession();
@@ -999,11 +1153,12 @@ const WEEK = [
       return;
     }
     const notes = $("#session-notes").value.trim();
+    const used = collectVariants(entries);
     let s = sessionFor(currentWorkout, date);
     if (s) {
-      Object.assign(s, { entries, notes, savedAt: Date.now() });
+      Object.assign(s, { entries, variants: used, notes, savedAt: Date.now() });
     } else {
-      s = { id: sessionId(currentWorkout, date), workout: currentWorkout, date, entries, notes, savedAt: Date.now() };
+      s = { id: sessionId(currentWorkout, date), workout: currentWorkout, date, entries, variants: used, notes, savedAt: Date.now() };
       sessions.push(s);
     }
     status.textContent = "A guardar…";
@@ -1028,8 +1183,19 @@ const WEEK = [
         .join("");
     }
     const ex = allExercises.find((e) => e.id === select.value) || allExercises[0];
-    const points = sortedSessions()
-      .filter((s) => s.entries[ex.id] && s.entries[ex.id][0] && s.entries[ex.id][0].reps)
+    const withData = sortedSessions().filter((s) => s.entries[ex.id] && s.entries[ex.id][0] && s.entries[ex.id][0].reps);
+    const keys = [...new Set(withData.map((s) => variantKey(s, ex.id)))];
+    const vSel = $("#progress-variant");
+    if (vSel.dataset.ex !== ex.id || [...vSel.options].map((o) => o.value).join() !== ["main", ...keys.filter((k) => k !== "main")].join()) {
+      vSel.dataset.ex = ex.id;
+      vSel.innerHTML = ["main", ...keys.filter((k) => k !== "main")]
+        .map((k) => `<option value="${k}">${k === "main" ? "Principal" : "Plano B"}: ${escapeHtml(variantOf(ex, k).name)}</option>`)
+        .join("");
+    }
+    $("#progress-variant-field").hidden = !keys.some((k) => k !== "main");
+    const key = vSel.value || "main";
+    const points = withData
+      .filter((s) => variantKey(s, ex.id) === key)
       .map((s) => {
         const top = s.entries[ex.id][0];
         const kg = Number(top.kg) || 0;
@@ -1359,6 +1525,7 @@ const WEEK = [
   $("#save-session").addEventListener("click", saveSession);
   $("#session-notes").addEventListener("input", () => (dirty = true));
   $("#progress-exercise").addEventListener("change", renderProgress);
+  $("#progress-variant").addEventListener("change", renderProgress);
 
   $("#exercise-list").addEventListener("input", (e) => {
     const inp = e.target;
@@ -1391,6 +1558,15 @@ const WEEK = [
   $("#exercise-list").addEventListener("click", (e) => {
     const rest = e.target.closest("[data-rest]");
     if (rest) startTimer(Number(rest.dataset.rest), rest.dataset.name);
+
+    const pb = e.target.closest("[data-planb]");
+    if (pb) {
+      const list = $(`[data-planb-list="${pb.dataset.planb}"]`);
+      list.hidden = !list.hidden;
+      pb.setAttribute("aria-expanded", String(!list.hidden));
+    }
+    const sw = e.target.closest("[data-swap]");
+    if (sw) swapVariant(sw.dataset.swapEx, sw.dataset.swap);
 
     const sv = e.target.closest(".set-video");
     if (sv) {
@@ -1521,7 +1697,7 @@ const WEEK = [
       let n = 0;
       for (const raw of data.sessions) {
         if (!raw || !WORKOUTS[raw.workout] || !/^\d{4}-\d{2}-\d{2}$/.test(raw.date) || typeof raw.entries !== "object") continue;
-        const s = { id: sessionId(raw.workout, raw.date), workout: raw.workout, date: raw.date, entries: raw.entries, notes: String(raw.notes || ""), savedAt: Number(raw.savedAt) || Date.now() };
+        const s = { id: sessionId(raw.workout, raw.date), workout: raw.workout, date: raw.date, entries: raw.entries, variants: raw.variants && typeof raw.variants === "object" ? raw.variants : {}, notes: String(raw.notes || ""), savedAt: Number(raw.savedAt) || Date.now() };
         sessions = sessions.filter((x) => !(x.workout === s.workout && x.date === s.date));
         sessions.push(s);
         if (remote) await persistSession(s);

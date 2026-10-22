@@ -84,10 +84,22 @@
     return [...sessions].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.savedAt - b.savedAt));
   }
 
-  // Último registo de um exercício antes de uma data (exclusive).
-  function lastEntry(exId, beforeDate) {
+  // ---------- plano B ----------
+  // Cada sessão guarda em `variants[exId]` o id da alternativa usada (sem entrada = exercício principal).
+  const variantKey = (s, exId) => (s && s.variants && s.variants[exId]) || "main";
+  let variants = {}; // escolha atual no formulário do treino
+
+  function variantOf(ex, key) {
+    const alt = key && key !== "main" && (ex.alts || []).find((a) => a.id === key);
+    if (!alt) return { key: "main", name: ex.name, cues: ex.cues, q: ex.video, photo: `img/${ex.id}`, photoNote: ex.photoNote };
+    return { key: alt.id, name: alt.name, cues: alt.cues, q: alt.q, photo: alt.photo === false ? null : `img/alt-${alt.id}`, alt: true };
+  }
+
+  // Último registo de um exercício (na mesma variante) antes de uma data (exclusive).
+  function lastEntry(exId, beforeDate, key = "main") {
     const list = sortedSessions().filter(
-      (s) => s.entries[exId] && s.entries[exId].some((r) => r.reps) && (!beforeDate || s.date < beforeDate)
+      (s) =>
+        s.entries[exId] && s.entries[exId].some((r) => r.reps) && (!beforeDate || s.date < beforeDate) && variantKey(s, exId) === key
     );
     const s = list[list.length - 1];
     return s ? { date: s.date, sets: s.entries[exId] } : null;
@@ -117,7 +129,7 @@
   function safeUrl(url) {
     return /^https?:\/\//i.test(url) ? url : null;
   }
-  function demoHtml(ex) {
+  function demoHtml(ex, v) {
     const m = media[ex.id] || {};
     const search = (q) => "https://www.youtube.com/results?search_query=" + encodeURIComponent(q);
     let block = "";
@@ -133,20 +145,21 @@
       block = `<div class="video"><img src="${escapeHtml(m.link)}" alt="${escapeHtml(ex.name)}" loading="lazy"></div>`;
     }
     const link = m.link && safeUrl(m.link);
-    const photos = `
+    const photos = v.photo
+      ? `
       <figure class="photos">
         <div class="photo-pair">
-          <div><img src="img/${ex.id}-0.jpg" alt="${escapeHtml(ex.name)}: fase 1" loading="lazy" width="640" height="427"><span>Fase 1</span></div>
-          <div><img src="img/${ex.id}-1.jpg" alt="${escapeHtml(ex.name)}: fase 2" loading="lazy" width="640" height="427"><span>Fase 2</span></div>
+          <div><img src="${v.photo}-0.jpg" alt="${escapeHtml(v.name)}: fase 1" loading="lazy" width="640" height="427"><span>Fase 1</span></div>
+          <div><img src="${v.photo}-1.jpg" alt="${escapeHtml(v.name)}: fase 2" loading="lazy" width="640" height="427"><span>Fase 2</span></div>
         </div>
-        ${ex.photoNote ? `<figcaption>${escapeHtml(ex.photoNote)}</figcaption>` : ""}
-      </figure>`;
+        ${v.photoNote ? `<figcaption>${escapeHtml(v.photoNote)}</figcaption>` : ""}
+      </figure>`
+      : "";
     return `
       ${photos}
       ${block}
       <div class="chips">
-        <a target="_blank" rel="noopener" href="${search(ex.video)}">▶ Vídeos de demonstração</a>
-        ${ex.alt ? `<a target="_blank" rel="noopener" href="${search(ex.alt + " technique")}">▶ Alternativa: ${escapeHtml(ex.alt)}</a>` : ""}
+        <a target="_blank" rel="noopener" href="${search(v.q)}">▶ Vídeos de demonstração</a>
         ${link ? `<a target="_blank" rel="noopener" href="${escapeHtml(link)}">▶ O meu vídeo</a>` : ""}
         <button class="link set-video" data-ex="${ex.id}" aria-expanded="false">${m.link || m.asset ? "Trocar vídeo/foto" : "Fixar vídeo/foto"}</button>
       </div>
@@ -185,48 +198,84 @@
     $("#workout-day").textContent = def.day;
     $("#session-notes").value = existing ? existing.notes || "" : "";
 
-    $("#exercise-list").innerHTML = def.exercises
-      .map((ex, i) => {
-        const last = lastEntry(ex.id, date);
-        const current = existing && existing.entries[ex.id];
-        const rest = ex.compound ? 210 : 90;
-        const rows = ex.sets
-          .map((set, si) => {
-            const prev = last && last.sets[si];
-            const cur = current && current[si];
-            return `
-              <div class="set-row">
-                <span class="set-label">${set.label}<small>${set.min}–${set.max} reps</small></span>
-                <label><span>kg</span><input type="number" inputmode="decimal" step="0.5" min="0" id="in-${ex.id}-${si}-kg" data-ex="${ex.id}" data-set="${si}" data-field="kg"
-                  value="${cur && cur.kg !== "" ? cur.kg : ""}" placeholder="${prev && prev.kg !== "" ? prev.kg : "–"}"></label>
-                <label><span>reps</span><input type="number" inputmode="numeric" step="1" min="0" id="in-${ex.id}-${si}-reps" data-ex="${ex.id}" data-set="${si}" data-field="reps"
-                  value="${cur && cur.reps ? cur.reps : ""}" placeholder="${prev && prev.reps ? prev.reps : "–"}"></label>
-              </div>`;
-          })
-          .join("");
-        return `
-          <article class="card" data-ex="${ex.id}">
-            <header>
-              <span class="num">${i + 1}</span>
-              <div>
-                <h3>${escapeHtml(ex.name)}</h3>
-                <span class="tag ${ex.compound ? "compound" : ""}">${ex.compound ? "Composto · parar a 1–2 reps da falha" : "Isolamento · podes ir à falha"}</span>
-              </div>
-            </header>
-            <ul class="cues">${ex.cues.map((c) => `<li>${escapeHtml(c)}</li>`).join("")}</ul>
-            ${demoHtml(ex)}
-            ${i < 3 ? `<div class="warmup" data-warmup="${ex.id}"></div>` : ""}
-            <div class="hint">${last ? `<span class="muted">Último (${fmtDate(last.date)}): ${last.sets
-              .filter((r) => r.reps)
-              .map((r) => `${r.kg !== "" ? r.kg + "×" : ""}${r.reps}`)
-              .join(" · ")}</span><br>` : ""}${suggestion(ex, last)}</div>
-            <div class="sets">${rows}</div>
-            <button class="rest" data-rest="${rest}" data-name="${escapeHtml(ex.name)}">⏱ Descanso ${ex.compound ? "3–4 min" : "1–2 min"}</button>
-          </article>`;
-      })
-      .join("");
+    variants = existing && existing.variants ? { ...existing.variants } : {};
+    $("#exercise-list").innerHTML = def.exercises.map((ex, i) => renderCard(ex, i, date, existing)).join("");
 
     def.exercises.forEach((ex, i) => i < 3 && updateWarmup(ex));
+  }
+
+  function planBHtml(ex, v) {
+    const opts = [variantOf(ex, "main"), ...(ex.alts || []).map((a) => variantOf(ex, a.id))];
+    return `
+      <div class="planb">
+        <button class="planb-toggle" data-planb="${ex.id}" aria-expanded="false">${v.alt ? "Trocar exercício" : "Máquina ocupada? Plano B"}</button>
+        <div class="planb-list" data-planb-list="${ex.id}" hidden>
+          ${opts
+            .map(
+              (o) => `
+            <button class="planb-opt ${o.key === v.key ? "active" : ""}" data-swap-ex="${ex.id}" data-swap="${o.key}">
+              ${o.photo ? `<img src="${o.photo}-0.jpg" alt="" loading="lazy">` : `<span class="planb-noimg" aria-hidden="true"></span>`}
+              <span><small>${o.alt ? "Plano B" : "Principal"}</small>${escapeHtml(o.name)}</span>
+            </button>`
+            )
+            .join("")}
+        </div>
+      </div>`;
+  }
+
+  function renderCard(ex, i, date, existing) {
+    const v = variantOf(ex, variants[ex.id]);
+    const last = lastEntry(ex.id, date, v.key);
+    const current = existing && variantKey(existing, ex.id) === v.key && existing.entries[ex.id];
+    const rest = ex.compound ? 210 : 90;
+    const rows = ex.sets
+      .map((set, si) => {
+        const prev = last && last.sets[si];
+        const cur = current && current[si];
+        return `
+          <div class="set-row">
+            <span class="set-label">${set.label}<small>${set.min}–${set.max} reps</small></span>
+            <label><span>kg</span><input type="number" inputmode="decimal" step="0.5" min="0" id="in-${ex.id}-${si}-kg" data-ex="${ex.id}" data-set="${si}" data-field="kg"
+              value="${cur && cur.kg !== "" ? cur.kg : ""}" placeholder="${prev && prev.kg !== "" ? prev.kg : "–"}"></label>
+            <label><span>reps</span><input type="number" inputmode="numeric" step="1" min="0" id="in-${ex.id}-${si}-reps" data-ex="${ex.id}" data-set="${si}" data-field="reps"
+              value="${cur && cur.reps ? cur.reps : ""}" placeholder="${prev && prev.reps ? prev.reps : "–"}"></label>
+          </div>`;
+      })
+      .join("");
+    return `
+      <article class="card ${v.alt ? "is-alt" : ""}" data-ex="${ex.id}" data-index="${i}">
+        <header>
+          <span class="num">${i + 1}</span>
+          <div>
+            ${v.alt ? `<span class="planb-tag">Plano B · em vez de ${escapeHtml(ex.name)}</span>` : ""}
+            <h3>${escapeHtml(v.name)}</h3>
+            <span class="tag ${ex.compound ? "compound" : ""}">${ex.compound ? "Composto · parar a 1–2 reps da falha" : "Isolamento · podes ir à falha"}</span>
+          </div>
+        </header>
+        ${planBHtml(ex, v)}
+        <ul class="cues">${v.cues.map((c) => `<li>${escapeHtml(c)}</li>`).join("")}</ul>
+        ${demoHtml(ex, v)}
+        ${i < 3 ? `<div class="warmup" data-warmup="${ex.id}"></div>` : ""}
+        <div class="hint">${last ? `<span class="muted">Último (${fmtDate(last.date)}): ${last.sets
+          .filter((r) => r.reps)
+          .map((r) => `${r.kg !== "" ? r.kg + "×" : ""}${r.reps}`)
+          .join(" · ")}</span><br>` : v.alt ? `<span class="muted">Primeira vez com este exercício: começa leve e ajusta.</span><br>` : ""}${last || !v.alt ? suggestion(ex, last) : ""}</div>
+        <div class="sets">${rows}</div>
+        <button class="rest" data-rest="${rest}" data-name="${escapeHtml(v.name)}">⏱ Descanso ${ex.compound ? "3–4 min" : "1–2 min"}</button>
+      </article>`;
+  }
+
+  function swapVariant(exId, key) {
+    const ex = allExercises.find((x) => x.id === exId);
+    const card = $(`.card[data-ex="${exId}"]`);
+    if (!ex || !card) return;
+    if (key === "main") delete variants[exId];
+    else variants[exId] = key;
+    dirty = true;
+    const date = $("#session-date").value || today();
+    card.outerHTML = renderCard(ex, Number(card.dataset.index), date, sessionFor(currentWorkout, date));
+    updateWarmup(ex);
+    $(`.card[data-ex="${exId}"]`).scrollIntoView({ block: "start", behavior: "smooth" });
   }
 
   function topKg(exId) {
@@ -258,6 +307,12 @@
     return entries;
   }
 
+  function collectVariants(entries) {
+    const out = {};
+    Object.keys(entries).forEach((id) => variants[id] && (out[id] = variants[id]));
+    return out;
+  }
+
   async function saveSession() {
     const date = $("#session-date").value || today();
     const entries = collectSession();
@@ -267,11 +322,12 @@
       return;
     }
     const notes = $("#session-notes").value.trim();
+    const used = collectVariants(entries);
     let s = sessionFor(currentWorkout, date);
     if (s) {
-      Object.assign(s, { entries, notes, savedAt: Date.now() });
+      Object.assign(s, { entries, variants: used, notes, savedAt: Date.now() });
     } else {
-      s = { id: sessionId(currentWorkout, date), workout: currentWorkout, date, entries, notes, savedAt: Date.now() };
+      s = { id: sessionId(currentWorkout, date), workout: currentWorkout, date, entries, variants: used, notes, savedAt: Date.now() };
       sessions.push(s);
     }
     status.textContent = "A guardar…";
@@ -296,8 +352,19 @@
         .join("");
     }
     const ex = allExercises.find((e) => e.id === select.value) || allExercises[0];
-    const points = sortedSessions()
-      .filter((s) => s.entries[ex.id] && s.entries[ex.id][0] && s.entries[ex.id][0].reps)
+    const withData = sortedSessions().filter((s) => s.entries[ex.id] && s.entries[ex.id][0] && s.entries[ex.id][0].reps);
+    const keys = [...new Set(withData.map((s) => variantKey(s, ex.id)))];
+    const vSel = $("#progress-variant");
+    if (vSel.dataset.ex !== ex.id || [...vSel.options].map((o) => o.value).join() !== ["main", ...keys.filter((k) => k !== "main")].join()) {
+      vSel.dataset.ex = ex.id;
+      vSel.innerHTML = ["main", ...keys.filter((k) => k !== "main")]
+        .map((k) => `<option value="${k}">${k === "main" ? "Principal" : "Plano B"}: ${escapeHtml(variantOf(ex, k).name)}</option>`)
+        .join("");
+    }
+    $("#progress-variant-field").hidden = !keys.some((k) => k !== "main");
+    const key = vSel.value || "main";
+    const points = withData
+      .filter((s) => variantKey(s, ex.id) === key)
       .map((s) => {
         const top = s.entries[ex.id][0];
         const kg = Number(top.kg) || 0;
@@ -627,6 +694,7 @@
   $("#save-session").addEventListener("click", saveSession);
   $("#session-notes").addEventListener("input", () => (dirty = true));
   $("#progress-exercise").addEventListener("change", renderProgress);
+  $("#progress-variant").addEventListener("change", renderProgress);
 
   $("#exercise-list").addEventListener("input", (e) => {
     const inp = e.target;
@@ -659,6 +727,15 @@
   $("#exercise-list").addEventListener("click", (e) => {
     const rest = e.target.closest("[data-rest]");
     if (rest) startTimer(Number(rest.dataset.rest), rest.dataset.name);
+
+    const pb = e.target.closest("[data-planb]");
+    if (pb) {
+      const list = $(`[data-planb-list="${pb.dataset.planb}"]`);
+      list.hidden = !list.hidden;
+      pb.setAttribute("aria-expanded", String(!list.hidden));
+    }
+    const sw = e.target.closest("[data-swap]");
+    if (sw) swapVariant(sw.dataset.swapEx, sw.dataset.swap);
 
     const sv = e.target.closest(".set-video");
     if (sv) {
@@ -789,7 +866,7 @@
       let n = 0;
       for (const raw of data.sessions) {
         if (!raw || !WORKOUTS[raw.workout] || !/^\d{4}-\d{2}-\d{2}$/.test(raw.date) || typeof raw.entries !== "object") continue;
-        const s = { id: sessionId(raw.workout, raw.date), workout: raw.workout, date: raw.date, entries: raw.entries, notes: String(raw.notes || ""), savedAt: Number(raw.savedAt) || Date.now() };
+        const s = { id: sessionId(raw.workout, raw.date), workout: raw.workout, date: raw.date, entries: raw.entries, variants: raw.variants && typeof raw.variants === "object" ? raw.variants : {}, notes: String(raw.notes || ""), savedAt: Number(raw.savedAt) || Date.now() };
         sessions = sessions.filter((x) => !(x.workout === s.workout && x.date === s.date));
         sessions.push(s);
         if (remote) await persistSession(s);

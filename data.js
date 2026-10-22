@@ -1,3 +1,4 @@
+// Plano B: cada exercício tem "alts" (fotos em img/alt-<id>-0.jpg / -1.jpg).
 // Fotos em img/<id>-0.jpg (início) e img/<id>-1.jpg (fim), de free-exercise-db (domínio público).
 // Plano de treino: 2x/semana, 2 séries por exercício, adaptado a hérnias e anca.
 const WORKOUTS = {
@@ -19,6 +20,12 @@ const WORKOUTS = {
           "Lombar sempre colada ao encosto — se descolar, desceste demais.",
         ],
         video: "leg press feet high wide technique",
+        alts: [
+          { id: "leg-extension", name: "Extensão de pernas na máquina", q: "leg extension machine technique",
+            cues: ["Costas encostadas, pega nas pegas laterais.", "Sobe controlado e desce em 2–3 s.", "Se tiveres tempo, junta 2 séries de curl femoral sentado."] },
+          { id: "seated-leg-curl", name: "Curl femoral sentado", q: "seated leg curl technique",
+            cues: ["Lombar encostada, almofada por cima dos joelhos bem presa.", "Puxa os calcanhares para baixo sem levantar a anca do banco."] },
+        ],
         photoNote: "Na foto a descida vai mais fundo do que deves: para a ~90° no joelho.",
       },
       {
@@ -35,6 +42,12 @@ const WORKOUTS = {
           "Sem balanço do tronco.",
         ],
         video: "neutral grip lat pulldown technique",
+        alts: [
+          { id: "one-arm-pulldown", name: "Puxada unilateral na polia, sentado", q: "single arm lat pulldown seated technique",
+            cues: ["Puxa à frente, cotovelo em direção à anca.", "Tronco quieto, sem rodar a coluna."] },
+          { id: "straight-arm-pulldown", name: "Pullover na polia com corda", q: "straight arm rope pulldown technique",
+            cues: ["Inclina ligeiramente o tronco a partir da anca, lombar neutra.", "Braços quase esticados, leva a corda até às coxas."] },
+        ],
       },
       {
         id: "shoulder-press",
@@ -50,7 +63,14 @@ const WORKOUTS = {
           "Se o pescoço reclamar, troca por landmine press.",
         ],
         video: "machine shoulder press neutral grip",
-        alt: "landmine press",
+        alts: [
+          { id: "db-shoulder-press", name: "Press com halteres sentado, com encosto", q: "seated dumbbell shoulder press neutral grip",
+            cues: ["Banco quase vertical, costas e cabeça apoiadas.", "Pega neutra (palmas viradas uma para a outra).", "Não bloqueies os cotovelos em cima."] },
+          { id: "cable-shoulder-press", name: "Press de ombros na polia, sentado", q: "seated cable shoulder press",
+            cues: ["Banco com encosto entre as duas polias.", "Empurra para cima e ligeiramente para a frente."] },
+          { id: "landmine", name: "Landmine press", q: "landmine press technique", photo: false,
+            cues: ["Ajoelhado ou em pé, barra apoiada no canto.", "Empurra na diagonal: poupa o pescoço e os ombros."] },
+        ],
       },
       {
         id: "triceps-corda",
@@ -65,6 +85,12 @@ const WORKOUTS = {
           "Nada de extensões acima da cabeça (cervical).",
         ],
         video: "tricep rope pushdown technique",
+        alts: [
+          { id: "vbar-pushdown", name: "Tríceps na polia com barra em V", q: "v bar tricep pushdown technique",
+            cues: ["Cotovelos fixos junto ao corpo.", "Estica completamente sem inclinar o tronco."] },
+          { id: "dip-machine", name: "Tríceps na máquina de dips, sentado", q: "seated dip machine triceps",
+            cues: ["Costas apoiadas, ombros para baixo.", "Desce só até os cotovelos a ~90°."] },
+        ],
       },
       {
         id: "gemeos",
@@ -78,6 +104,12 @@ const WORKOUTS = {
           "Amplitude completa, pausa de 1 s em baixo.",
         ],
         video: "seated calf raise technique",
+        alts: [
+          { id: "calf-leg-press", name: "Gémeos no leg press", q: "calf press on leg press machine",
+            cues: ["Só a ponta dos pés na plataforma, joelhos quase esticados.", "Mantém os travões de segurança à mão."] },
+          { id: "db-seated-calf", name: "Gémeos sentado com halter", q: "seated dumbbell calf raise",
+            cues: ["Ponta do pé num disco ou degrau, halter sobre o joelho.", "Uma perna de cada vez, amplitude completa."] },
+        ],
       },
       {
         id: "face-pull",
@@ -91,6 +123,12 @@ const WORKOUTS = {
           "Rodar os ombros para fora no final.",
         ],
         video: "face pull cable technique",
+        alts: [
+          { id: "reverse-fly", name: "Reverse fly na máquina (pec deck invertido)", q: "reverse pec deck fly technique",
+            cues: ["Peito encostado ao apoio.", "Abre os braços sem encolher os ombros."] },
+          { id: "rear-delt-row", name: "Remada alta para deltóide posterior na polia", q: "cable rope rear delt row",
+            cues: ["Polia à altura do peito, corda.", "Puxa com os cotovelos abertos, em direção à cara."] },
+        ],
       },
     ],
   },
@@ -111,10 +149,16 @@ const WORKOUTS = {
           "Omoplatas retraídas, descer controlado.",
         ],
         video: "incline chest press machine technique",
+        alts: [
+          { id: "incline-db-press", name: "Supino inclinado com halteres", q: "incline dumbbell press technique",
+            cues: ["Banco a 30°, costas e cabeça apoiadas.", "Pega neutra se os ombros reclamarem."] },
+          { id: "machine-chest-press", name: "Chest press em máquina (plano)", q: "machine chest press technique",
+            cues: ["Costas apoiadas, pegas à altura do peito.", "Omoplatas para trás durante toda a série."] },
+        ],
       },
       {
         id: "hip-thrust",
-        name: "Hip thrust em máquina ou glute bridge",
+        name: "Hip thrust em máquina",
         compound: true,
         sets: [
           { label: "Top set", min: 8, max: 10 },
@@ -126,8 +170,13 @@ const WORKOUTS = {
           "Queixo ligeiramente recolhido.",
         ],
         video: "hip thrust machine technique",
+        alts: [
+          { id: "glute-bridge", name: "Glute bridge no chão", q: "glute bridge technique",
+            cues: ["Sem peso, com halter ou barra almofadada na anca.", "Sobe até a anca ficar alinhada, sem arquear a lombar.", "Pausa de 1–2 s em cima."] },
+          { id: "cable-kickback", name: "Kickback de glúteo na polia", q: "cable glute kickback technique",
+            cues: ["Mãos na máquina, abdominal ativo.", "Leva a perna para trás só até onde a lombar não arqueia.", "Uma perna de cada vez; regista o peso de uma perna."] },
+        ],
         photoNote: "Foto com barra; na máquina o movimento é o mesmo.",
-        alt: "glute bridge",
       },
       {
         id: "remada",
@@ -142,7 +191,12 @@ const WORKOUTS = {
           "Puxar com os cotovelos, sem balançar a lombar.",
         ],
         video: "chest supported machine row technique",
-        alt: "seated cable row",
+        alts: [
+          { id: "machine-row", name: "Remada em máquina (outra máquina)", q: "seated machine row technique",
+            cues: ["Peito no apoio, se a máquina tiver.", "Puxa com os cotovelos, sem balançar."] },
+          { id: "db-row", name: "Remada unilateral com halter, apoiado no banco", q: "one arm dumbbell row bench supported",
+            cues: ["Mão e joelho no banco, coluna neutra e quieta.", "Puxa o halter em direção à anca."] },
+        ],
       },
       {
         id: "elevacoes-laterais",
@@ -156,6 +210,12 @@ const WORKOUTS = {
           "Subir até à linha dos ombros, sem encolher.",
         ],
         video: "seated dumbbell lateral raise technique",
+        alts: [
+          { id: "cable-lateral", name: "Elevação lateral na polia, sentado", q: "seated cable lateral raise",
+            cues: ["Um braço de cada vez se só houver uma polia.", "Sobe até à linha do ombro."] },
+          { id: "lying-lateral", name: "Elevação lateral deitado de lado", q: "lying one arm lateral raise",
+            cues: ["Deitado de lado num banco, coluna totalmente apoiada.", "Halter leve, movimento lento."] },
+        ],
       },
       {
         id: "curl",
@@ -166,6 +226,12 @@ const WORKOUTS = {
         ],
         cues: ["Braço apoiado, sem impulso.", "Descida controlada de 2–3 s."],
         video: "preacher curl machine technique",
+        alts: [
+          { id: "machine-curl", name: "Curl de bíceps em máquina", q: "machine bicep curl technique",
+            cues: ["Braços apoiados, costas direitas.", "Descida controlada de 2–3 s."] },
+          { id: "incline-curl", name: "Curl com halteres em banco inclinado", q: "incline dumbbell curl technique",
+            cues: ["Costas e cabeça apoiadas no banco.", "Cotovelos parados, sem impulso."] },
+        ],
       },
       {
         id: "pallof",
@@ -181,6 +247,12 @@ const WORKOUTS = {
           "Abdominal e glúteos contraídos, coluna neutra.",
         ],
         video: "pallof press technique",
+        alts: [
+          { id: "dead-bug", name: "Dead bug", q: "dead bug exercise technique",
+            cues: ["Lombar colada ao chão durante todo o movimento.", "Estende braço e perna opostos devagar."] },
+          { id: "side-bridge", name: "Side plank", q: "side plank technique",
+            cues: ["Corpo em linha reta, apoio no antebraço.", "Regista os segundos em vez das reps."] },
+        ],
       },
     ],
   },
