@@ -286,3 +286,18 @@ const WEEK = [
   { dow: 6, type: "rest", title: "Descanso" },
   { dow: 0, type: "rest", title: "Descanso" },
 ];
+
+// Proteína: atalhos com valores aproximados (g de proteína por porção).
+const PROTEIN_FACTORS = [1.6, 1.8, 2.0, 2.2]; // g por kg de peso corporal
+const PROTEIN_FOODS = [
+  { name: "1 ovo", g: 6 },
+  { name: "Iogurte proteico / skyr (150 g)", g: 15 },
+  { name: "Frango ou peru (100 g cozinhado)", g: 30 },
+  { name: "Peixe (150 g cozinhado)", g: 30 },
+  { name: "Carne vermelha (100 g cozinhada)", g: 26 },
+  { name: "Atum em lata (1 lata escorrida)", g: 20 },
+  { name: "Whey (1 dose, 30 g)", g: 23 },
+  { name: "Queijo fresco (1 unidade, 100 g)", g: 10 },
+  { name: "Leite (1 copo, 250 ml)", g: 8 },
+  { name: "Leguminosas (1 chávena cozida)", g: 15 },
+];

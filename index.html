@@ -18,6 +18,7 @@
         <button data-tab="week" class="active">Semana</button>
         <button data-tab="A">Treino A</button>
         <button data-tab="B">Treino B</button>
+        <button data-tab="body">Corpo</button>
         <button data-tab="progress">Evolução</button>
         <button data-tab="info">Regras</button>
       </nav>
@@ -76,6 +77,53 @@
         <button id="save-session" class="primary">Guardar treino</button>
         <span id="save-status" class="muted"></span>
       </div>
+    </section>
+
+    <section id="tab-body" class="tab-panel" hidden>
+      <div class="week-head body-head">
+        <div class="session-title">
+          <h2>Corpo</h2>
+          <span>Proteína do dia, peso e cintura</span>
+        </div>
+        <label class="date-field">Data
+          <input type="date" id="body-date">
+        </label>
+      </div>
+
+      <h2>Proteína</h2>
+      <div class="protein-card">
+        <div class="protein-top">
+          <div class="protein-total"><b id="protein-total">0</b><span id="protein-goal-label">/ – g</span></div>
+          <label class="select-field protein-factor">Objetivo
+            <select id="protein-factor"></select>
+          </label>
+        </div>
+        <div class="bar-track big"><span id="protein-bar"></span></div>
+        <p id="protein-msg" class="muted small"></p>
+        <div class="food-grid" id="food-grid"></div>
+        <div class="custom-food">
+          <input type="text" id="food-name" placeholder="Outro alimento (opcional)">
+          <input type="number" id="food-g" inputmode="numeric" min="1" step="1" placeholder="g">
+          <button id="food-add" class="pill-btn dark">Adicionar</button>
+        </div>
+        <ul class="food-log" id="food-log"></ul>
+        <p class="muted small">Valores aproximados por porção. Tenta repartir a proteína por 3–4 refeições.</p>
+      </div>
+      <h3>Últimos 7 dias</h3>
+      <div class="protein-week" id="protein-week"></div>
+
+      <h2>Peso e cintura</h2>
+      <p class="muted small">Pesa-te de manhã, em jejum, depois da casa de banho, 1–2 vezes por semana. Mede a cintura à altura do umbigo, sem apertar.</p>
+      <div class="weigh-form">
+        <label>Peso (kg)<input type="number" id="body-weight" inputmode="decimal" step="0.1" min="30" max="300" placeholder="–"></label>
+        <label>Cintura (cm)<input type="number" id="body-waist" inputmode="decimal" step="0.5" min="40" max="200" placeholder="–"></label>
+        <button id="body-save" class="pill-btn dark">Guardar</button>
+      </div>
+      <p id="body-status" class="muted small"></p>
+      <ul class="week-stats" id="body-stats"></ul>
+      <div id="body-trend" class="callout"></div>
+      <div id="weight-chart" class="chart"></div>
+      <div id="body-table"></div>
     </section>
 
     <section id="tab-progress" class="tab-panel" hidden>

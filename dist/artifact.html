@@ -399,6 +399,61 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
   background: var(--tint-warm); color: var(--ink); border-radius: 999px; padding: .3rem .65rem;
 }
 .card.is-alt { box-shadow: inset 0 0 0 2px var(--tint-warm); }
+
+/* ---------- corpo ---------- */
+.body-head { background: var(--tint-b); }
+.body-head .session-title > span { font-size: .9rem; opacity: .7; }
+.protein-card { background: var(--surface); border-radius: var(--r-lg); padding: 1.25rem; display: grid; gap: .9rem; }
+.protein-top { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; flex-wrap: wrap; }
+.protein-total { display: flex; align-items: baseline; gap: .4rem; }
+.protein-total b { font: 900 3rem/1 var(--font-display); font-stretch: 120%; font-variant-numeric: tabular-nums; }
+.protein-total span { font-weight: 700; color: var(--muted); }
+.protein-factor { margin: 0; min-width: 10rem; }
+.protein-card > p { margin: 0; }
+.bar-track.big { height: .9rem; background: var(--bg); }
+.bar-track span.ok, .pw-bar span.ok { background: var(--ok); }
+.food-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); gap: .5rem; }
+.food-btn {
+  display: flex; flex-direction: column; align-items: flex-start; gap: .35rem; text-align: left;
+  background: var(--bg); color: var(--ink); border: 1.5px solid transparent; border-radius: var(--r-md);
+  padding: .75rem .85rem; cursor: pointer; font: 600 .82rem/1.25 var(--font-body);
+  transition: border-color .15s, transform .1s;
+}
+.food-btn:hover { border-color: var(--ink); }
+.food-btn:active { transform: scale(.97); }
+.food-btn b { font: 800 .95rem/1 var(--font-display); font-stretch: 110%; color: var(--accent); }
+.custom-food { display: grid; grid-template-columns: 1fr 5rem auto; gap: .5rem; align-items: center; }
+.custom-food input { min-width: 0; }
+.food-log { list-style: none; margin: 0; padding: 0; display: grid; gap: .35rem; }
+.food-log li { display: flex; align-items: center; gap: .75rem; background: var(--bg); border-radius: var(--r-sm); padding: .5rem .5rem .5rem .85rem; font-size: .9rem; }
+.food-log li span { flex: 1; min-width: 0; }
+.food-log li b { font-variant-numeric: tabular-nums; }
+.food-log li.empty { color: var(--muted); padding: .75rem .85rem; }
+.protein-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: .4rem; background: var(--surface); border-radius: var(--r-lg); padding: 1rem; }
+.pw-day { display: flex; flex-direction: column; align-items: center; gap: .3rem; min-width: 0; }
+.pw-val { font-size: .72rem; font-weight: 700; min-height: 1em; font-variant-numeric: tabular-nums; }
+.pw-bar { position: relative; width: 100%; max-width: 2.2rem; height: 7rem; background: var(--bg); border-radius: 8px; overflow: hidden; }
+.pw-bar span { position: absolute; left: 0; right: 0; bottom: 0; background: var(--ink); border-radius: 8px 8px 0 0; }
+.pw-bar i { position: absolute; left: -2px; right: -2px; height: 2px; background: var(--accent); }
+.pw-lbl { font-size: .7rem; font-weight: 700; text-transform: uppercase; color: var(--muted); }
+.pw-day.sel .pw-lbl { color: var(--ink); }
+.weigh-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: .6rem; align-items: end; }
+.weigh-form label { display: flex; flex-direction: column; gap: .3rem; }
+.weigh-form input { font-size: 1.15rem; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; }
+#body-trend { background: var(--surface); }
+#body-trend.good { background: var(--tint-ok); }
+#body-trend.warn { background: var(--tint-warm); }
+#body-trend.danger { background: var(--tint-danger); }
+#body-table { overflow-x: auto; }
+@media (max-width: 600px) {
+  .tabs { display: grid; grid-template-columns: repeat(3, 1fr); border-radius: 22px; overflow: visible; }
+  .tabs button { padding: .6rem .3rem; font-size: .7rem; }
+  .weigh-form { grid-template-columns: 1fr 1fr; }
+  .weigh-form .pill-btn { grid-column: 1 / -1; }
+  .custom-food { grid-template-columns: 1fr 4.5rem; }
+  .custom-food .pill-btn { grid-column: 1 / -1; }
+  .protein-total b { font-size: 2.4rem; }
+}
 </style>
 <header class="top">
     <div class="bar">
@@ -407,6 +462,7 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
         <button data-tab="week" class="active">Semana</button>
         <button data-tab="A">Treino A</button>
         <button data-tab="B">Treino B</button>
+        <button data-tab="body">Corpo</button>
         <button data-tab="progress">Evolução</button>
         <button data-tab="info">Regras</button>
       </nav>
@@ -465,6 +521,53 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
         <button id="save-session" class="primary">Guardar treino</button>
         <span id="save-status" class="muted"></span>
       </div>
+    </section>
+
+    <section id="tab-body" class="tab-panel" hidden>
+      <div class="week-head body-head">
+        <div class="session-title">
+          <h2>Corpo</h2>
+          <span>Proteína do dia, peso e cintura</span>
+        </div>
+        <label class="date-field">Data
+          <input type="date" id="body-date">
+        </label>
+      </div>
+
+      <h2>Proteína</h2>
+      <div class="protein-card">
+        <div class="protein-top">
+          <div class="protein-total"><b id="protein-total">0</b><span id="protein-goal-label">/ – g</span></div>
+          <label class="select-field protein-factor">Objetivo
+            <select id="protein-factor"></select>
+          </label>
+        </div>
+        <div class="bar-track big"><span id="protein-bar"></span></div>
+        <p id="protein-msg" class="muted small"></p>
+        <div class="food-grid" id="food-grid"></div>
+        <div class="custom-food">
+          <input type="text" id="food-name" placeholder="Outro alimento (opcional)">
+          <input type="number" id="food-g" inputmode="numeric" min="1" step="1" placeholder="g">
+          <button id="food-add" class="pill-btn dark">Adicionar</button>
+        </div>
+        <ul class="food-log" id="food-log"></ul>
+        <p class="muted small">Valores aproximados por porção. Tenta repartir a proteína por 3–4 refeições.</p>
+      </div>
+      <h3>Últimos 7 dias</h3>
+      <div class="protein-week" id="protein-week"></div>
+
+      <h2>Peso e cintura</h2>
+      <p class="muted small">Pesa-te de manhã, em jejum, depois da casa de banho, 1–2 vezes por semana. Mede a cintura à altura do umbigo, sem apertar.</p>
+      <div class="weigh-form">
+        <label>Peso (kg)<input type="number" id="body-weight" inputmode="decimal" step="0.1" min="30" max="300" placeholder="–"></label>
+        <label>Cintura (cm)<input type="number" id="body-waist" inputmode="decimal" step="0.5" min="40" max="200" placeholder="–"></label>
+        <button id="body-save" class="pill-btn dark">Guardar</button>
+      </div>
+      <p id="body-status" class="muted small"></p>
+      <ul class="week-stats" id="body-stats"></ul>
+      <div id="body-trend" class="callout"></div>
+      <div id="weight-chart" class="chart"></div>
+      <div id="body-table"></div>
     </section>
 
     <section id="tab-progress" class="tab-panel" hidden>
@@ -826,6 +929,21 @@ const WEEK = [
   { dow: 5, type: "workout", workout: "B", title: "Treino B" },
   { dow: 6, type: "rest", title: "Descanso" },
   { dow: 0, type: "rest", title: "Descanso" },
+];
+
+// Proteína: atalhos com valores aproximados (g de proteína por porção).
+const PROTEIN_FACTORS = [1.6, 1.8, 2.0, 2.2]; // g por kg de peso corporal
+const PROTEIN_FOODS = [
+  { name: "1 ovo", g: 6 },
+  { name: "Iogurte proteico / skyr (150 g)", g: 15 },
+  { name: "Frango ou peru (100 g cozinhado)", g: 30 },
+  { name: "Peixe (150 g cozinhado)", g: 30 },
+  { name: "Carne vermelha (100 g cozinhada)", g: 26 },
+  { name: "Atum em lata (1 lata escorrida)", g: 20 },
+  { name: "Whey (1 dose, 30 g)", g: 23 },
+  { name: "Queijo fresco (1 unidade, 100 g)", g: 10 },
+  { name: "Leite (1 copo, 250 ml)", g: 8 },
+  { name: "Leguminosas (1 chávena cozida)", g: 15 },
 ];
 </script>
 <script>
@@ -1464,6 +1582,196 @@ const WEEK = [
     } catch {}
   }
 
+  // ---------- corpo: proteína, peso e cintura ----------
+  let proteinFactor = 1.8;
+  try { proteinFactor = Number(localStorage.getItem("gym.proteinFactor")) || 1.8; } catch {}
+
+  const bodyDate = () => $("#body-date").value || today();
+  const proteinOf = (date) => ((days[date] || {}).protein || []).reduce((t, i) => t + (Number(i.g) || 0), 0);
+
+  function weightEntries() {
+    return Object.values(days)
+      .filter((d) => Number(d.weight) > 0 || Number(d.waist) > 0)
+      .sort((a, b) => (a.date < b.date ? -1 : 1));
+  }
+
+  // Peso mais recente até à data (inclusive).
+  function latestWeight(upTo) {
+    const w = weightEntries().filter((d) => Number(d.weight) > 0 && (!upTo || d.date <= upTo));
+    return w.length ? Number(w[w.length - 1].weight) : 0;
+  }
+
+  const proteinGoal = (date) => {
+    const w = latestWeight(date) || latestWeight();
+    return w ? Math.round((w * proteinFactor) / 5) * 5 : 0;
+  };
+
+  // Ritmo semanal (kg/semana) por regressão linear nas pesagens dos últimos 28 dias.
+  function weeklyRate() {
+    const w = weightEntries().filter((d) => Number(d.weight) > 0);
+    if (w.length < 3) return null;
+    const lastT = new Date(w[w.length - 1].date + "T12:00:00").getTime();
+    const pts = w
+      .map((d) => ({ x: (new Date(d.date + "T12:00:00").getTime() - lastT) / 864e5, y: Number(d.weight) }))
+      .filter((p) => p.x >= -28);
+    if (pts.length < 3 || -pts[0].x < 7) return null;
+    const mx = pts.reduce((t, p) => t + p.x, 0) / pts.length;
+    const my = pts.reduce((t, p) => t + p.y, 0) / pts.length;
+    const num = pts.reduce((t, p) => t + (p.x - mx) * (p.y - my), 0);
+    const den = pts.reduce((t, p) => t + (p.x - mx) ** 2, 0);
+    return den ? (num / den) * 7 : null;
+  }
+
+  const fmt1 = (n) => n.toLocaleString("pt-PT", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+  function renderBody() {
+    const dateInput = $("#body-date");
+    if (!dateInput.value) dateInput.value = today();
+    const date = bodyDate();
+
+    // proteína
+    const sel = $("#protein-factor");
+    if (!sel.options.length) {
+      sel.innerHTML = PROTEIN_FACTORS.map((f) => `<option value="${f}">${fmt1(f)} g por kg</option>`).join("");
+    }
+    sel.value = String(proteinFactor);
+    const goal = proteinGoal(date);
+    const total = proteinOf(date);
+    $("#protein-total").textContent = total;
+    $("#protein-goal-label").textContent = goal ? `/ ${goal} g` : "g";
+    const pct = goal ? Math.min(100, Math.round((total / goal) * 100)) : 0;
+    $("#protein-bar").style.width = pct + "%";
+    $("#protein-bar").classList.toggle("ok", goal > 0 && total >= goal);
+    $("#protein-msg").textContent = !goal
+      ? "Regista o teu peso em baixo para calcular o objetivo de proteína."
+      : total >= goal
+      ? "Objetivo cumprido."
+      : `Faltam ${goal - total} g (${fmt1(proteinFactor)} g × ${fmt1(latestWeight(date) || latestWeight())} kg).`;
+    $("#food-grid").innerHTML = PROTEIN_FOODS.map(
+      (f, i) => `<button class="food-btn" data-food="${i}"><span>${escapeHtml(f.name)}</span><b>+${f.g} g</b></button>`
+    ).join("");
+    const items = (days[date] || {}).protein || [];
+    $("#food-log").innerHTML = items.length
+      ? items
+          .map(
+            (it, i) => `<li><span>${escapeHtml(it.name)}</span><b>${it.g} g</b><button class="link" data-food-del="${i}" aria-label="Remover ${escapeHtml(it.name)}">✕</button></li>`
+          )
+          .join("")
+      : `<li class="empty">Ainda nada registado neste dia. Toca num alimento para somar.</li>`;
+
+    // últimos 7 dias
+    const end = new Date(date + "T12:00:00");
+    const last7 = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(end);
+      d.setDate(end.getDate() - 6 + i);
+      return isoDate(d);
+    });
+    const max = Math.max(goal, ...last7.map(proteinOf), 1) * 1.12;
+    $("#protein-week").innerHTML = last7
+      .map((d) => {
+        const v = proteinOf(d);
+        const g = proteinGoal(d);
+        return `<div class="pw-day ${d === date ? "sel" : ""}">
+          <span class="pw-val">${v || ""}</span>
+          <div class="pw-bar"><span class="${g && v >= g ? "ok" : ""}" style="height:${Math.round((v / max) * 100)}%"></span>
+            ${g ? `<i style="bottom:${Math.round((g / max) * 100)}%"></i>` : ""}</div>
+          <span class="pw-lbl">${DOW_NAMES[new Date(d + "T12:00:00").getDay()].slice(0, 3)}</span>
+        </div>`;
+      })
+      .join("");
+
+    // peso e cintura
+    const today_ = days[date] || {};
+    if (document.activeElement !== $("#body-weight")) $("#body-weight").value = today_.weight || "";
+    if (document.activeElement !== $("#body-waist")) $("#body-waist").value = today_.waist || "";
+    const entries = weightEntries();
+    const ws = entries.filter((d) => Number(d.weight) > 0);
+    const waists = entries.filter((d) => Number(d.waist) > 0);
+    const rate = weeklyRate();
+    const cur = ws.length ? Number(ws[ws.length - 1].weight) : 0;
+    const first = ws.length ? Number(ws[0].weight) : 0;
+    const waistDiff = waists.length > 1 ? Number(waists[waists.length - 1].waist) - Number(waists[0].waist) : null;
+    $("#body-stats").innerHTML = `
+      <li><b>${cur ? fmt1(cur) : "–"}</b><span>peso atual (kg)</span></li>
+      <li><b>${ws.length > 1 ? (cur - first > 0 ? "+" : "") + fmt1(cur - first) : "–"}</b><span>desde o início (kg)</span></li>
+      <li><b>${waistDiff !== null ? (waistDiff > 0 ? "+" : "") + fmt1(waistDiff) : waists.length ? fmt1(Number(waists[0].waist)) : "–"}</b><span>${waistDiff !== null ? "cintura desde o início (cm)" : "cintura (cm)"}</span></li>`;
+
+    const trend = $("#body-trend");
+    trend.className = "callout";
+    if (rate === null) {
+      trend.textContent = "Com pelo menos 3 pesagens ao longo de uma semana ou mais, aparece aqui o teu ritmo semanal.";
+    } else {
+      const pctW = cur ? (-rate / cur) * 100 : 0;
+      const r = `${rate > 0 ? "+" : ""}${fmt1(rate)} kg por semana`;
+      if (pctW > 1) {
+        trend.classList.add("danger");
+        trend.innerHTML = `<strong>${r}.</strong> Estás a perder mais de 1% do peso por semana. Com treino de força, um ritmo tão rápido aumenta o risco de perderes músculo e força: considera comer um pouco mais e garante a proteína.`;
+      } else if (pctW >= 0.25) {
+        trend.classList.add("good");
+        trend.innerHTML = `<strong>${r}.</strong> Bom ritmo (cerca de ${fmt1(pctW)}% do peso por semana). Se a força nos treinos se mantém ou sobe, estás a perder sobretudo gordura.`;
+      } else if (rate <= 0.1) {
+        trend.classList.add("warn");
+        trend.innerHTML = `<strong>${r}.</strong> Peso praticamente estável. Se a cintura também não desce há 3–4 semanas, revê as calorias ou aumenta os passos.`;
+      } else {
+        trend.classList.add("warn");
+        trend.innerHTML = `<strong>${r}.</strong> O peso está a subir. Se a cintura também sobe, revê o que estás a comer.`;
+      }
+    }
+
+    $("#weight-chart").innerHTML = lineChart(ws.map((d) => ({ date: d.date, v: Number(d.weight) })), "kg");
+    $("#body-table").innerHTML = entries.length
+      ? `<table><thead><tr><th>Data</th><th>Peso</th><th>Cintura</th><th></th></tr></thead><tbody>${entries
+          .slice()
+          .reverse()
+          .map(
+            (d) => `<tr><td>${fmtDate(d.date)}</td><td>${Number(d.weight) > 0 ? fmt1(Number(d.weight)) + " kg" : "–"}</td><td>${
+              Number(d.waist) > 0 ? fmt1(Number(d.waist)) + " cm" : "–"
+            }</td><td><button class="link danger-text" data-body-del="${d.date}">Apagar</button></td></tr>`
+          )
+          .join("")}</tbody></table>`
+      : "";
+  }
+
+  function lineChart(points, unit) {
+    if (!points.length) return `<p class="empty">Ainda sem pesagens. Regista a primeira em cima.</p>`;
+    const W = 640, H = 240, P = { l: 44, r: 16, t: 20, b: 36 };
+    const vs = points.map((p) => p.v);
+    let min = Math.min(...vs), max = Math.max(...vs);
+    if (max - min < 2) { min -= 1; max += 1; }
+    const pad = (max - min) * 0.15;
+    min -= pad; max += pad;
+    const t0 = new Date(points[0].date + "T12:00:00").getTime();
+    const t1 = new Date(points[points.length - 1].date + "T12:00:00").getTime();
+    const x = (d) => (t1 === t0 ? (P.l + W - P.r) / 2 : P.l + ((new Date(d + "T12:00:00").getTime() - t0) / (t1 - t0)) * (W - P.l - P.r));
+    const y = (v) => P.t + (1 - (v - min) / (max - min)) * (H - P.t - P.b);
+    const grid = Array.from({ length: 5 }, (_, i) => {
+      const v = min + ((max - min) * i) / 4;
+      return `<line x1="${P.l}" x2="${W - P.r}" y1="${y(v)}" y2="${y(v)}" class="grid"/><text x="${P.l - 6}" y="${y(v) + 4}" class="axis" text-anchor="end">${fmt1(v)}</text>`;
+    }).join("");
+    const path = points.map((p, i) => `${i ? "L" : "M"}${x(p.date).toFixed(1)},${y(p.v).toFixed(1)}`).join(" ");
+    const step = Math.ceil(points.length / 7);
+    const dots = points
+      .map(
+        (p, i) => `<circle cx="${x(p.date)}" cy="${y(p.v)}" r="4.5" class="dot"><title>${fmtDate(p.date)}: ${fmt1(p.v)} ${unit}</title></circle>
+        ${i % step === 0 || i === points.length - 1 ? `<text x="${x(p.date)}" y="${H - 12}" class="axis" text-anchor="middle">${p.date.slice(5).split("-").reverse().join("/")}</text>` : ""}`
+      )
+      .join("");
+    const lastP = points[points.length - 1];
+    return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Evolução do peso">
+      ${grid}<text x="8" y="14" class="axis">${unit}</text>
+      <path d="${path}" class="line"/>${dots}
+      <text x="${Math.min(x(lastP.date), W - P.r - 20)}" y="${y(lastP.v) - 10}" class="label" text-anchor="middle">${fmt1(lastP.v)}</text></svg>`;
+  }
+
+  async function updateDay(date, patch) {
+    const d = { ...(days[date] || {}), date, ...patch };
+    days[date] = d;
+    try {
+      await persistDay(d);
+    } catch {}
+    renderBody();
+  }
+
   // ---------- navegação ----------
   let currentTab = "week";
   function showTab(tab) {
@@ -1474,7 +1782,11 @@ const WEEK = [
     $("#tab-progress").hidden = tab !== "progress";
     $("#tab-info").hidden = tab !== "info";
     $("#tab-week").hidden = tab !== "week";
+    $("#tab-body").hidden = tab !== "body";
     if (tab === "week") renderWeek();
+    if (tab === "body") renderBody();
+    const active = $(`.tabs button[data-tab="${tab}"]`);
+    if (active && active.scrollIntoView) active.scrollIntoView({ block: "nearest", inline: "nearest" });
     if (isWorkout) {
       currentWorkout = tab;
       $("#tab-workout").dataset.workout = tab;
@@ -1490,10 +1802,75 @@ const WEEK = [
   function refresh() {
     if (currentTab === "progress") renderProgress();
     else if (currentTab === "week" && !$("#tab-week").contains(document.activeElement)) renderWeek();
+    else if (currentTab === "body") renderBody();
     else if ((currentTab === "A" || currentTab === "B") && !dirty) renderWorkout();
   }
 
   // ---------- eventos ----------
+  $("#body-date").addEventListener("change", renderBody);
+  $("#protein-factor").addEventListener("change", (e) => {
+    proteinFactor = Number(e.target.value) || 1.8;
+    try { localStorage.setItem("gym.proteinFactor", String(proteinFactor)); } catch {}
+    renderBody();
+  });
+  $("#food-grid").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-food]");
+    if (!b) return;
+    const f = PROTEIN_FOODS[Number(b.dataset.food)];
+    const date = bodyDate();
+    updateDay(date, { protein: [...((days[date] || {}).protein || []), { name: f.name, g: f.g }] });
+  });
+  $("#food-add").addEventListener("click", () => {
+    const g = Math.round(Number($("#food-g").value));
+    if (!g || g < 1) {
+      $("#food-g").focus();
+      return;
+    }
+    const name = $("#food-name").value.trim() || "Outro";
+    const date = bodyDate();
+    $("#food-g").value = "";
+    $("#food-name").value = "";
+    updateDay(date, { protein: [...((days[date] || {}).protein || []), { name, g }] });
+  });
+  $("#food-log").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-food-del]");
+    if (!b) return;
+    const date = bodyDate();
+    const list = [...((days[date] || {}).protein || [])];
+    list.splice(Number(b.dataset.foodDel), 1);
+    updateDay(date, { protein: list });
+  });
+  $("#body-save").addEventListener("click", async () => {
+    const w = Number($("#body-weight").value);
+    const c = Number($("#body-waist").value);
+    const status = $("#body-status");
+    if (!(w > 0) && !(c > 0)) {
+      status.textContent = "Escreve o peso, a cintura ou os dois.";
+      return;
+    }
+    const date = bodyDate();
+    $("#body-weight").blur();
+    $("#body-waist").blur();
+    await updateDay(date, { weight: w > 0 ? w : 0, waist: c > 0 ? c : 0 });
+    status.textContent = `Guardado (${fmtDate(date)}).`;
+  });
+  $("#body-table").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-body-del]");
+    if (!b) return;
+    if (!b.dataset.armed) {
+      b.dataset.armed = "1";
+      b.textContent = "Confirmar";
+      setTimeout(() => {
+        if (b.isConnected) {
+          delete b.dataset.armed;
+          b.textContent = "Apagar";
+        }
+      }, 4000);
+      return;
+    }
+    updateDay(b.dataset.bodyDel, { weight: 0, waist: 0 });
+  });
+
   $("#week-prev").addEventListener("click", () => { weekOffset--; renderWeek(); });
   $("#week-next").addEventListener("click", () => { weekOffset++; renderWeek(); });
   $("#week-today").addEventListener("click", () => { weekOffset = 0; renderWeek(); });
