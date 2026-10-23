@@ -4,6 +4,8 @@
 const WORKOUTS = {
   A: {
     name: "Treino A",
+    short: "Treino A",
+    warmup: "<strong>Aquecimento:</strong> 5 min de bicicleta. Nos três primeiros exercícios: 1 série a 50% × 6 e 1 a 70% × 3 (valores calculados em cada cartão).",
     day: "Segunda-feira",
     exercises: [
       {
@@ -134,6 +136,8 @@ const WORKOUTS = {
   },
   B: {
     name: "Treino B",
+    short: "Treino B",
+    warmup: "<strong>Aquecimento:</strong> 5 min de bicicleta. Nos três primeiros exercícios: 1 série a 50% × 6 e 1 a 70% × 3 (valores calculados em cada cartão).",
     day: "Sexta-feira",
     exercises: [
       {
@@ -258,6 +262,131 @@ const WORKOUTS = {
   },
 };
 
+// ---------- Casa: kettlebell 6 kg + 12 kg e halteres de 9 kg ----------
+// Sem swings, cleans, snatches nem peso morto (carga e flexão da lombar), sem press de pé
+// e sem nada atrás da nuca. Cargas leves: progride com reps, tempo (descida em 3 s) e unilateral.
+const HOME_WARMUP =
+  "<strong>Aquecimento (5 min):</strong> marcha no lugar, 10 glute bridges sem peso, 10 bird dogs por lado e 1 série leve dos dois primeiros exercícios. Descansa 60–90 s entre séries.";
+const sets3 = (min, max, unit = "reps") => [1, 2, 3].map((n) => ({ label: `Série ${n}`, min, max, unit }));
+
+WORKOUTS.KA = {
+  name: "Casa 1 · Kettlebell",
+  short: "Casa 1",
+  day: "Segunda-feira",
+  home: true,
+  warmup: HOME_WARMUP,
+  exercises: [
+    {
+      id: "kb-goblet", name: "Goblet squat para uma cadeira", compound: true, home: true,
+      load: "KB 12 kg", sets: sets3(10, 15),
+      cues: ["Kettlebell de 12 kg agarrada pelos lados, junto ao peito.", "Senta-te devagar (3 s) numa cadeira firme e levanta sem balanço.", "A cadeira limita a descida: anca e joelho a ~90°.", "Tronco direito, lombar neutra."],
+      next: "Passa a fazer uma pausa de 2 s sentado sem relaxar, ou usa os dois halteres de 9 kg aos lados (18 kg).",
+      photoNote: "Na foto desce mais fundo do que deves: usa a cadeira para parar a ~90°.",
+      video: "goblet box squat kettlebell",
+    },
+    {
+      id: "kb-floor-press", name: "Floor press com halteres", compound: true, home: true,
+      load: "2 × 9 kg", sets: sets3(10, 15),
+      cues: ["Deitado no chão, joelhos fletidos, lombar apoiada.", "Desce até os cotovelos tocarem no chão, pausa 1 s.", "Pega neutra (palmas viradas uma para a outra) se os ombros reclamarem."],
+      next: "Passa a 1 braço de cada vez com a kettlebell de 12 kg (o outro braço ajuda a estabilizar).",
+      video: "dumbbell floor press technique",
+    },
+    {
+      id: "kb-row", name: "Remada unilateral apoiada", compound: true, home: true, perSide: true,
+      load: "KB 12 kg", sets: sets3(10, 15, "reps por lado"),
+      cues: ["Mão e joelho numa cadeira ou sofá, coluna neutra e quieta.", "Puxa a kettlebell em direção à anca, sem rodar o tronco.", "Desce em 2–3 s."],
+      next: "Faz pausa de 2 s em cima e descida em 4 s.",
+      video: "supported one arm kettlebell row",
+    },
+    {
+      id: "kb-split-squat", name: "Split squat com halteres", home: true, perSide: true,
+      load: "2 × 9 kg ou 2 × KB", sets: sets3(8, 12, "reps por lado"),
+      cues: ["Pé de trás no chão (não elevado), passada média.", "Desce na vertical até o joelho da frente a ~90°.", "Tronco direito, segura-te a uma parede se precisares."],
+      next: "Desce em 3 s e faz pausa de 1 s em baixo.",
+      photoNote: "Na foto o pé de trás está elevado: faz com os dois pés no chão.",
+      video: "dumbbell split squat technique",
+    },
+    {
+      id: "kb-hammer", name: "Curl martelo sentado", home: true,
+      load: "2 × 9 kg", sets: sets3(10, 15),
+      cues: ["Sentado com as costas apoiadas.", "Cotovelos parados, sem balanço.", "Descida de 2–3 s."],
+      next: "Alterna os braços com pausa de 1 s em cima.",
+      photoNote: "Na foto em pé; sentado poupa a lombar.",
+      video: "seated hammer curl dumbbell",
+    },
+    {
+      id: "kb-dead-bug", name: "Dead bug com kettlebell", home: true, perSide: true,
+      load: "KB 6 kg", sets: sets3(6, 10, "reps por lado"),
+      cues: ["Kettlebell de 6 kg segura com os braços esticados por cima do peito.", "Lombar colada ao chão durante todo o movimento.", "Estende uma perna de cada vez, devagar."],
+      next: "Estende braço e perna opostos ao mesmo tempo.",
+      video: "dead bug kettlebell",
+    },
+  ],
+};
+
+WORKOUTS.KB = {
+  name: "Casa 2 · Kettlebell",
+  short: "Casa 2",
+  day: "Sexta-feira",
+  home: true,
+  warmup: HOME_WARMUP,
+  exercises: [
+    {
+      id: "kb-bridge", name: "Glute bridge com kettlebell", compound: true, home: true,
+      load: "KB 12 kg", sets: sets3(12, 20),
+      cues: ["Deitado, kettlebell de 12 kg em cima da anca (com uma toalha).", "Sobe até a anca ficar alinhada, sem arquear a lombar.", "Pausa de 2 s em cima."],
+      next: "Passa a uma perna de cada vez (como na foto), primeiro sem peso.",
+      photoNote: "A foto mostra a versão a uma perna: é a progressão.",
+      video: "kettlebell glute bridge",
+    },
+    {
+      id: "kb-press", name: "Press de ombros sentado, costas apoiadas", compound: true, home: true,
+      load: "2 × 9 kg ou KB 6 kg", sets: sets3(8, 12),
+      cues: ["Sentado com as costas encostadas a uma parede ou cadeira.", "Pega neutra, cotovelos ligeiramente à frente.", "Se o pescoço reclamar, faz só um braço de cada vez com a de 6 kg."],
+      next: "Descida em 3 s e pausa de 1 s em baixo.",
+      photoNote: "Na foto sem encosto: em casa encosta as costas.",
+      video: "seated dumbbell shoulder press neutral grip",
+    },
+    {
+      id: "kb-stepup", name: "Step-up para degrau baixo", compound: true, home: true, perSide: true,
+      load: "2 × 9 kg", sets: sets3(8, 12, "reps por lado"),
+      cues: ["Degrau ou caixa de 20–30 cm: o joelho não deve passar dos 90°.", "Empurra com o calcanhar da perna de cima, sem impulso da de baixo.", "Desce devagar."],
+      next: "Desce em 3 s, ou segura a kettlebell de 12 kg em vez dos halteres.",
+      photoNote: "Na foto o banco é alto: em casa usa um degrau baixo.",
+      video: "dumbbell step up low step",
+    },
+    {
+      id: "kb-pullover", name: "Pullover deitado no chão", home: true,
+      load: "KB 12 kg ou halter 9 kg", sets: sets3(10, 15),
+      cues: ["Deitado no chão, joelhos fletidos, lombar apoiada.", "Braços quase esticados, leva o peso para trás só até onde a lombar não arqueia.", "Puxa de volta até por cima do peito."],
+      next: "Descida em 4 s.",
+      photoNote: "Na foto num banco: no chão o movimento é mais curto e mais seguro.",
+      video: "floor kettlebell pullover",
+    },
+    {
+      id: "kb-lateral", name: "Elevação lateral sentado", home: true, perSide: true,
+      load: "KB 6 kg", sets: sets3(10, 15, "reps por lado"),
+      cues: ["Sentado, um braço de cada vez com a kettlebell de 6 kg.", "Sobe até à linha do ombro, sem encolher.", "Descida lenta."],
+      next: "Faz 1 s de pausa em cima.",
+      video: "seated one arm lateral raise",
+    },
+    {
+      id: "kb-carry", name: "Suitcase carry (transporte com um braço)", home: true, perSide: true,
+      load: "KB 12 kg", sets: sets3(30, 45, "s por lado"),
+      cues: ["Kettlebell de 12 kg numa mão, de lado. Regista os segundos nas reps.", "Caminha devagar com o tronco direito: não deixes inclinar para o lado do peso.", "Ombros para baixo, abdominal ativo."],
+      next: "Usa um halter de 9 kg em cada mão e depois volta à de 12 kg com mais tempo.",
+      photoNote: "Na foto com dois pesos; aqui é com um, para treinar o core contra a inclinação.",
+      video: "suitcase carry kettlebell",
+    },
+  ],
+};
+
+// Programas: o plano da semana usa o treino do programa ativo em cada "slot".
+const PROGRAMS = {
+  gym: { label: "Ginásio", workouts: ["A", "B"] },
+  home: { label: "Casa · kettlebell", workouts: ["KA", "KB"] },
+};
+
 // Semana: 0 = domingo … 6 = sábado (como Date.getDay()).
 const STEPS_GOAL = 11000;
 const FLOW_CHANNEL = "https://www.youtube.com/@strengthsidefollowalongs";
@@ -278,11 +407,11 @@ const FLOW_VIDEOS = [
     note: "Aula guiada com preparação dos pulsos, movimentos base e um flow para iniciantes." },
 ];
 const WEEK = [
-  { dow: 1, type: "workout", workout: "A", title: "Treino A" },
+  { dow: 1, type: "workout", slot: 0 },
   { dow: 2, type: "steps", title: `${STEPS_GOAL.toLocaleString("pt-PT")} passos` },
   { dow: 3, type: "flow", title: "Animal Flow" },
   { dow: 4, type: "steps", title: `${STEPS_GOAL.toLocaleString("pt-PT")} passos` },
-  { dow: 5, type: "workout", workout: "B", title: "Treino B" },
+  { dow: 5, type: "workout", slot: 1 },
   { dow: 6, type: "rest", title: "Descanso" },
   { dow: 0, type: "rest", title: "Descanso" },
 ];

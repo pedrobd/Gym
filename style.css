@@ -467,3 +467,14 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
   .food-edit-row input[type="text"] { grid-column: 1 / -1; font-weight: 600; }
   .food-edit-row .log-g { padding-left: .5rem; }
 }
+
+/* ---------- programa: ginásio / casa ---------- */
+.mode-row { display: flex; justify-content: space-between; align-items: center; gap: .75rem; flex-wrap: wrap; margin: 1rem 0; }
+#tab-workout > .mode-row { margin-top: 0; }
+.mode-row > span { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.mode-switch { display: flex; gap: .25rem; background: var(--surface); border-radius: 999px; padding: .25rem; }
+.mode-switch button {
+  border: 0; background: none; color: var(--muted); cursor: pointer; white-space: nowrap;
+  font: 700 .82rem/1 var(--font-body); padding: .6rem .9rem; border-radius: 999px;
+}
+.mode-switch button.on { background: var(--ink); color: var(--on-ink); }

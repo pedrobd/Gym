@@ -49,11 +49,19 @@
           <button id="week-next" aria-label="Semana seguinte">›</button>
         </div>
       </div>
+      <div class="mode-row">
+        <span>Treinos de força</span>
+        <div class="mode-switch" role="radiogroup" aria-label="Onde vais treinar"></div>
+      </div>
       <ul class="week-stats" id="week-stats"></ul>
       <div id="week-days" class="week-days"></div>
     </section>
 
     <section id="tab-workout" class="tab-panel" hidden>
+      <div class="mode-row">
+        <span>Programa</span>
+        <div class="mode-switch" role="radiogroup" aria-label="Onde vais treinar"></div>
+      </div>
       <div class="session-bar">
         <div class="session-title">
           <h2 id="workout-title"></h2>
@@ -64,9 +72,7 @@
         </label>
       </div>
 
-      <div class="callout warn">
-        <strong>Aquecimento:</strong> 5 min de bicicleta. Nos três primeiros exercícios: 1 série a 50% × 6 e 1 a 70% × 3 (valores calculados em cada cartão).
-      </div>
+      <div class="callout warn" id="warmup-callout"></div>
 
       <div id="exercise-list"></div>
 
@@ -175,6 +181,15 @@
 
       <h2>Progressão dupla</h2>
       <p>Mantém o peso até chegares ao topo da faixa de repetições e só então sobe a carga. Exemplo no leg press: 100 kg×8 → 100×9 → 100×10 → 105 kg×8. Regista tudo — este princípio gera 90% dos resultados. O site mostra uma sugestão em cada exercício com base no último registo.</p>
+
+      <h2>Treino em casa (kettlebell)</h2>
+      <ul class="rules">
+        <li><strong>Material:</strong> kettlebells de 6 e 12 kg e halteres de 9 kg. Escolhe "Casa · kettlebell" no separador Semana e os treinos de segunda e sexta passam a Casa 1 e Casa 2.</li>
+        <li><strong>Fica de fora:</strong> swings, cleans, snatches, peso morto, press de pé e halos. São os movimentos mais típicos de kettlebell, mas carregam ou fletem a lombar, ou levam peso por cima da cabeça.</li>
+        <li><strong>3 séries por exercício</strong> em vez de 2, porque as cargas são leves. Descansa 60–90 s.</li>
+        <li><strong>Progressão:</strong> como não podes subir de peso aos poucos, primeiro sobes as reps até ao topo da faixa em todas as séries. Depois tornas o exercício mais difícil: descida em 3–4 s, pausas, uma perna ou um braço de cada vez, ou o peso seguinte. Cada cartão diz qual é o próximo passo.</li>
+        <li>Os sinais para parar são os mesmos.</li>
+      </ul>
 
       <h2>Restantes dias</h2>
       <ul class="rules">

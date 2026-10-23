@@ -39,6 +39,13 @@
   let remote = null; // { col } quando a base de dados está disponível
   let assets = null;
   let currentWorkout = "A";
+  // Programa ativo: "gym" (treinos A/B) ou "home" (kettlebell em casa).
+  let mode = "gym";
+  try { mode = PROGRAMS[localStorage.getItem("gym.mode")] ? localStorage.getItem("gym.mode") : "gym"; } catch {}
+  const slotWorkout = (slot, m = mode) => PROGRAMS[m].workouts[slot];
+  // Sessão de força feita nesse dia nesse slot, em qualquer programa.
+  const slotSession = (slot, date) =>
+    Object.keys(PROGRAMS).map((m) => sessionFor(slotWorkout(slot, m), date)).find(Boolean);
   let dirty = false;
 
   function normalizeMedia(m) {
@@ -121,6 +128,12 @@
     if (!top || !top.reps) return "";
     const range = ex.sets[0];
     const kg = Number(top.kg) || 0;
+    if (ex.home) {
+      const allTop = last.sets.every((r) => r.reps >= range.max);
+      if (allTop) return `✅ Chegaste ao topo nas ${last.sets.length} séries. Próximo passo: <strong>${escapeHtml(ex.next)}</strong>`;
+      const lowest = Math.min(...last.sets.map((r) => r.reps || 0));
+      return `Mantém o peso e tenta <strong>+1 ${range.unit && range.unit.startsWith("s") ? "a 5 s" : "rep"}</strong> nas séries mais fracas (a mais baixa foi ${lowest}). Objetivo: ${range.max} em todas.`;
+    }
     if (top.reps >= range.max) {
       if (!kg) return `Chegaste a ${top.reps} reps. Aumenta a resistência e volta às ${range.min} reps.`;
       const inc = Math.max(ex.compound ? 5 : 2.5, roundTo(kg * 0.05));
@@ -203,8 +216,9 @@
     const existing = sessionFor(currentWorkout, date);
     dirty = false;
 
-    $("#workout-title").textContent = def.name;
-    $("#workout-day").textContent = def.day;
+    $("#workout-title").textContent = def.short || def.name;
+    $("#warmup-callout").innerHTML = def.warmup || "";
+    $("#workout-day").textContent = def.day + (def.home ? " · kettlebell em casa" : "");
     $("#session-notes").value = existing ? existing.notes || "" : "";
 
     variants = existing && existing.variants ? { ...existing.variants } : {};
@@ -243,7 +257,7 @@
         const cur = current && current[si];
         return `
           <div class="set-row">
-            <span class="set-label">${set.label}<small>${set.min}–${set.max} reps</small></span>
+            <span class="set-label">${set.label}<small>${set.min}–${set.max} ${set.unit || "reps"}</small></span>
             <label><span>kg</span><input type="number" inputmode="decimal" step="0.5" min="0" id="in-${ex.id}-${si}-kg" data-ex="${ex.id}" data-set="${si}" data-field="kg"
               value="${cur && cur.kg !== "" ? cur.kg : ""}" placeholder="${prev && prev.kg !== "" ? prev.kg : "–"}"></label>
             <label><span>reps</span><input type="number" inputmode="numeric" step="1" min="0" id="in-${ex.id}-${si}-reps" data-ex="${ex.id}" data-set="${si}" data-field="reps"
@@ -261,10 +275,11 @@
             <span class="tag ${ex.compound ? "compound" : ""}">${ex.compound ? "Composto · parar a 1–2 reps da falha" : "Isolamento · podes ir à falha"}</span>
           </div>
         </header>
-        ${planBHtml(ex, v)}
+        ${(ex.alts || []).length ? planBHtml(ex, v) : ""}
         <ul class="cues">${v.cues.map((c) => `<li>${escapeHtml(c)}</li>`).join("")}</ul>
         ${demoHtml(ex, v)}
-        ${i < 3 ? `<div class="warmup" data-warmup="${ex.id}"></div>` : ""}
+        ${i < 3 && !ex.home ? `<div class="warmup" data-warmup="${ex.id}"></div>` : ""}
+        ${ex.load ? `<div class="warmup"><strong>Peso:</strong> ${escapeHtml(ex.load)}</div>` : ""}
         <div class="hint">${last ? `<span class="muted">Último (${fmtDate(last.date)}): ${last.sets
           .filter((r) => r.reps)
           .map((r) => `${r.kg !== "" ? r.kg + "×" : ""}${r.reps}`)
@@ -490,7 +505,7 @@
   function dayStatus(plan, date) {
     const d = days[date] || {};
     if (plan.type === "workout") {
-      const s = sessionFor(plan.workout, date);
+      const s = slotSession(plan.slot, date);
       return { done: !!s, label: s ? `Feito · ${Object.keys(s.entries).length} exercícios registados` : "" };
     }
     if (plan.type === "steps") {
@@ -545,10 +560,10 @@
   function dayBody(plan, date) {
     const d = days[date] || {};
     if (plan.type === "workout") {
-      const def = WORKOUTS[plan.workout];
+      const def = WORKOUTS[slotWorkout(plan.slot)];
       return `
         <p class="day-desc">${def.exercises.length} exercícios · 2 séries · ~60 min com aquecimento.</p>
-        <button class="pill-btn dark" data-open-workout="${plan.workout}" data-date="${date}">Abrir ${def.name}</button>`;
+        <button class="pill-btn dark" data-open-workout="${plan.slot ? "B" : "A"}" data-date="${date}">Abrir ${def.short}</button>`;
     }
     if (plan.type === "steps") {
       const n = Number(d.steps) || 0;
@@ -614,13 +629,13 @@
       }
       const n = Number((days[date] || {}).steps) || 0;
       if (n) { stepsTotal += n; stepsDays++; }
-      const tone = plan.type === "workout" ? `workout-${plan.workout}` : plan.type;
+      const tone = plan.type === "workout" ? `workout-${plan.slot ? "B" : "A"}` : plan.type;
       return `
         <article class="day ${date === todayIso ? "today" : ""} ${st.done ? "done" : ""}" data-tone="${tone}">
           <header class="day-head">
             <div class="day-date"><span>${DOW_NAMES[dt.getDay()]}</span><b>${dt.getDate()}</b></div>
             <div class="day-title">
-              <h3>${escapeHtml(plan.title)}</h3>
+              <h3>${escapeHtml(plan.type === "workout" ? WORKOUTS[slotWorkout(plan.slot)].name : plan.title)}</h3>
               <span class="day-status">${date === todayIso ? `<em>Hoje</em>` : ""}${st.done ? `<i class="ok">✓ ${escapeHtml(st.label)}</i>` : st.label ? escapeHtml(st.label) : plan.type === "rest" ? "" : "Por fazer"}</span>
             </div>
           </header>
@@ -631,7 +646,7 @@
     $("#week-stats").innerHTML = `
       <li><b>${done}/${planned}</b><span>dias cumpridos</span></li>
       <li><b>${stepsDays ? Math.round(stepsTotal / stepsDays).toLocaleString("pt-PT") : "–"}</b><span>média de passos</span></li>
-      <li><b>${dates.filter((dt) => { const p = WEEK.find((w) => w.dow === dt.getDay()); return p.type === "workout" && sessionFor(p.workout, isoDate(dt)); }).length}/2</b><span>treinos de força</span></li>`;
+      <li><b>${dates.filter((dt) => { const p = WEEK.find((w) => w.dow === dt.getDay()); return p.type === "workout" && slotSession(p.slot, isoDate(dt)); }).length}/2</b><span>treinos de força</span></li>`;
   }
 
   async function saveDayField(date, field, value) {
@@ -860,7 +875,30 @@
 
   // ---------- navegação ----------
   let currentTab = "week";
-  function showTab(tab) {
+  function renderModeSwitches() {
+    $$(".mode-switch").forEach((el) => {
+      el.innerHTML = Object.entries(PROGRAMS)
+        .map(
+          ([k, p]) => `<button role="radio" aria-checked="${k === mode}" class="${k === mode ? "on" : ""}" data-mode="${k}">${escapeHtml(p.label)}</button>`
+        )
+        .join("");
+    });
+    $$('.tabs button[data-tab="A"], .tabs button[data-tab="B"]').forEach((b) => {
+      b.textContent = WORKOUTS[slotWorkout(b.dataset.tab === "A" ? 0 : 1)].short;
+    });
+  }
+
+  async function setMode(m, save = true) {
+    if (!PROGRAMS[m] || m === mode) return;
+    mode = m;
+    try { localStorage.setItem("gym.mode", m); } catch {}
+    if (save && remote) remote.col.doc("settings").set({ kind: "settings", mode: m }).catch(() => {});
+    renderModeSwitches();
+    if (currentTab === "A" || currentTab === "B") showTab(currentTab);
+    else refresh();
+  }
+
+  function showTab(tab, workoutKey) {
     currentTab = tab;
     $$(".tabs button").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
     const isWorkout = tab === "A" || tab === "B";
@@ -874,9 +912,9 @@
     const active = $(`.tabs button[data-tab="${tab}"]`);
     if (active && active.scrollIntoView) active.scrollIntoView({ block: "nearest", inline: "nearest" });
     if (isWorkout) {
-      currentWorkout = tab;
+      currentWorkout = workoutKey || slotWorkout(tab === "A" ? 0 : 1);
       $("#tab-workout").dataset.workout = tab;
-      $("#save-status").textContent = sessionFor(tab, $("#session-date").value || today()) ? "A editar o registo desta data." : "";
+      $("#save-status").textContent = sessionFor(currentWorkout, $("#session-date").value || today()) ? "A editar o registo desta data." : "";
       renderWorkout();
     } else if (tab === "progress") {
       renderProgress();
@@ -893,6 +931,10 @@
   }
 
   // ---------- eventos ----------
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-mode]");
+    if (b) setMode(b.dataset.mode);
+  });
   $("#body-date").addEventListener("change", renderBody);
   $("#protein-factor").addEventListener("change", (e) => {
     proteinFactor = Number(e.target.value) || 1.8;
@@ -1167,7 +1209,8 @@
     if (open) {
       const s = sessions.find((x) => x.id === open.dataset.open);
       $("#session-date").value = s.date;
-      showTab(s.workout);
+      const m = Object.keys(PROGRAMS).find((k) => PROGRAMS[k].workouts.includes(s.workout));
+      showTab(PROGRAMS[m].workouts.indexOf(s.workout) ? "B" : "A", s.workout);
     }
   });
 
@@ -1271,6 +1314,9 @@
         const remoteSessions = docs.filter((d) => d.kind === "session").map(({ kind, ...s }) => s);
         const m = docs.find((d) => d.kind === "media");
         const fd = docs.find((d) => d.kind === "foods");
+        const st = docs.find((d) => d.kind === "settings");
+        if (st && PROGRAMS[st.mode] && st.mode !== mode) setMode(st.mode, false);
+        else if (!st && first && mode !== "gym") col.doc("settings").set({ kind: "settings", mode }).catch(() => {});
         const remoteDays = {};
         docs.filter((d) => d.kind === "day").forEach(({ kind, ...d }) => (remoteDays[d.date] = d));
         if (first) {
@@ -1310,6 +1356,7 @@
     );
   }
 
+  renderModeSwitches();
   showTab("week");
   connectRemote();
 })();
