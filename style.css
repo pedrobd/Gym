@@ -478,3 +478,6 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
   font: 700 .82rem/1 var(--font-body); padding: .6rem .9rem; border-radius: 999px;
 }
 .mode-switch button.on { background: var(--ink); color: var(--on-ink); }
+.ex-vids { margin: .75rem 0 .25rem; }
+.ex-vids .vid.featured { padding: .85rem 1rem; }
+.ex-vids .vid.featured .vid-play { width: 2.8rem; height: 2.8rem; }

@@ -107,7 +107,7 @@
 
   function variantOf(ex, key) {
     const alt = key && key !== "main" && (ex.alts || []).find((a) => a.id === key);
-    if (!alt) return { key: "main", name: ex.name, cues: ex.cues, q: ex.video, photo: `img/${ex.id}`, photoNote: ex.photoNote };
+    if (!alt) return { key: "main", name: ex.name, cues: ex.cues, q: ex.video, photo: `img/${ex.id}`, photoNote: ex.photoNote, vids: ex.vids };
     return { key: alt.id, name: alt.name, cues: alt.cues, q: alt.q, photo: alt.photo === false ? null : `img/alt-${alt.id}`, alt: true };
   }
 
@@ -123,7 +123,10 @@
 
   // ---------- sugestão de progressão dupla ----------
   function suggestion(ex, last) {
-    if (!last) return "Primeira vez: escolhe uma carga em que chegues ao fundo da faixa com boa técnica.";
+    if (!last)
+      return ex.home
+        ? "Primeira vez: usa o peso indicado e vê quantas reps fazes com boa técnica, parando 1–2 antes da falha."
+        : "Primeira vez: escolhe uma carga em que chegues ao fundo da faixa com boa técnica.";
     const top = last.sets[0];
     if (!top || !top.reps) return "";
     const range = ex.sets[0];
@@ -177,11 +180,25 @@
         ${v.photoNote ? `<figcaption>${escapeHtml(v.photoNote)}</figcaption>` : ""}
       </figure>`
       : "";
+    const vids = (v.vids || []).length
+      ? `<div class="vids ex-vids">
+          ${!inViewer ? `<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/${v.vids[0].id}" title="${escapeHtml(v.vids[0].title)}" loading="lazy" allowfullscreen allow="encrypted-media; picture-in-picture"></iframe></div>` : ""}
+          ${v.vids
+            .map(
+              (x, i) => `<a class="vid ${i === 0 ? "featured" : ""}" href="https://www.youtube.com/watch?v=${x.id}" target="_blank" rel="noopener">
+                <span class="vid-play" aria-hidden="true"></span>
+                <span class="vid-text">${i === 0 ? "<em>Vídeo de demonstração</em>" : ""}<strong>${escapeHtml(x.title)}</strong><small>YouTube · em inglês</small></span>
+              </a>`
+            )
+            .join("")}
+        </div>`
+      : "";
     return `
       ${photos}
       ${block}
+      ${vids}
       <div class="chips">
-        <a target="_blank" rel="noopener" href="${search(v.q)}">▶ Vídeos de demonstração</a>
+        <a target="_blank" rel="noopener" href="${search(v.q)}">▶ ${vids ? "Mais vídeos" : "Vídeos de demonstração"}</a>
         ${link ? `<a target="_blank" rel="noopener" href="${escapeHtml(link)}">▶ O meu vídeo</a>` : ""}
         <button class="link set-video" data-ex="${ex.id}" aria-expanded="false">${m.link || m.asset ? "Trocar vídeo/foto" : "Fixar vídeo/foto"}</button>
       </div>
