@@ -393,6 +393,77 @@ WORKOUTS.KB = {
   ],
 };
 
+// ---------- Quarta: calistenia + kettlebell (uma kettlebell de cada vez: 6 ou 12 kg) ----------
+// Circuito: corpo e kettlebell alternados, 3 voltas. Mesmas regras: nada de swings,
+// peso morto, press de pé nem flexão da lombar com carga. "photo" reaproveita fotos de img/.
+WORKOUTS.W = {
+  name: "Quarta · Calistenia + kettlebell",
+  short: "Quarta",
+  day: "Quarta-feira",
+  home: true,
+  circuit: true,
+  warmup:
+    "<strong>Como fazer:</strong> 10 min de Animal Flow (vídeo no separador Semana) como aquecimento. Depois faz o circuito: 1 série de cada exercício seguida, com 20–30 s entre exercícios, e descansa 90 s no fim de cada volta. 3 voltas. Só precisas de uma kettlebell de cada vez.",
+  exercises: [
+    {
+      id: "w-goblet", photo: "kb-goblet", name: "Goblet squat para uma cadeira", compound: true, home: true,
+      vids: [{ id: "xxUok-bsgpQ", title: "Weighted Goblet Squats from a Chair" }],
+      load: "KB 12 kg", sets: sets3(10, 15),
+      cues: ["Kettlebell de 12 kg junto ao peito, agarrada pelos lados.", "Senta-te devagar (3 s) na cadeira e levanta sem balanço: anca e joelho a ~90°.", "Tronco direito, lombar neutra."],
+      next: "Pausa de 2 s sentado sem relaxar, ou descida em 4 s.",
+      photoNote: "Na foto desce mais fundo do que deves: usa a cadeira para parar a ~90°.",
+      video: "goblet box squat kettlebell",
+    },
+    {
+      id: "w-pushup", name: "Flexões inclinadas (mãos numa mesa ou bancada)", home: true,
+      load: "Peso do corpo", sets: sets3(8, 15),
+      cues: ["Mãos numa superfície firme à altura da anca, corpo em linha reta dos ombros aos calcanhares.", "Abdominal e glúteos contraídos: a lombar não cai.", "Pescoço neutro, olha para as mãos. Cotovelos a ~45° do corpo."],
+      next: "Usa uma superfície mais baixa (cadeira, depois degrau) até chegares às flexões no chão.",
+      photoNote: "Na foto numa barra; em casa usa uma mesa ou bancada.",
+      video: "incline push up technique",
+    },
+    {
+      id: "w-row", photo: "kb-row", name: "Remada unilateral apoiada", compound: true, home: true, perSide: true,
+      vids: [{ id: "eQLvFed1noc", title: "Single Arm Kettlebell Row Bench Supported" }],
+      load: "KB 12 kg", sets: sets3(10, 15, "reps por lado"),
+      cues: ["Mão e joelho numa cadeira ou sofá, coluna neutra e quieta.", "Puxa a kettlebell em direção à anca, sem rodar o tronco.", "Desce em 2–3 s."],
+      next: "Pausa de 2 s em cima e descida em 4 s.",
+      video: "supported one arm kettlebell row",
+    },
+    {
+      id: "w-bridge", photo: "kb-bridge", name: "Glute bridge a uma perna", home: true, perSide: true,
+      load: "Peso do corpo", sets: sets3(8, 12, "reps por lado"),
+      cues: ["Deitado, um pé no chão perto do glúteo, a outra perna esticada ou fletida no ar.", "Sobe empurrando com o calcanhar até a anca alinhar, sem arquear a lombar.", "Pausa de 2 s em cima."],
+      next: "Põe a kettlebell de 6 kg em cima da anca (com uma toalha).",
+      video: "single leg glute bridge",
+    },
+    {
+      id: "w-beast", photo: false, name: "Beast hold → beast crawl (Animal Flow)", home: true,
+      load: "Peso do corpo", sets: sets3(20, 40, "s"),
+      cues: ["De gatas, mãos por baixo dos ombros e joelhos por baixo da anca; levanta os joelhos 2–3 cm do chão.", "Costas planas como uma mesa, pescoço neutro. Regista os segundos nas reps.", "Quando chegares aos 40 s, passa a andar devagar: mão e pé opostos ao mesmo tempo."],
+      next: "Beast crawl: 4 passos para a frente e 4 para trás, sem a anca subir nem rodar.",
+      video: "animal flow beast hold beast crawl beginner",
+    },
+    {
+      id: "w-pullover", photo: "kb-pullover", name: "Pullover deitado no chão", home: true,
+      vids: [{ id: "hbiDlO7VBxs", title: "Kettlebell Floor Pullover" }],
+      load: "KB 6 kg", sets: sets3(12, 15),
+      cues: ["Deitado no chão, joelhos fletidos, lombar apoiada.", "Kettlebell de 6 kg agarrada pelos lados, braços quase esticados.", "Leva-a para trás só até onde a lombar não arqueia e volta até por cima do peito."],
+      next: "Descida em 4 s, ou passa à de 12 kg com 8–10 reps.",
+      photoNote: "Na foto num banco: no chão o movimento é mais curto e mais seguro.",
+      video: "floor kettlebell pullover",
+    },
+    {
+      id: "w-carry", photo: "kb-carry", name: "Suitcase carry (transporte com um braço)", home: true, perSide: true,
+      vids: [{ id: "cF_CrM2eC4U", title: "How To Suitcase Carry" }],
+      load: "KB 12 kg", sets: sets3(30, 45, "s por lado"),
+      cues: ["Kettlebell de 12 kg numa mão, de lado. Regista os segundos nas reps.", "Caminha devagar com o tronco direito: não deixes inclinar para o lado do peso.", "Ombros para baixo, abdominal ativo."],
+      next: "Mais tempo (60 s por lado) ou passos mais lentos com pausa de 2 s em cada passo.",
+      video: "suitcase carry kettlebell",
+    },
+  ],
+};
+
 // Programas: o plano da semana usa o treino do programa ativo em cada "slot".
 const PROGRAMS = {
   gym: { label: "Ginásio", workouts: ["A", "B"] },
@@ -421,7 +492,7 @@ const FLOW_VIDEOS = [
 const WEEK = [
   { dow: 1, type: "workout", slot: 0 },
   { dow: 2, type: "steps", title: `${STEPS_GOAL.toLocaleString("pt-PT")} passos` },
-  { dow: 3, type: "flow", title: "Animal Flow" },
+  { dow: 3, type: "mixed", title: "Calistenia + kettlebell", workout: "W" },
   { dow: 4, type: "steps", title: `${STEPS_GOAL.toLocaleString("pt-PT")} passos` },
   { dow: 5, type: "workout", slot: 1 },
   { dow: 6, type: "rest", title: "Descanso" },
