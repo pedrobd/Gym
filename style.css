@@ -553,3 +553,22 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
 .morning-tag { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; background: var(--ink); color: var(--on-ink); border-radius: 999px; padding: .2rem .55rem; margin-right: .3rem; vertical-align: .1em; }
 #week-stats { grid-template-columns: repeat(4, 1fr); }
 @media (max-width: 600px) { #week-stats { grid-template-columns: repeat(2, 1fr); } }
+
+/* corpo: refeições da ementa */
+.body-meals { display: grid; gap: .5rem; }
+.body-meals:empty { display: none; }
+.body-meals > p { margin: 0; }
+.body-meals .food-head .small { text-transform: none; letter-spacing: 0; font-weight: 500; }
+.body-meal-list { display: grid; gap: .4rem; }
+.body-meal {
+  display: flex; justify-content: space-between; align-items: center; gap: .75rem; text-align: left; width: 100%;
+  background: var(--bg); color: var(--ink); border: 1.5px solid transparent; border-radius: var(--r-md);
+  padding: .65rem .85rem; cursor: pointer; font: 500 .86rem/1.3 var(--font-body);
+}
+.body-meal:hover { border-color: var(--ink); }
+.body-meal.on { background: var(--tint-ok); }
+.body-meal-text { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
+.body-meal-text small, .body-meal-num small { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.body-meal-num { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: .15rem; }
+.body-meal-num b { font: 800 .95rem/1 var(--font-display); font-stretch: 110%; color: var(--accent); white-space: nowrap; }
+.body-meal.on .body-meal-num b { color: var(--ok); }
