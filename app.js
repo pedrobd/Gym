@@ -35,7 +35,7 @@
   // days[date] = { date, steps?, flowDone?, flowMin?, coreDone?, notes? }
   let days = load(STORE_DAYS, {});
   // Atalhos de proteína (editáveis); começam com os valores de data.js.
-  let foods = load(STORE_FOODS, null) || PROTEIN_FOODS.map((f) => ({ ...f }));
+  let foods = withKcal(load(STORE_FOODS, null) || PROTEIN_FOODS.map((f) => ({ ...f })));
   let foodsCustomized = !!load(STORE_FOODS, null);
   // Lista de compras: [{ id, cat, name, qty, price?, done }]; começa com SHOP_DEFAULT.
   const defaultShop = () => SHOP_DEFAULT.map((it, i) => ({ id: "d" + i, ...it, done: false }));
@@ -65,6 +65,11 @@
   const slotSession = (slot, date) =>
     Object.keys(PROGRAMS).map((m) => sessionFor(slotWorkout(slot, m), date)).find(Boolean);
   let dirty = false;
+
+  // Atalhos guardados antes de haver calorias: usa as kcal do atalho original com o mesmo nome.
+  function withKcal(list) {
+    return list.map((f) => (f.kcal != null ? f : { ...f, kcal: (PROTEIN_FOODS.find((d) => d.name === f.name) || {}).kcal || 0 }));
+  }
 
   function normalizeMedia(m) {
     const out = {};
@@ -810,7 +815,7 @@
       if (!$("#foods-editor").contains(document.activeElement)) renderFoodsEditor();
     } else {
       $("#food-grid").innerHTML = foods.length
-        ? foods.map((f, i) => `<button class="food-btn" data-food="${i}"><span>${escapeHtml(f.name)}</span><b>+${f.g} g</b></button>`).join("")
+        ? foods.map((f, i) => `<button class="food-btn" data-food="${i}"><span>${escapeHtml(f.name)}</span><b>+${f.g} g</b><small>${f.kcal || 0} kcal</small></button>`).join("")
         : `<p class="muted small">Sem atalhos. Carrega em "Editar atalhos" para criar.</p>`;
     }
     const items = (days[date] || {}).protein || [];
@@ -834,11 +839,14 @@
           .join("")}</div>
         <p class="muted small">Toca numa refeição quando a comeres: a proteína entra no total do dia. Toca outra vez para tirar. Se comeres outra coisa, usa os atalhos em baixo.</p>`;
     } else $("#body-meals").innerHTML = "";
+    const kcalLogged = items.reduce((t, it) => t + (Number(it.kcal) || 0), 0);
+    const kcalTarget = plan ? plan.meals.reduce((t, m) => t + m.kcal, 0) : 1600;
+    $("#kcal-msg").innerHTML = `<b>≈${kcalLogged} kcal</b> registadas · objetivo ≈${kcalTarget} kcal${kcalLogged > kcalTarget ? ` <span class="danger-text">(+${kcalLogged - kcalTarget})</span>` : kcalLogged ? ` · faltam ≈${kcalTarget - kcalLogged}` : ""}`;
 
     $("#food-log").innerHTML = items.length
       ? items
           .map(
-            (it, i) => `<li><span>${escapeHtml(it.name)}</span><label class="log-g"><input type="number" inputmode="numeric" min="0" step="1" id="log-g-${i}" data-food-edit="${i}" value="${it.g}" aria-label="Proteína de ${escapeHtml(it.name)}"> g</label><button class="link" data-food-del="${i}" aria-label="Remover ${escapeHtml(it.name)}">✕</button></li>`
+            (it, i) => `<li><span>${escapeHtml(it.name)}</span><label class="log-g"><input type="number" inputmode="numeric" min="0" step="1" id="log-g-${i}" data-food-edit="${i}" data-food-field="g" value="${it.g}" aria-label="Proteína de ${escapeHtml(it.name)}"> g</label><label class="log-g"><input type="number" inputmode="numeric" min="0" step="1" id="log-kcal-${i}" data-food-edit="${i}" data-food-field="kcal" value="${Number(it.kcal) || 0}" aria-label="Calorias de ${escapeHtml(it.name)}"> kcal</label><button class="link" data-food-del="${i}" aria-label="Remover ${escapeHtml(it.name)}">✕</button></li>`
           )
           .join("")
       : `<li class="empty">Ainda nada registado neste dia. Toca num alimento para somar.</li>`;
@@ -918,13 +926,14 @@
 
   function renderFoodsEditor() {
     $("#foods-editor").innerHTML = `
-      <p class="muted small">Muda o nome ou os gramas de proteína de cada atalho. Os registos antigos não mudam.</p>
+      <p class="muted small">Muda o nome, os gramas de proteína ou as calorias de cada atalho. Os registos antigos não mudam.</p>
       ${foods
         .map(
           (f, i) => `
         <div class="food-edit-row">
           <input type="text" id="fe-name-${i}" data-fe="${i}" data-fe-field="name" value="${escapeHtml(f.name)}" aria-label="Nome do alimento">
           <label class="log-g"><input type="number" inputmode="numeric" min="0" step="1" id="fe-g-${i}" data-fe="${i}" data-fe-field="g" value="${f.g}" aria-label="Gramas de proteína"> g</label>
+          <label class="log-g"><input type="number" inputmode="numeric" min="0" step="1" id="fe-kcal-${i}" data-fe="${i}" data-fe-field="kcal" value="${f.kcal || 0}" aria-label="Calorias"> kcal</label>
           <button class="link danger-text" data-fe-del="${i}" aria-label="Apagar ${escapeHtml(f.name)}">✕</button>
         </div>`
         )
@@ -1129,7 +1138,7 @@
     if (!inp) return;
     const i = Number(inp.dataset.fe);
     if (inp.dataset.feField === "name") foods[i].name = inp.value.trim() || foods[i].name;
-    else foods[i].g = Math.max(0, Math.round(Number(inp.value) || 0));
+    else foods[i][inp.dataset.feField] = Math.max(0, Math.round(Number(inp.value) || 0));
     persistFoods().catch(() => {});
   });
   $("#foods-editor").addEventListener("click", (e) => {
@@ -1140,7 +1149,7 @@
       renderFoodsEditor();
     }
     if (e.target.closest("#fe-add")) {
-      foods.push({ name: "Novo alimento", g: 10 });
+      foods.push({ name: "Novo alimento", g: 10, kcal: 100 });
       persistFoods().catch(() => {});
       renderFoodsEditor();
       const n = $(`#fe-name-${foods.length - 1}`);
@@ -1166,7 +1175,13 @@
     const list = [...((days[date] || {}).protein || [])];
     const i = Number(inp.dataset.foodEdit);
     if (!list[i]) return;
-    list[i] = { ...list[i], g: Math.max(0, Math.round(Number(inp.value) || 0)) };
+    const v = Math.max(0, Math.round(Number(inp.value) || 0));
+    if (inp.dataset.foodField === "kcal") list[i] = { ...list[i], kcal: v };
+    else {
+      // mais ou menos proteína = porção maior ou menor: as calorias acompanham
+      const kcal = list[i].g ? Math.round(((Number(list[i].kcal) || 0) * v) / list[i].g) : Number(list[i].kcal) || 0;
+      list[i] = { ...list[i], g: v, kcal };
+    }
     inp.blur();
     updateDay(date, { protein: list });
   });
@@ -1187,7 +1202,7 @@
     if (!b) return;
     const f = foods[Number(b.dataset.food)];
     const date = bodyDate();
-    updateDay(date, { protein: [...((days[date] || {}).protein || []), { name: f.name, g: f.g }] });
+    updateDay(date, { protein: [...((days[date] || {}).protein || []), { name: f.name, g: f.g, kcal: f.kcal || 0 }] });
   });
   $("#food-add").addEventListener("click", () => {
     const g = Math.round(Number($("#food-g").value));
@@ -1196,10 +1211,12 @@
       return;
     }
     const name = $("#food-name").value.trim() || "Outro";
+    const kcal = Math.max(0, Math.round(Number($("#food-kcal").value) || 0));
     const date = bodyDate();
     $("#food-g").value = "";
+    $("#food-kcal").value = "";
     $("#food-name").value = "";
-    updateDay(date, { protein: [...((days[date] || {}).protein || []), { name, g }] });
+    updateDay(date, { protein: [...((days[date] || {}).protein || []), { name, g, kcal }] });
   });
   $("#food-log").addEventListener("click", (e) => {
     const b = e.target.closest("[data-food-del]");
@@ -1556,7 +1573,7 @@
       if (Array.isArray(data.foods)) {
         foods = data.foods
           .filter((f) => f && typeof f.name === "string")
-          .map((f) => ({ name: f.name, g: Math.max(0, Math.round(Number(f.g) || 0)) }));
+          .map((f) => ({ name: f.name, g: Math.max(0, Math.round(Number(f.g) || 0)), kcal: Math.max(0, Math.round(Number(f.kcal) || 0)) }));
         await persistFoods();
       }
       if (Array.isArray(data.shop)) {
@@ -1632,7 +1649,7 @@
         sessions = remoteSessions;
         days = remoteDays;
         if (m) media = normalizeMedia(m.items);
-        if (fd && Array.isArray(fd.items)) foods = fd.items;
+        if (fd && Array.isArray(fd.items)) foods = withKcal(fd.items);
         else if (foodsCustomized) persistFoods().catch(() => {});
         if (sd && Array.isArray(sd.items)) {
           shop = migrateShop(sd.items, sd.v || 1);

@@ -506,22 +506,22 @@ const WEEK = [
   { dow: 0, type: "rest", title: "Descanso" },
 ];
 
-// Proteína: atalhos com valores aproximados (g de proteína por porção).
+// Proteína: atalhos com valores aproximados (g de proteína e kcal por porção).
 const PROTEIN_FACTORS = [1.6, 1.8, 2.0, 2.2]; // g por kg de peso corporal
 const PROTEIN_FOODS = [
-  { name: "1 ovo", g: 6 },
-  { name: "1 clara de ovo", g: 4 },
-  { name: "Claras líquidas (100 ml)", g: 11 },
-  { name: "Iogurte proteico / skyr (150 g)", g: 15 },
-  { name: "Frango ou peru (100 g cozinhado)", g: 30 },
-  { name: "Peixe (150 g cozinhado)", g: 30 },
-  { name: "Carne vermelha (100 g cozinhada)", g: 26 },
-  { name: "Atum em lata (1 lata escorrida)", g: 20 },
-  { name: "Whey (1 dose, 30 g)", g: 23 },
-  { name: "Queijo fresco (1 unidade, 100 g)", g: 10 },
-  { name: "Requeijão (100 g)", g: 10 },
-  { name: "Leite (1 copo, 250 ml)", g: 8 },
-  { name: "Leguminosas (1 chávena cozida)", g: 15 },
+  { name: "1 ovo", g: 6, kcal: 70 },
+  { name: "1 clara de ovo", g: 4, kcal: 17 },
+  { name: "Claras líquidas (100 ml)", g: 11, kcal: 48 },
+  { name: "Iogurte proteico / skyr (150 g)", g: 15, kcal: 95 },
+  { name: "Frango ou peru (100 g cozinhado)", g: 30, kcal: 165 },
+  { name: "Peixe (150 g cozinhado)", g: 30, kcal: 190 },
+  { name: "Carne vermelha (100 g cozinhada)", g: 26, kcal: 250 },
+  { name: "Atum em lata (1 lata escorrida)", g: 20, kcal: 90 },
+  { name: "Whey (1 dose, 30 g)", g: 23, kcal: 120 },
+  { name: "Queijo fresco (1 unidade, 100 g)", g: 10, kcal: 150 },
+  { name: "Requeijão (100 g)", g: 10, kcal: 150 },
+  { name: "Leite (1 copo, 250 ml)", g: 8, kcal: 115 },
+  { name: "Leguminosas (1 chávena cozida)", g: 15, kcal: 200 },
 ];
 
 // Lista de compras semanal: 2 adultos (comem peixe mas não carne, ~1600 kcal,
