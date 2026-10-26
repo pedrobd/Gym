@@ -265,6 +265,9 @@
     $("#warmup-callout").innerHTML = def.warmup || "";
     $("#workout-day").textContent = def.day + (def.home ? " · kettlebell em casa" : "");
     $("#session-notes").value = existing ? existing.notes || "" : "";
+    $("#session-minutes").value = existing && existing.minutes ? existing.minutes : "";
+    $("#session-minutes").placeholder = def.minutes || 60;
+    updateWorkoutKcal();
 
     variants = existing && existing.variants ? { ...existing.variants } : {};
     $("#exercise-list").innerHTML = def.exercises.map((ex, i) => renderCard(ex, i, date, existing)).join("");
@@ -392,12 +395,13 @@
       return;
     }
     const notes = $("#session-notes").value.trim();
+    const minutes = Math.round(Number($("#session-minutes").value)) || 0;
     const used = collectVariants(entries);
     let s = sessionFor(currentWorkout, date);
     if (s) {
-      Object.assign(s, { entries, variants: used, notes, savedAt: Date.now() });
+      Object.assign(s, { entries, variants: used, notes, minutes, savedAt: Date.now() });
     } else {
-      s = { id: sessionId(currentWorkout, date), workout: currentWorkout, date, entries, variants: used, notes, savedAt: Date.now() };
+      s = { id: sessionId(currentWorkout, date), workout: currentWorkout, date, entries, variants: used, notes, minutes, savedAt: Date.now() };
       sessions.push(s);
     }
     status.textContent = "A guardar…";
@@ -703,7 +707,7 @@
     $("#week-range").textContent = `${fmt(dates[0])} – ${fmt(dates[6])}`;
     $("#week-today").disabled = weekOffset === 0;
 
-    let planned = 0, done = 0, stepsTotal = 0, stepsDays = 0;
+    let planned = 0, done = 0, stepsTotal = 0, stepsDays = 0, burnWeek = 0;
     const cards = dates.map((dt) => {
       const date = isoDate(dt);
       const plan = WEEK.find((w) => w.dow === dt.getDay());
@@ -715,13 +719,15 @@
       const n = Number((days[date] || {}).steps) || 0;
       if (n) { stepsTotal += n; stepsDays++; }
       const tone = plan.type === "workout" ? `workout-${plan.slot ? "B" : "A"}` : plan.type;
+      const burn = burnOf(date);
+      burnWeek += burn.kcal;
       return `
         <article class="day ${date === todayIso ? "today" : ""} ${st.done ? "done" : ""}" data-tone="${tone}">
           <header class="day-head">
             <div class="day-date"><span>${DOW_NAMES[dt.getDay()]}</span><b>${dt.getDate()}</b></div>
             <div class="day-title">
               <h3>${escapeHtml(plan.type === "workout" ? WORKOUTS[slotWorkout(plan.slot)].name : plan.title)}</h3>
-              <span class="day-status">${date === todayIso ? `<em>Hoje</em>` : ""}${st.done ? `<i class="ok">✓ ${escapeHtml(st.label)}</i>` : st.label ? escapeHtml(st.label) : plan.type === "rest" ? "" : "Por fazer"}</span>
+              <span class="day-status">${date === todayIso ? `<em>Hoje</em>` : ""}${st.done ? `<i class="ok">✓ ${escapeHtml(st.label)}</i>` : st.label ? escapeHtml(st.label) : plan.type === "rest" ? "" : "Por fazer"}${burn.kcal ? `<span class="burn-tag" title="${escapeHtml(burn.parts.map((p) => `${p.label}: ${p.kcal} kcal`).join(" · "))}">🔥 ≈${burn.kcal} kcal</span>` : ""}</span>
             </div>
           </header>
           <div class="day-body">${dayBody(plan, date)}</div>
@@ -733,6 +739,37 @@
       <li><b>${stepsDays ? Math.round(stepsTotal / stepsDays).toLocaleString("pt-PT") : "–"}</b><span>média de passos</span></li>
       <li><b>${dates.filter((dt) => { const p = WEEK.find((w) => w.dow === dt.getDay()); return p.type === "workout" && slotSession(p.slot, isoDate(dt)); }).length}/2</b><span>treinos de força</span></li>
       <li><b>${dates.filter((dt) => (days[isoDate(dt)] || {}).hiitDone).length}/${MORNING.intervalDays.length}</b><span>3×3 de manhã</span></li>`;
+    $("#week-burn").textContent = burnWeek
+      ? `Gasto estimado em exercício esta semana: ≈${burnWeek.toLocaleString("pt-PT")} kcal (média ≈${Math.round(burnWeek / 7)} por dia).`
+      : "";
+  }
+
+  // ---------- calorias gastas (estimativa) ----------
+  const kgFor = (date) => latestWeight(date) || latestWeight() || 0;
+  const metKcal = (met, minutes, kg) => Math.round((met * kg * minutes) / 60);
+  function workoutKcal(s, kg) {
+    const def = WORKOUTS[s.workout];
+    return metKcal(def.met || 3.5, Number(s.minutes) || def.minutes || 60, kg);
+  }
+  // Gasto estimado em exercício num dia: treinos registados, passos (ou a caminhada da manhã),
+  // intervalos 3×3 e estabilização lombar.
+  function burnOf(date) {
+    const kg = kgFor(date) || BURN.defaultKg;
+    const d = days[date] || {};
+    const parts = sessions.filter((s) => s.date === date && WORKOUTS[s.workout]).map((s) => ({ label: WORKOUTS[s.workout].short, kcal: workoutKcal(s, kg) }));
+    const steps = Number(d.steps) || (d.walkDone ? MORNING.steps : 0);
+    if (steps) parts.push({ label: `${steps.toLocaleString("pt-PT")} passos`, kcal: Math.round(steps * BURN.kcalPerStepPerKg * kg) });
+    if (d.hiitDone) parts.push({ label: "3×3", kcal: metKcal(BURN.intervals.met, BURN.intervals.minutes, kg) });
+    if (d.coreDone) parts.push({ label: "estabilização", kcal: metKcal(BURN.core.met, BURN.core.minutes, kg) });
+    if (d.flowDone && !parts.some((p) => p.label === WORKOUTS.W.short)) parts.push({ label: "Animal Flow", kcal: metKcal(BURN.flow.met, Number(d.flowMin) || BURN.flow.minutes, kg) });
+    return { kcal: parts.reduce((t, p) => t + p.kcal, 0), parts, kgKnown: !!kgFor(date) };
+  }
+  function updateWorkoutKcal() {
+    const def = WORKOUTS[currentWorkout];
+    const date = $("#session-date").value || today();
+    const minutes = Number($("#session-minutes").value) || def.minutes || 60;
+    const kg = kgFor(date);
+    $("#workout-kcal").innerHTML = `Gasto estimado: <b>≈${metKcal(def.met || 3.5, minutes, kg || BURN.defaultKg)} kcal</b> (${minutes} min, ${kg ? fmt1(kg) + " kg" : "80 kg por omissão: regista o peso no separador Corpo"}).`;
   }
 
   async function saveDayField(date, field, value) {
@@ -841,7 +878,9 @@
     } else $("#body-meals").innerHTML = "";
     const kcalLogged = items.reduce((t, it) => t + (Number(it.kcal) || 0), 0);
     const kcalTarget = plan ? plan.meals.reduce((t, m) => t + m.kcal, 0) : 1600;
-    $("#kcal-msg").innerHTML = `<b>≈${kcalLogged} kcal</b> registadas · objetivo ≈${kcalTarget} kcal${kcalLogged > kcalTarget ? ` <span class="danger-text">(+${kcalLogged - kcalTarget})</span>` : kcalLogged ? ` · faltam ≈${kcalTarget - kcalLogged}` : ""}`;
+    const burn = burnOf(date);
+    $("#kcal-msg").innerHTML = `<b>≈${kcalLogged} kcal</b> registadas · objetivo ≈${kcalTarget} kcal${kcalLogged > kcalTarget ? ` <span class="danger-text">(+${kcalLogged - kcalTarget})</span>` : kcalLogged ? ` · faltam ≈${kcalTarget - kcalLogged}` : ""}
+      ${burn.kcal ? `<br><span class="burn-tag">🔥 ≈${burn.kcal} kcal gastas em exercício</span> <span class="muted small">(${escapeHtml(burn.parts.map((p) => `${p.label} ${p.kcal}`).join(" · "))}). As ~1600 kcal já contam com o exercício normal da semana, por isso não é para comer estas calorias de volta.</span>` : ""}`;
 
     $("#food-log").innerHTML = items.length
       ? items
@@ -1380,6 +1419,10 @@
   });
   $("#save-session").addEventListener("click", saveSession);
   $("#session-notes").addEventListener("input", () => (dirty = true));
+  $("#session-minutes").addEventListener("input", () => {
+    dirty = true;
+    updateWorkoutKcal();
+  });
   $("#progress-exercise").addEventListener("change", renderProgress);
   $("#progress-variant").addEventListener("change", renderProgress);
 
@@ -1555,7 +1598,7 @@
       let n = 0;
       for (const raw of data.sessions) {
         if (!raw || !WORKOUTS[raw.workout] || !/^\d{4}-\d{2}-\d{2}$/.test(raw.date) || typeof raw.entries !== "object") continue;
-        const s = { id: sessionId(raw.workout, raw.date), workout: raw.workout, date: raw.date, entries: raw.entries, variants: raw.variants && typeof raw.variants === "object" ? raw.variants : {}, notes: String(raw.notes || ""), savedAt: Number(raw.savedAt) || Date.now() };
+        const s = { id: sessionId(raw.workout, raw.date), workout: raw.workout, date: raw.date, entries: raw.entries, variants: raw.variants && typeof raw.variants === "object" ? raw.variants : {}, notes: String(raw.notes || ""), minutes: Number(raw.minutes) || 0, savedAt: Number(raw.savedAt) || Date.now() };
         sessions = sessions.filter((x) => !(x.workout === s.workout && x.date === s.date));
         sessions.push(s);
         if (remote) await persistSession(s);
