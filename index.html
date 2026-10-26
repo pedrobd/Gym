@@ -19,6 +19,7 @@
         <button data-tab="A">Treino A</button>
         <button data-tab="B">Treino B</button>
         <button data-tab="body">Corpo</button>
+        <button data-tab="shop">Compras</button>
         <button data-tab="progress">Evolução</button>
         <button data-tab="info">Regras</button>
       </nav>
@@ -135,6 +136,51 @@
       <div id="body-trend" class="callout"></div>
       <div id="weight-chart" class="chart"></div>
       <div id="body-table"></div>
+    </section>
+
+    <section id="tab-shop" class="tab-panel" hidden>
+      <div class="week-head shop-head">
+        <div class="session-title">
+          <h2>Compras da semana</h2>
+          <span>2 adultos com peixe e sem carne + 1 criança · ~1600 kcal, proteína alta, baixo índice glicémico</span>
+        </div>
+        <div class="shop-count"><b id="shop-done">0</b><span id="shop-total">/ 0 no carrinho</span></div>
+      </div>
+      <div class="bar-track big shop-bar"><span id="shop-bar"></span></div>
+
+      <div class="protein-card shop-add">
+        <div class="food-head"><span>Acrescentar à lista</span></div>
+        <div class="shop-form">
+          <input type="text" id="shop-name" placeholder="Alimento (ex.: hummus)" aria-label="Alimento">
+          <input type="text" id="shop-qty" placeholder="Quantidade" aria-label="Quantidade">
+          <select id="shop-cat" aria-label="Secção"></select>
+          <button id="shop-add" class="pill-btn dark">Adicionar</button>
+        </div>
+      </div>
+
+      <div class="shop-tools">
+        <label class="check"><input type="checkbox" id="shop-hide"> Esconder o que já está no carrinho</label>
+        <div class="foods-editor-actions">
+          <button class="pill-btn" id="shop-copy">Copiar o que falta</button>
+          <button class="pill-btn" id="shop-new">Nova semana</button>
+          <button class="link" id="shop-reset">Repor lista sugerida</button>
+        </div>
+        <p id="shop-status" class="muted small"></p>
+      </div>
+
+      <div id="shop-list" class="shop-list"></div>
+
+      <h2>Porque esta lista</h2>
+      <ul class="rules">
+        <li><strong>Proteína em todas as refeições:</strong> peixe, ovos, claras, skyr, queijo fresco, cottage e tofu chegam a ~130 g por dia sem carne e sem passar as 1600 kcal. Peixe 3–4 vezes por semana, com salmão, sardinha ou cavala pelo menos 2 (ómega-3).</li>
+        <li><strong>Pouca insulina:</strong> sem açúcar, sumos nem farinhas refinadas. Os hidratos vêm das leguminosas, da aveia, da quinoa e do pão integral, sempre junto com proteína e legumes. Fruta inteira, não em sumo.</li>
+        <li><strong>Longe do supermercado:</strong> come primeiro as folhas, os cogumelos e os frutos vermelhos frescos. Do 5.º dia em diante usa a couve, a cenoura, a abóbora e os congelados. O peixe fresco come-se nos 2 primeiros dias ou vai logo para o congelador; o congelado e as latas de atum, sardinha e cavala garantem proteína até à próxima ida às compras.</li>
+        <li><strong>O filho come o mesmo:</strong> o vosso peixe, legumes, ovos e lácteos, com carne na secção dele e um pouco mais de arroz, massa, batata e fruta, porque aos 5 anos precisa de mais hidratos do que vocês.</li>
+      </ul>
+
+      <h3>Exemplo de dia (um adulto)</h3>
+      <div id="shop-day"></div>
+      <p class="muted small">Valores aproximados. Ajusta as quantidades às tuas refeições: se uma semana sobrar ou faltar alguma coisa, muda a quantidade na lista e ela fica guardada.</p>
     </section>
 
     <section id="tab-progress" class="tab-panel" hidden>

@@ -7,6 +7,7 @@ Site estático com o plano de treino (A/B) adaptado a hérnias e à anca, com:
 - sugestão automática de progressão dupla e cálculo do aquecimento (50% × 6, 70% × 3);
 - cronómetro de descanso;
 - gráfico e tabela de evolução por exercício;
+- lista de compras semanal (família vegetariana + criança que come carne), editável, com campo para acrescentar alimentos;
 - exportar/importar cópia de segurança em JSON.
 
 Os dados ficam guardados no `localStorage` do browser.

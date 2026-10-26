@@ -3,6 +3,7 @@
   const STORE_VIDEOS = "gym.videos.v1";
   const STORE_DAYS = "gym.days.v1";
   const STORE_FOODS = "gym.foods.v1";
+  const STORE_SHOP = "gym.shop.v1";
 
   const $ = (sel, el = document) => el.querySelector(sel);
   const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
@@ -36,6 +37,10 @@
   // Atalhos de proteína (editáveis); começam com os valores de data.js.
   let foods = load(STORE_FOODS, null) || PROTEIN_FOODS.map((f) => ({ ...f }));
   let foodsCustomized = !!load(STORE_FOODS, null);
+  // Lista de compras: [{ id, cat, name, qty, done }]; começa com SHOP_DEFAULT.
+  const defaultShop = () => SHOP_DEFAULT.map((it, i) => ({ id: "d" + i, ...it, done: false }));
+  let shop = load(STORE_SHOP, null) || defaultShop();
+  let shopCustomized = !!load(STORE_SHOP, null);
   let remote = null; // { col } quando a base de dados está disponível
   let assets = null;
   let currentWorkout = "A";
@@ -75,6 +80,11 @@
     foodsCustomized = true;
     if (remote) await remote.col.doc("foods").set({ kind: "foods", items: foods });
     else saveLocal(STORE_FOODS, foods);
+  }
+  async function persistShop() {
+    shopCustomized = true;
+    if (remote) await remote.col.doc("shop").set({ kind: "shop", items: shop });
+    else saveLocal(STORE_SHOP, shop);
   }
   async function persistMedia() {
     if (remote) await remote.col.doc("media").set({ kind: "media", items: media });
@@ -881,6 +891,56 @@
       <text x="${Math.min(x(lastP.date), W - P.r - 20)}" y="${y(lastP.v) - 10}" class="label" text-anchor="middle">${fmt1(lastP.v)}</text></svg>`;
   }
 
+  // ---------- compras ----------
+  let shopHide = false;
+  try { shopHide = localStorage.getItem("gym.shopHide") === "1"; } catch {}
+  function renderShop() {
+    const sel = $("#shop-cat");
+    if (!sel.options.length) sel.innerHTML = SHOP_CATEGORIES.map((c) => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
+    if (!sel.value) sel.value = "other";
+    $("#shop-hide").checked = shopHide;
+    const done = shop.filter((it) => it.done).length;
+    $("#shop-done").textContent = done;
+    $("#shop-total").textContent = `/ ${shop.length} no carrinho`;
+    $("#shop-bar").style.width = (shop.length ? Math.round((done / shop.length) * 100) : 0) + "%";
+    $("#shop-bar").classList.toggle("ok", shop.length > 0 && done === shop.length);
+    const cats = [...SHOP_CATEGORIES, ...[...new Set(shop.map((it) => it.cat))].filter((c) => !SHOP_CATEGORIES.some((x) => x.id === c)).map((id) => ({ id, name: id }))];
+    const groups = cats
+      .map((c) => {
+        const all = shop.filter((it) => (it.cat || "other") === c.id);
+        const items = shopHide ? all.filter((it) => !it.done) : all;
+        if (!all.length) return "";
+        const left = all.filter((it) => !it.done).length;
+        return `<div class="shop-group">
+          <div class="food-head"><span>${escapeHtml(c.name)}</span><span class="muted small">${left ? `faltam ${left}` : "tudo no carrinho"}</span></div>
+          ${items.length ? `<ul class="food-log">${items
+            .map(
+              (it) => `<li class="${it.done ? "done" : ""}">
+              <label class="check"><input type="checkbox" data-shop-done="${it.id}" ${it.done ? "checked" : ""}> <span>${escapeHtml(it.name)}</span></label>
+              <input type="text" class="shop-qty" data-shop-qty="${it.id}" value="${escapeHtml(it.qty || "")}" placeholder="qtd." aria-label="Quantidade de ${escapeHtml(it.name)}">
+              <button class="link" data-shop-del="${it.id}" aria-label="Remover ${escapeHtml(it.name)}">✕</button></li>`
+            )
+            .join("")}</ul>` : ""}
+        </div>`;
+      })
+      .join("");
+    $("#shop-list").innerHTML = groups || `<p class="empty muted">A lista está vazia. Acrescenta alimentos em cima ou repõe a lista sugerida.</p>`;
+    if (!$("#shop-day").innerHTML) {
+      const tk = SHOP_DAY_EXAMPLE.reduce((a, m) => a + m.kcal, 0);
+      const tp = SHOP_DAY_EXAMPLE.reduce((a, m) => a + m.p, 0);
+      $("#shop-day").innerHTML = `<div class="table-wrap"><table><thead><tr><th>Refeição</th><th>O quê</th><th>kcal</th><th>Proteína</th></tr></thead><tbody>${SHOP_DAY_EXAMPLE.map(
+        (m) => `<tr><td>${escapeHtml(m.meal)}</td><td class="wrap">${escapeHtml(m.food)}</td><td>${m.kcal}</td><td>${m.p} g</td></tr>`
+      ).join("")}<tr><th>Total</th><th></th><th>≈${tk}</th><th>≈${tp} g</th></tr></tbody></table></div>`;
+    }
+  }
+  function shopItem(id) {
+    return shop.find((it) => it.id === id);
+  }
+  function saveShop() {
+    persistShop().catch(() => {});
+    renderShop();
+  }
+
   async function updateDay(date, patch) {
     const d = { ...(days[date] || {}), date, ...patch };
     days[date] = d;
@@ -924,7 +984,9 @@
     $("#tab-info").hidden = tab !== "info";
     $("#tab-week").hidden = tab !== "week";
     $("#tab-body").hidden = tab !== "body";
+    $("#tab-shop").hidden = tab !== "shop";
     if (tab === "week") renderWeek();
+    if (tab === "shop") renderShop();
     if (tab === "body") renderBody();
     const active = $(`.tabs button[data-tab="${tab}"]`);
     if (active && active.scrollIntoView) active.scrollIntoView({ block: "nearest", inline: "nearest" });
@@ -944,6 +1006,7 @@
     if (currentTab === "progress") renderProgress();
     else if (currentTab === "week" && !$("#tab-week").contains(document.activeElement)) renderWeek();
     else if (currentTab === "body") renderBody();
+    else if (currentTab === "shop" && !$("#tab-shop").contains(document.activeElement)) renderShop();
     else if ((currentTab === "A" || currentTab === "B") && !dirty) renderWorkout();
   }
 
@@ -1066,6 +1129,93 @@
       return;
     }
     updateDay(b.dataset.bodyDel, { weight: 0, waist: 0 });
+  });
+
+  function addShopItem() {
+    const name = $("#shop-name").value.trim();
+    if (!name) {
+      $("#shop-name").focus();
+      return;
+    }
+    shop.push({ id: "u" + Date.now().toString(36), cat: $("#shop-cat").value || "other", name, qty: $("#shop-qty").value.trim(), done: false });
+    $("#shop-name").value = "";
+    $("#shop-qty").value = "";
+    $("#shop-status").textContent = `"${name}" adicionado.`;
+    saveShop();
+    $("#shop-name").focus();
+  }
+  $("#shop-add").addEventListener("click", addShopItem);
+  ["#shop-name", "#shop-qty"].forEach((s) =>
+    $(s).addEventListener("keydown", (e) => {
+      if (e.key === "Enter") addShopItem();
+    })
+  );
+  $("#shop-list").addEventListener("change", (e) => {
+    const cb = e.target.closest("[data-shop-done]");
+    const q = e.target.closest("[data-shop-qty]");
+    const it = shopItem(cb ? cb.dataset.shopDone : q ? q.dataset.shopQty : "");
+    if (!it) return;
+    if (cb) it.done = cb.checked;
+    else {
+      it.qty = q.value.trim();
+      q.blur();
+    }
+    saveShop();
+  });
+  $("#shop-list").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-shop-del]");
+    if (!b) return;
+    shop = shop.filter((it) => it.id !== b.dataset.shopDel);
+    saveShop();
+  });
+  $("#shop-hide").addEventListener("change", (e) => {
+    shopHide = e.target.checked;
+    try { localStorage.setItem("gym.shopHide", shopHide ? "1" : "0"); } catch {}
+    renderShop();
+  });
+  $("#shop-new").addEventListener("click", () => {
+    shop.forEach((it) => (it.done = false));
+    $("#shop-status").textContent = "Lista pronta para a próxima ida às compras.";
+    saveShop();
+  });
+  $("#shop-copy").addEventListener("click", async () => {
+    const text = SHOP_CATEGORIES.concat({ id: null })
+      .map((c) => {
+        const items = shop.filter((it) => !it.done && (c.id ? (it.cat || "other") === c.id : !SHOP_CATEGORIES.some((x) => x.id === it.cat)));
+        return items.length ? `${c.name || "Outros"}\n${items.map((it) => `- ${it.name}${it.qty ? ` (${it.qty})` : ""}`).join("\n")}` : "";
+      })
+      .filter(Boolean)
+      .join("\n\n");
+    const status = $("#shop-status");
+    if (!text) {
+      status.textContent = "Já está tudo no carrinho.";
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      status.textContent = "Lista copiada. Cola-a numa mensagem ou nas notas do telemóvel.";
+    } catch {
+      status.textContent = "Não foi possível copiar nesta vista.";
+    }
+  });
+  $("#shop-reset").addEventListener("click", (e) => {
+    const b = e.target;
+    if (!b.dataset.armed) {
+      b.dataset.armed = "1";
+      b.textContent = "Confirmar: apagar alterações e repor";
+      setTimeout(() => {
+        if (b.isConnected) {
+          delete b.dataset.armed;
+          b.textContent = "Repor lista sugerida";
+        }
+      }, 4000);
+      return;
+    }
+    delete b.dataset.armed;
+    b.textContent = "Repor lista sugerida";
+    shop = defaultShop();
+    $("#shop-status").textContent = "Lista sugerida reposta.";
+    saveShop();
   });
 
   $("#week-prev").addEventListener("click", () => { weekOffset--; renderWeek(); });
@@ -1233,7 +1383,7 @@
 
   let downloads = null;
   $("#export-btn").addEventListener("click", async () => {
-    const data = JSON.stringify({ sessions, videos: media, days, foods }, null, 2);
+    const data = JSON.stringify({ sessions, videos: media, days, foods, shop }, null, 2);
     const filename = `treino-backup-${today()}.json`;
     const status = $("#backup-status");
     if (downloads) {
@@ -1293,6 +1443,12 @@
           .map((f) => ({ name: f.name, g: Math.max(0, Math.round(Number(f.g) || 0)) }));
         await persistFoods();
       }
+      if (Array.isArray(data.shop)) {
+        shop = data.shop
+          .filter((it) => it && typeof it.name === "string")
+          .map((it, i) => ({ id: String(it.id || "i" + i), cat: String(it.cat || "other"), name: it.name, qty: String(it.qty || ""), done: !!it.done }));
+        await persistShop();
+      }
       if (data.videos) {
         media = { ...media, ...normalizeMedia(data.videos) };
         await persistMedia();
@@ -1331,6 +1487,7 @@
         const remoteSessions = docs.filter((d) => d.kind === "session").map(({ kind, ...s }) => s);
         const m = docs.find((d) => d.kind === "media");
         const fd = docs.find((d) => d.kind === "foods");
+        const sd = docs.find((d) => d.kind === "shop");
         const st = docs.find((d) => d.kind === "settings");
         if (st && PROGRAMS[st.mode] && st.mode !== mode) setMode(st.mode, false);
         else if (!st && first && mode !== "gym") col.doc("settings").set({ kind: "settings", mode }).catch(() => {});
@@ -1361,6 +1518,8 @@
         if (m) media = normalizeMedia(m.items);
         if (fd && Array.isArray(fd.items)) foods = fd.items;
         else if (foodsCustomized) persistFoods().catch(() => {});
+        if (sd && Array.isArray(sd.items)) shop = sd.items;
+        else if (shopCustomized) persistShop().catch(() => {});
         sync.textContent = "Guardado na tua conta, sincroniza entre aparelhos.";
         sync.classList.add("ok");
         refresh();
