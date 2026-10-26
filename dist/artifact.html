@@ -545,6 +545,11 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
   .meal-list li { grid-template-columns: 1fr auto; row-gap: .2rem; }
   .meal-food { grid-column: 1 / -1; grid-row: 2; }
 }
+
+/* ---------- quarta: calistenia + kettlebell ---------- */
+.day[data-tone="mixed"] { --tone: var(--tint-warm); }
+#tab-workout[data-workout="W"] .session-bar { background: var(--tint-warm); }
+.mixed-list { margin: 0; padding-left: 1.1rem; display: grid; gap: .2rem; font-size: .9rem; }
 </style>
 <header class="top">
     <div class="bar">
@@ -569,7 +574,7 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
       <ul class="stats">
         <li><b>2</b><span>treinos de força</span></li>
         <li><b>2</b><span>dias de 11 mil passos</span></li>
-        <li><b>1</b><span>sessão de Animal Flow</span></li>
+        <li><b>1</b><span>circuito de calistenia + kettlebell</span></li>
       </ul>
       <p id="sync" class="sync"></p>
     </section>
@@ -793,7 +798,7 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
       <h2>Restantes dias</h2>
       <ul class="rules">
         <li><strong>Terça e quinta:</strong> pelo menos 11 000 passos ao longo do dia. Regista o número no separador Semana.</li>
-        <li><strong>Quarta:</strong> Animal Flow, 20–30 min a intensidade leve a moderada, com os vídeos do <a href="https://www.youtube.com/@strengthsidefollowalongs" target="_blank" rel="noopener">Strength Side</a>. Vê os cuidados no separador Semana.</li>
+        <li><strong>Quarta:</strong> 10 min de Animal Flow como aquecimento, com os vídeos do <a href="https://www.youtube.com/@strengthsidefollowalongs" target="_blank" rel="noopener">Strength Side</a>, e depois um circuito de 3 voltas que alterna exercícios de peso do corpo (flexões inclinadas, glute bridge a uma perna, beast hold) com exercícios com uma só kettlebell, de 6 ou 12 kg (goblet squat para a cadeira, remada apoiada, pullover no chão, suitcase carry). Abre o circuito no separador Semana para registar as reps; o site sugere o próximo passo como nos outros treinos.</li>
         <li><strong>Sábado e domingo:</strong> descanso. Caminhada leve se te apetecer e 10 min de estabilização lombar (bird dog, side plank, dead bug).</li>
       </ul>
       <p>Os dias livres não devem virar mais ginásio: a recuperação é a peça central do protocolo, e com 1600 kcal já está limitada.</p>
@@ -1212,6 +1217,77 @@ WORKOUTS.KB = {
   ],
 };
 
+// ---------- Quarta: calistenia + kettlebell (uma kettlebell de cada vez: 6 ou 12 kg) ----------
+// Circuito: corpo e kettlebell alternados, 3 voltas. Mesmas regras: nada de swings,
+// peso morto, press de pé nem flexão da lombar com carga. "photo" reaproveita fotos de img/.
+WORKOUTS.W = {
+  name: "Quarta · Calistenia + kettlebell",
+  short: "Quarta",
+  day: "Quarta-feira",
+  home: true,
+  circuit: true,
+  warmup:
+    "<strong>Como fazer:</strong> 10 min de Animal Flow (vídeo no separador Semana) como aquecimento. Depois faz o circuito: 1 série de cada exercício seguida, com 20–30 s entre exercícios, e descansa 90 s no fim de cada volta. 3 voltas. Só precisas de uma kettlebell de cada vez.",
+  exercises: [
+    {
+      id: "w-goblet", photo: "kb-goblet", name: "Goblet squat para uma cadeira", compound: true, home: true,
+      vids: [{ id: "xxUok-bsgpQ", title: "Weighted Goblet Squats from a Chair" }],
+      load: "KB 12 kg", sets: sets3(10, 15),
+      cues: ["Kettlebell de 12 kg junto ao peito, agarrada pelos lados.", "Senta-te devagar (3 s) na cadeira e levanta sem balanço: anca e joelho a ~90°.", "Tronco direito, lombar neutra."],
+      next: "Pausa de 2 s sentado sem relaxar, ou descida em 4 s.",
+      photoNote: "Na foto desce mais fundo do que deves: usa a cadeira para parar a ~90°.",
+      video: "goblet box squat kettlebell",
+    },
+    {
+      id: "w-pushup", name: "Flexões inclinadas (mãos numa mesa ou bancada)", home: true,
+      load: "Peso do corpo", sets: sets3(8, 15),
+      cues: ["Mãos numa superfície firme à altura da anca, corpo em linha reta dos ombros aos calcanhares.", "Abdominal e glúteos contraídos: a lombar não cai.", "Pescoço neutro, olha para as mãos. Cotovelos a ~45° do corpo."],
+      next: "Usa uma superfície mais baixa (cadeira, depois degrau) até chegares às flexões no chão.",
+      photoNote: "Na foto numa barra; em casa usa uma mesa ou bancada.",
+      video: "incline push up technique",
+    },
+    {
+      id: "w-row", photo: "kb-row", name: "Remada unilateral apoiada", compound: true, home: true, perSide: true,
+      vids: [{ id: "eQLvFed1noc", title: "Single Arm Kettlebell Row Bench Supported" }],
+      load: "KB 12 kg", sets: sets3(10, 15, "reps por lado"),
+      cues: ["Mão e joelho numa cadeira ou sofá, coluna neutra e quieta.", "Puxa a kettlebell em direção à anca, sem rodar o tronco.", "Desce em 2–3 s."],
+      next: "Pausa de 2 s em cima e descida em 4 s.",
+      video: "supported one arm kettlebell row",
+    },
+    {
+      id: "w-bridge", photo: "kb-bridge", name: "Glute bridge a uma perna", home: true, perSide: true,
+      load: "Peso do corpo", sets: sets3(8, 12, "reps por lado"),
+      cues: ["Deitado, um pé no chão perto do glúteo, a outra perna esticada ou fletida no ar.", "Sobe empurrando com o calcanhar até a anca alinhar, sem arquear a lombar.", "Pausa de 2 s em cima."],
+      next: "Põe a kettlebell de 6 kg em cima da anca (com uma toalha).",
+      video: "single leg glute bridge",
+    },
+    {
+      id: "w-beast", photo: false, name: "Beast hold → beast crawl (Animal Flow)", home: true,
+      load: "Peso do corpo", sets: sets3(20, 40, "s"),
+      cues: ["De gatas, mãos por baixo dos ombros e joelhos por baixo da anca; levanta os joelhos 2–3 cm do chão.", "Costas planas como uma mesa, pescoço neutro. Regista os segundos nas reps.", "Quando chegares aos 40 s, passa a andar devagar: mão e pé opostos ao mesmo tempo."],
+      next: "Beast crawl: 4 passos para a frente e 4 para trás, sem a anca subir nem rodar.",
+      video: "animal flow beast hold beast crawl beginner",
+    },
+    {
+      id: "w-pullover", photo: "kb-pullover", name: "Pullover deitado no chão", home: true,
+      vids: [{ id: "hbiDlO7VBxs", title: "Kettlebell Floor Pullover" }],
+      load: "KB 6 kg", sets: sets3(12, 15),
+      cues: ["Deitado no chão, joelhos fletidos, lombar apoiada.", "Kettlebell de 6 kg agarrada pelos lados, braços quase esticados.", "Leva-a para trás só até onde a lombar não arqueia e volta até por cima do peito."],
+      next: "Descida em 4 s, ou passa à de 12 kg com 8–10 reps.",
+      photoNote: "Na foto num banco: no chão o movimento é mais curto e mais seguro.",
+      video: "floor kettlebell pullover",
+    },
+    {
+      id: "w-carry", photo: "kb-carry", name: "Suitcase carry (transporte com um braço)", home: true, perSide: true,
+      vids: [{ id: "cF_CrM2eC4U", title: "How To Suitcase Carry" }],
+      load: "KB 12 kg", sets: sets3(30, 45, "s por lado"),
+      cues: ["Kettlebell de 12 kg numa mão, de lado. Regista os segundos nas reps.", "Caminha devagar com o tronco direito: não deixes inclinar para o lado do peso.", "Ombros para baixo, abdominal ativo."],
+      next: "Mais tempo (60 s por lado) ou passos mais lentos com pausa de 2 s em cada passo.",
+      video: "suitcase carry kettlebell",
+    },
+  ],
+};
+
 // Programas: o plano da semana usa o treino do programa ativo em cada "slot".
 const PROGRAMS = {
   gym: { label: "Ginásio", workouts: ["A", "B"] },
@@ -1240,7 +1316,7 @@ const FLOW_VIDEOS = [
 const WEEK = [
   { dow: 1, type: "workout", slot: 0 },
   { dow: 2, type: "steps", title: `${STEPS_GOAL.toLocaleString("pt-PT")} passos` },
-  { dow: 3, type: "flow", title: "Animal Flow" },
+  { dow: 3, type: "mixed", title: "Calistenia + kettlebell", workout: "W" },
   { dow: 4, type: "steps", title: `${STEPS_GOAL.toLocaleString("pt-PT")} passos` },
   { dow: 5, type: "workout", slot: 1 },
   { dow: 6, type: "rest", title: "Descanso" },
@@ -1547,7 +1623,7 @@ const MEAL_PLAN = [
 
   function variantOf(ex, key) {
     const alt = key && key !== "main" && (ex.alts || []).find((a) => a.id === key);
-    if (!alt) return { key: "main", name: ex.name, cues: ex.cues, q: ex.video, photo: `img/${ex.id}`, photoNote: ex.photoNote, vids: ex.vids };
+    if (!alt) return { key: "main", name: ex.name, cues: ex.cues, q: ex.video, photo: ex.photo === false ? null : `img/${ex.photo || ex.id}`, photoNote: ex.photoNote, vids: ex.vids };
     return { key: alt.id, name: alt.name, cues: alt.cues, q: alt.q, photo: alt.photo === false ? null : `img/alt-${alt.id}`, alt: true };
   }
 
@@ -1707,7 +1783,8 @@ const MEAL_PLAN = [
     const v = variantOf(ex, variants[ex.id]);
     const last = lastEntry(ex.id, date, v.key);
     const current = existing && variantKey(existing, ex.id) === v.key && existing.entries[ex.id];
-    const rest = ex.compound ? 210 : 90;
+    const circuit = WORKOUTS[currentWorkout].circuit;
+    const rest = circuit ? 90 : ex.compound ? 210 : 90;
     const rows = ex.sets
       .map((set, si) => {
         const prev = last && last.sets[si];
@@ -1742,7 +1819,7 @@ const MEAL_PLAN = [
           .map((r) => `${r.kg !== "" ? r.kg + "×" : ""}${r.reps}`)
           .join(" · ")}</span><br>` : v.alt ? `<span class="muted">Primeira vez com este exercício: começa leve e ajusta.</span><br>` : ""}${last || !v.alt ? suggestion(ex, last) : ""}</div>
         <div class="sets">${rows}</div>
-        <button class="rest" data-rest="${rest}" data-name="${escapeHtml(v.name)}">⏱ Descanso ${ex.compound ? "3–4 min" : "1–2 min"}</button>
+        <button class="rest" data-rest="${rest}" data-name="${escapeHtml(v.name)}">⏱ Descanso ${circuit ? "90 s (fim da volta)" : ex.compound ? "3–4 min" : "1–2 min"}</button>
       </article>`;
   }
 
@@ -1969,7 +2046,11 @@ const MEAL_PLAN = [
       const n = Number(d.steps) || 0;
       return { done: n >= STEPS_GOAL, label: n ? `${n.toLocaleString("pt-PT")} passos` : "" };
     }
-    if (plan.type === "flow") return { done: !!d.flowDone, label: d.flowDone ? `Feito${d.flowMin ? ` · ${d.flowMin} min` : ""}` : "" };
+    if (plan.type === "mixed") {
+      const s = sessionFor(plan.workout, date);
+      if (s) return { done: true, label: `Feito · ${Object.keys(s.entries).length} exercícios registados` };
+    }
+    if (plan.type === "flow" || plan.type === "mixed") return { done: !!d.flowDone, label: d.flowDone ? `Feito${d.flowMin ? ` · ${d.flowMin} min` : ""}` : "" };
     return { done: !!d.coreDone, label: d.coreDone ? "Estabilização lombar feita" : "" };
   }
 
@@ -2014,6 +2095,23 @@ const MEAL_PLAN = [
       </div>`;
   }
 
+  function flowTipsHtml() {
+    return `
+        <details class="flow-tips">
+          <summary>Cuidados com as hérnias e a anca</summary>
+          <ul>
+            <li>Segue a ordem dos vídeos recomendados: primeiro as posições base, depois sessões mais longas.</li>
+            <li>Sempre que o vídeo tiver ape ou agachamento profundo, desce só até a anca ficar a ~90°.</li>
+            <li><strong>Boas escolhas:</strong> beast hold e beast crawl (coluna neutra, abdominal ativo), crab hold, wrist prep e os movimentos de ativação.</li>
+            <li><strong>Com cuidado ou adaptados:</strong> side kickthrough e crab reach envolvem rotação e extensão da coluna. Faz amplitude curta e lenta, ou salta-os.</li>
+            <li><strong>Evitar no início:</strong> scorpion reach (extensão com rotação da lombar) e o ape em agachamento profundo (passa os ~90° de flexão da anca).</li>
+            <li>Mantém o pescoço neutro, sem atirar a cabeça para trás no crab.</li>
+            <li>Os mesmos sinais para parar: dor que irradia, formigueiro, dormência ou perda de força.</li>
+            <li>Mostra um dos vídeos ao teu fisioterapeuta para confirmar o que podes fazer.</li>
+          </ul>
+        </details>`;
+  }
+
   function dayBody(plan, date) {
     const d = days[date] || {};
     if (plan.type === "workout") {
@@ -2035,6 +2133,16 @@ const MEAL_PLAN = [
         <p class="bar-label">${pct}% do objetivo</p>
         ${coreCheck(date, d)}`;
     }
+    if (plan.type === "mixed") {
+      const def = WORKOUTS[plan.workout];
+      return `
+        <p class="day-desc"><strong>1. Aquecimento:</strong> 10 min de Animal Flow com o vídeo da semana (podes parar a meio).</p>
+        ${flowVideosHtml(date)}
+        ${flowTipsHtml()}
+        <p class="day-desc"><strong>2. Circuito:</strong> ${def.exercises.length} exercícios, 3 voltas, corpo e uma kettlebell (6 ou 12 kg) · ~35 min no total.</p>
+        <ul class="mixed-list">${def.exercises.map((ex) => `<li>${escapeHtml(ex.name)} <span class="muted">· ${escapeHtml(ex.load)}</span></li>`).join("")}</ul>
+        <button class="pill-btn dark" data-open-workout="W" data-date="${date}">Abrir circuito</button>`;
+    }
     if (plan.type === "flow") {
       return `
         <p class="day-desc">Sessão follow-along de 20–30 min, a intensidade leve a moderada: deves acabar com energia, não exausto.</p>
@@ -2042,19 +2150,7 @@ const MEAL_PLAN = [
         <div class="chips">
           <a target="_blank" rel="noopener" href="${FLOW_CHANNEL}/videos">▶ Mais vídeos: Strength Side</a>
         </div>
-        <details class="flow-tips">
-          <summary>Cuidados com as hérnias e a anca</summary>
-          <ul>
-            <li>Segue a ordem dos vídeos recomendados: primeiro as posições base, depois sessões mais longas.</li>
-            <li>Sempre que o vídeo tiver ape ou agachamento profundo, desce só até a anca ficar a ~90°.</li>
-            <li><strong>Boas escolhas:</strong> beast hold e beast crawl (coluna neutra, abdominal ativo), crab hold, wrist prep e os movimentos de ativação.</li>
-            <li><strong>Com cuidado ou adaptados:</strong> side kickthrough e crab reach envolvem rotação e extensão da coluna. Faz amplitude curta e lenta, ou salta-os.</li>
-            <li><strong>Evitar no início:</strong> scorpion reach (extensão com rotação da lombar) e o ape em agachamento profundo (passa os ~90° de flexão da anca).</li>
-            <li>Mantém o pescoço neutro, sem atirar a cabeça para trás no crab.</li>
-            <li>Os mesmos sinais para parar: dor que irradia, formigueiro, dormência ou perda de força.</li>
-            <li>Mostra um dos vídeos ao teu fisioterapeuta para confirmar o que podes fazer.</li>
-          </ul>
-        </details>
+        ${flowTipsHtml()}
         <div class="flow-row">
           <label class="check"><input type="checkbox" id="flow-${date}" data-day="${date}" data-field="flowDone" ${d.flowDone ? "checked" : ""}><span>Sessão feita</span></label>
           <label class="inline-num" for="flowmin-${date}">Minutos
@@ -2427,7 +2523,7 @@ const MEAL_PLAN = [
   function showTab(tab, workoutKey) {
     currentTab = tab;
     $$(".tabs button").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
-    const isWorkout = tab === "A" || tab === "B";
+    const isWorkout = tab === "A" || tab === "B" || tab === "W";
     $("#tab-workout").hidden = !isWorkout;
     $("#tab-progress").hidden = tab !== "progress";
     $("#tab-info").hidden = tab !== "info";
@@ -2442,8 +2538,9 @@ const MEAL_PLAN = [
     const active = $(`.tabs button[data-tab="${tab}"]`);
     if (active && active.scrollIntoView) active.scrollIntoView({ block: "nearest", inline: "nearest" });
     if (isWorkout) {
-      currentWorkout = workoutKey || slotWorkout(tab === "A" ? 0 : 1);
+      currentWorkout = workoutKey || (tab === "W" ? "W" : slotWorkout(tab === "A" ? 0 : 1));
       $("#tab-workout").dataset.workout = tab;
+      $("#tab-workout > .mode-row").hidden = tab === "W";
       $("#save-status").textContent = sessionFor(currentWorkout, $("#session-date").value || today()) ? "A editar o registo desta data." : "";
       renderWorkout();
     } else if (tab === "progress") {
@@ -2458,7 +2555,7 @@ const MEAL_PLAN = [
     else if (currentTab === "week" && !$("#tab-week").contains(document.activeElement)) renderWeek();
     else if (currentTab === "body") renderBody();
     else if (currentTab === "shop" && !$("#tab-shop").contains(document.activeElement)) renderShop();
-    else if ((currentTab === "A" || currentTab === "B") && !dirty) renderWorkout();
+    else if ((currentTab === "A" || currentTab === "B" || currentTab === "W") && !dirty) renderWorkout();
   }
 
   // ---------- eventos ----------
@@ -2834,7 +2931,8 @@ const MEAL_PLAN = [
       const s = sessions.find((x) => x.id === open.dataset.open);
       $("#session-date").value = s.date;
       const m = Object.keys(PROGRAMS).find((k) => PROGRAMS[k].workouts.includes(s.workout));
-      showTab(PROGRAMS[m].workouts.indexOf(s.workout) ? "B" : "A", s.workout);
+      if (!m) showTab("W", s.workout);
+      else showTab(PROGRAMS[m].workouts.indexOf(s.workout) ? "B" : "A", s.workout);
     }
   });
 

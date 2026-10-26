@@ -130,7 +130,7 @@
 
   function variantOf(ex, key) {
     const alt = key && key !== "main" && (ex.alts || []).find((a) => a.id === key);
-    if (!alt) return { key: "main", name: ex.name, cues: ex.cues, q: ex.video, photo: `img/${ex.id}`, photoNote: ex.photoNote, vids: ex.vids };
+    if (!alt) return { key: "main", name: ex.name, cues: ex.cues, q: ex.video, photo: ex.photo === false ? null : `img/${ex.photo || ex.id}`, photoNote: ex.photoNote, vids: ex.vids };
     return { key: alt.id, name: alt.name, cues: alt.cues, q: alt.q, photo: alt.photo === false ? null : `img/alt-${alt.id}`, alt: true };
   }
 
@@ -290,7 +290,8 @@
     const v = variantOf(ex, variants[ex.id]);
     const last = lastEntry(ex.id, date, v.key);
     const current = existing && variantKey(existing, ex.id) === v.key && existing.entries[ex.id];
-    const rest = ex.compound ? 210 : 90;
+    const circuit = WORKOUTS[currentWorkout].circuit;
+    const rest = circuit ? 90 : ex.compound ? 210 : 90;
     const rows = ex.sets
       .map((set, si) => {
         const prev = last && last.sets[si];
@@ -325,7 +326,7 @@
           .map((r) => `${r.kg !== "" ? r.kg + "×" : ""}${r.reps}`)
           .join(" · ")}</span><br>` : v.alt ? `<span class="muted">Primeira vez com este exercício: começa leve e ajusta.</span><br>` : ""}${last || !v.alt ? suggestion(ex, last) : ""}</div>
         <div class="sets">${rows}</div>
-        <button class="rest" data-rest="${rest}" data-name="${escapeHtml(v.name)}">⏱ Descanso ${ex.compound ? "3–4 min" : "1–2 min"}</button>
+        <button class="rest" data-rest="${rest}" data-name="${escapeHtml(v.name)}">⏱ Descanso ${circuit ? "90 s (fim da volta)" : ex.compound ? "3–4 min" : "1–2 min"}</button>
       </article>`;
   }
 
@@ -552,7 +553,11 @@
       const n = Number(d.steps) || 0;
       return { done: n >= STEPS_GOAL, label: n ? `${n.toLocaleString("pt-PT")} passos` : "" };
     }
-    if (plan.type === "flow") return { done: !!d.flowDone, label: d.flowDone ? `Feito${d.flowMin ? ` · ${d.flowMin} min` : ""}` : "" };
+    if (plan.type === "mixed") {
+      const s = sessionFor(plan.workout, date);
+      if (s) return { done: true, label: `Feito · ${Object.keys(s.entries).length} exercícios registados` };
+    }
+    if (plan.type === "flow" || plan.type === "mixed") return { done: !!d.flowDone, label: d.flowDone ? `Feito${d.flowMin ? ` · ${d.flowMin} min` : ""}` : "" };
     return { done: !!d.coreDone, label: d.coreDone ? "Estabilização lombar feita" : "" };
   }
 
@@ -597,6 +602,23 @@
       </div>`;
   }
 
+  function flowTipsHtml() {
+    return `
+        <details class="flow-tips">
+          <summary>Cuidados com as hérnias e a anca</summary>
+          <ul>
+            <li>Segue a ordem dos vídeos recomendados: primeiro as posições base, depois sessões mais longas.</li>
+            <li>Sempre que o vídeo tiver ape ou agachamento profundo, desce só até a anca ficar a ~90°.</li>
+            <li><strong>Boas escolhas:</strong> beast hold e beast crawl (coluna neutra, abdominal ativo), crab hold, wrist prep e os movimentos de ativação.</li>
+            <li><strong>Com cuidado ou adaptados:</strong> side kickthrough e crab reach envolvem rotação e extensão da coluna. Faz amplitude curta e lenta, ou salta-os.</li>
+            <li><strong>Evitar no início:</strong> scorpion reach (extensão com rotação da lombar) e o ape em agachamento profundo (passa os ~90° de flexão da anca).</li>
+            <li>Mantém o pescoço neutro, sem atirar a cabeça para trás no crab.</li>
+            <li>Os mesmos sinais para parar: dor que irradia, formigueiro, dormência ou perda de força.</li>
+            <li>Mostra um dos vídeos ao teu fisioterapeuta para confirmar o que podes fazer.</li>
+          </ul>
+        </details>`;
+  }
+
   function dayBody(plan, date) {
     const d = days[date] || {};
     if (plan.type === "workout") {
@@ -618,6 +640,16 @@
         <p class="bar-label">${pct}% do objetivo</p>
         ${coreCheck(date, d)}`;
     }
+    if (plan.type === "mixed") {
+      const def = WORKOUTS[plan.workout];
+      return `
+        <p class="day-desc"><strong>1. Aquecimento:</strong> 10 min de Animal Flow com o vídeo da semana (podes parar a meio).</p>
+        ${flowVideosHtml(date)}
+        ${flowTipsHtml()}
+        <p class="day-desc"><strong>2. Circuito:</strong> ${def.exercises.length} exercícios, 3 voltas, corpo e uma kettlebell (6 ou 12 kg) · ~35 min no total.</p>
+        <ul class="mixed-list">${def.exercises.map((ex) => `<li>${escapeHtml(ex.name)} <span class="muted">· ${escapeHtml(ex.load)}</span></li>`).join("")}</ul>
+        <button class="pill-btn dark" data-open-workout="W" data-date="${date}">Abrir circuito</button>`;
+    }
     if (plan.type === "flow") {
       return `
         <p class="day-desc">Sessão follow-along de 20–30 min, a intensidade leve a moderada: deves acabar com energia, não exausto.</p>
@@ -625,19 +657,7 @@
         <div class="chips">
           <a target="_blank" rel="noopener" href="${FLOW_CHANNEL}/videos">▶ Mais vídeos: Strength Side</a>
         </div>
-        <details class="flow-tips">
-          <summary>Cuidados com as hérnias e a anca</summary>
-          <ul>
-            <li>Segue a ordem dos vídeos recomendados: primeiro as posições base, depois sessões mais longas.</li>
-            <li>Sempre que o vídeo tiver ape ou agachamento profundo, desce só até a anca ficar a ~90°.</li>
-            <li><strong>Boas escolhas:</strong> beast hold e beast crawl (coluna neutra, abdominal ativo), crab hold, wrist prep e os movimentos de ativação.</li>
-            <li><strong>Com cuidado ou adaptados:</strong> side kickthrough e crab reach envolvem rotação e extensão da coluna. Faz amplitude curta e lenta, ou salta-os.</li>
-            <li><strong>Evitar no início:</strong> scorpion reach (extensão com rotação da lombar) e o ape em agachamento profundo (passa os ~90° de flexão da anca).</li>
-            <li>Mantém o pescoço neutro, sem atirar a cabeça para trás no crab.</li>
-            <li>Os mesmos sinais para parar: dor que irradia, formigueiro, dormência ou perda de força.</li>
-            <li>Mostra um dos vídeos ao teu fisioterapeuta para confirmar o que podes fazer.</li>
-          </ul>
-        </details>
+        ${flowTipsHtml()}
         <div class="flow-row">
           <label class="check"><input type="checkbox" id="flow-${date}" data-day="${date}" data-field="flowDone" ${d.flowDone ? "checked" : ""}><span>Sessão feita</span></label>
           <label class="inline-num" for="flowmin-${date}">Minutos
@@ -1010,7 +1030,7 @@
   function showTab(tab, workoutKey) {
     currentTab = tab;
     $$(".tabs button").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
-    const isWorkout = tab === "A" || tab === "B";
+    const isWorkout = tab === "A" || tab === "B" || tab === "W";
     $("#tab-workout").hidden = !isWorkout;
     $("#tab-progress").hidden = tab !== "progress";
     $("#tab-info").hidden = tab !== "info";
@@ -1025,8 +1045,9 @@
     const active = $(`.tabs button[data-tab="${tab}"]`);
     if (active && active.scrollIntoView) active.scrollIntoView({ block: "nearest", inline: "nearest" });
     if (isWorkout) {
-      currentWorkout = workoutKey || slotWorkout(tab === "A" ? 0 : 1);
+      currentWorkout = workoutKey || (tab === "W" ? "W" : slotWorkout(tab === "A" ? 0 : 1));
       $("#tab-workout").dataset.workout = tab;
+      $("#tab-workout > .mode-row").hidden = tab === "W";
       $("#save-status").textContent = sessionFor(currentWorkout, $("#session-date").value || today()) ? "A editar o registo desta data." : "";
       renderWorkout();
     } else if (tab === "progress") {
@@ -1041,7 +1062,7 @@
     else if (currentTab === "week" && !$("#tab-week").contains(document.activeElement)) renderWeek();
     else if (currentTab === "body") renderBody();
     else if (currentTab === "shop" && !$("#tab-shop").contains(document.activeElement)) renderShop();
-    else if ((currentTab === "A" || currentTab === "B") && !dirty) renderWorkout();
+    else if ((currentTab === "A" || currentTab === "B" || currentTab === "W") && !dirty) renderWorkout();
   }
 
   // ---------- eventos ----------
@@ -1417,7 +1438,8 @@
       const s = sessions.find((x) => x.id === open.dataset.open);
       $("#session-date").value = s.date;
       const m = Object.keys(PROGRAMS).find((k) => PROGRAMS[k].workouts.includes(s.workout));
-      showTab(PROGRAMS[m].workouts.indexOf(s.workout) ? "B" : "A", s.workout);
+      if (!m) showTab("W", s.workout);
+      else showTab(PROGRAMS[m].workouts.indexOf(s.workout) ? "B" : "A", s.workout);
     }
   });
 

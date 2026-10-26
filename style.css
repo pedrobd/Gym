@@ -541,3 +541,8 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
   .meal-list li { grid-template-columns: 1fr auto; row-gap: .2rem; }
   .meal-food { grid-column: 1 / -1; grid-row: 2; }
 }
+
+/* ---------- quarta: calistenia + kettlebell ---------- */
+.day[data-tone="mixed"] { --tone: var(--tint-warm); }
+#tab-workout[data-workout="W"] .session-bar { background: var(--tint-warm); }
+.mixed-list { margin: 0; padding-left: 1.1rem; display: grid; gap: .2rem; font-size: .9rem; }
