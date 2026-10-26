@@ -608,3 +608,7 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
 .profile-form { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; margin: .75rem 0 .5rem; }
 .profile-form label { display: flex; flex-direction: column; gap: .3rem; }
 .profile-form input { text-align: center; font-weight: 700; }
+.bal-tag { display: inline-block; font-size: .78rem; font-weight: 700; white-space: nowrap; margin-left: .2rem; }
+.bal-tag.deficit { color: var(--ok); }
+.bal-tag.surplus { color: var(--accent); }
+#week-burn .bal-tag { margin-left: 0; }
