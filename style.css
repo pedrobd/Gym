@@ -572,3 +572,19 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
 .body-meal-num { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: .15rem; }
 .body-meal-num b { font: 800 .95rem/1 var(--font-display); font-stretch: 110%; color: var(--accent); white-space: nowrap; }
 .body-meal.on .body-meal-num b { color: var(--ok); }
+
+/* calorias nos atalhos e no registo */
+.food-btn small { font-size: .72rem; font-weight: 700; color: var(--muted); }
+.kcal-msg { margin: 0; font-size: .9rem; }
+.kcal-msg b { font-variant-numeric: tabular-nums; }
+.custom-food { grid-template-columns: 1fr 5rem 5rem auto; }
+.food-log .log-g input[data-food-field="kcal"] { width: 4.8rem; }
+.food-edit-row { grid-template-columns: 1fr auto auto auto; }
+@media (max-width: 600px) {
+  .custom-food { grid-template-columns: 1fr 1fr; }
+  .custom-food input[type="text"] { grid-column: 1 / -1; }
+  .food-log li { flex-wrap: wrap; row-gap: .25rem; }
+  .food-log li > span { flex-basis: 100%; }
+  .food-log li .log-g:first-of-type { margin-left: auto; }
+  .food-edit-row { grid-template-columns: 1fr auto auto; }
+}

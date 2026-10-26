@@ -108,6 +108,7 @@
         </div>
         <div class="bar-track big"><span id="protein-bar"></span></div>
         <p id="protein-msg" class="muted small"></p>
+        <p id="kcal-msg" class="kcal-msg"></p>
         <div id="body-meals" class="body-meals"></div>
         <div class="food-head">
           <span>Atalhos</span>
@@ -117,11 +118,12 @@
         <div class="foods-editor" id="foods-editor" hidden></div>
         <div class="custom-food">
           <input type="text" id="food-name" placeholder="Outro alimento (opcional)">
-          <input type="number" id="food-g" inputmode="numeric" min="1" step="1" placeholder="g">
+          <input type="number" id="food-g" inputmode="numeric" min="1" step="1" placeholder="g prot.">
+          <input type="number" id="food-kcal" inputmode="numeric" min="0" step="1" placeholder="kcal">
           <button id="food-add" class="pill-btn dark">Adicionar</button>
         </div>
         <ul class="food-log" id="food-log"></ul>
-        <p class="muted small">Valores aproximados por porção. Tenta repartir a proteína por 3–4 refeições.</p>
+        <p class="muted small">Valores aproximados por porção (proteína e calorias). Tenta repartir a proteína por 3–4 refeições.</p>
       </div>
       <h3>Últimos 7 dias</h3>
       <div class="protein-week" id="protein-week"></div>
