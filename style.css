@@ -617,3 +617,12 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
   .people-switch, .kids-switch { width: 100%; }
   .people-switch button, .kids-switch button { padding: .6rem .3rem; font-size: .78rem; }
 }
+
+/* refeição livre */
+.free-switch { flex-wrap: wrap; border-radius: 22px; }
+.free-switch button { flex: 1 1 auto; }
+.meal-list li.free { background: var(--tint-b); }
+@media (max-width: 600px) {
+  .free-switch { width: 100%; }
+  .free-switch button { padding: .6rem .5rem; font-size: .78rem; }
+}

@@ -927,12 +927,12 @@
     // refeições da ementa para este dia da semana
     const plan = MEAL_PLAN.find((d) => d.day === DOW_NAMES[new Date(date + "T12:00:00").getDay()]);
     if (plan) {
-      const eaten = plan.meals.filter((m, i) => items.some((it) => it.meal === `${plan.day}:${i}`));
-      const kcalPlan = plan.meals.reduce((t, m) => t + m.kcal, 0);
+      const eaten = mealsOf(plan).filter((m, i) => items.some((it) => it.meal === `${plan.day}:${i}`));
+      const kcalPlan = mealsOf(plan).reduce((t, m) => t + m.kcal, 0);
       const kcalDay = items.reduce((t, it) => t + (Number(it.kcal) || 0), 0);
       $("#body-meals").innerHTML = `
-        <div class="food-head"><span>Ementa de ${escapeHtml(plan.day.toLowerCase())}</span><span class="muted small">${eaten.length}/${plan.meals.length} refeições · ≈${kcalDay} / ${kcalPlan} kcal</span></div>
-        <div class="body-meal-list">${plan.meals
+        <div class="food-head"><span>Ementa de ${escapeHtml(plan.day.toLowerCase())}</span><span class="muted small">${eaten.length}/${mealsOf(plan).length} refeições · ≈${kcalDay} / ${kcalPlan} kcal</span></div>
+        <div class="body-meal-list">${mealsOf(plan)
           .map((m, i) => {
             const on = items.some((it) => it.meal === `${plan.day}:${i}`);
             return `<button class="body-meal ${on ? "on" : ""}" data-meal="${plan.day}:${i}" aria-pressed="${on}">
@@ -944,7 +944,7 @@
         <p class="muted small">Toca numa refeição quando a comeres: a proteína entra no total do dia. Toca outra vez para tirar. Se comeres outra coisa, usa os atalhos em baixo.</p>`;
     } else $("#body-meals").innerHTML = "";
     const kcalLogged = items.reduce((t, it) => t + (Number(it.kcal) || 0), 0);
-    const kcalTarget = plan ? plan.meals.reduce((t, m) => t + m.kcal, 0) : 1600;
+    const kcalTarget = plan ? mealsOf(plan).reduce((t, m) => t + m.kcal, 0) : 1600;
     renderBalance(date);
     const burn = burnOf(date);
     $("#kcal-msg").innerHTML = `<b>≈${kcalLogged} kcal</b> registadas · objetivo ≈${kcalTarget} kcal${kcalLogged > kcalTarget ? ` <span class="danger-text">(+${kcalLogged - kcalTarget})</span>` : kcalLogged ? ` · faltam ≈${kcalTarget - kcalLogged}` : ""}
@@ -1090,7 +1090,12 @@
   // Crianças (a lista sugerida tem as coisas de 1); com 0 a secção do filho fica escondida.
   let mealKids = 1;
   try { const k = localStorage.getItem("gym.mealKids"); mealKids = k === null ? 1 : Number(k) || 0; } catch {}
-  const SHOP_SCALED = ["protein", "veg", "fruit", "pantry", "fats", "frozen"];
+  const SHOP_SCALED = ["protein", "veg", "fruit", "pantry", "fats", "frozen", "out"];
+  // Refeição livre da semana ("Sábado:3" = jantar de sábado; "" = nenhuma).
+  let freeSlot = "Sábado:3";
+  try { const f = localStorage.getItem("gym.freeMeal"); if (f !== null) freeSlot = f; } catch {}
+  const mealsOf = (plan) =>
+    plan.meals.map((m, i) => (`${plan.day}:${i}` === freeSlot ? { meal: m.meal, food: FREE_MEAL.food, kcal: FREE_MEAL.kcal, p: FREE_MEAL.p, free: true } : m));
   const shopFactor = (it) =>
     !String(it.id).startsWith("d") ? 1 : SHOP_SCALED.includes(it.cat) ? mealPeople / 2 : it.cat === "kid" ? mealKids : 1;
   const shopVisible = (it) => mealKids > 0 || it.cat !== "kid";
@@ -1132,6 +1137,13 @@
     $$(".kids-switch").forEach((el) => (el.innerHTML = btns([0, 1, 2, 3], mealKids, "kids", (n) => (n ? `${n} ${n === 1 ? "criança" : "crianças"}` : "Nenhuma"))));
   }
   document.addEventListener("click", (e) => {
+    const f = e.target.closest("[data-free]");
+    if (f) {
+      freeSlot = f.dataset.free;
+      try { localStorage.setItem("gym.freeMeal", freeSlot); } catch {}
+      renderMeals();
+      return;
+    }
     const b = e.target.closest("[data-people], [data-kids]");
     if (!b) return;
     if (b.dataset.people) mealPeople = Number(b.dataset.people);
@@ -1209,16 +1221,19 @@
 
   function renderMeals() {
     renderPeopleSwitches();
-    $("#meals-sub").textContent = `Quantidades para ${mealPeople} ${mealPeople === 1 ? "adulto" : "adultos"}${mealKids ? ` + ${mealKids} ${mealKids === 1 ? "criança" : "crianças"}` : ""} · por adulto ≈1550 kcal e ≈130 g de proteína · peixe, sem carne`;
+    $("#free-switch").innerHTML = FREE_MEAL_SLOTS.map(
+      (f) => `<button role="radio" aria-checked="${f.id === freeSlot}" class="${f.id === freeSlot ? "on" : ""}" data-free="${f.id}">${escapeHtml(f.label)}</button>`
+    ).join("");
+    $("#meals-sub").textContent = `Quantidades para ${mealPeople} ${mealPeople === 1 ? "adulto" : "adultos"}${mealKids ? ` + ${mealKids} ${mealKids === 1 ? "criança" : "crianças"}` : ""} · por adulto ≈1450 kcal e ≈130 g de proteína · sem carne, pão, massa nem arroz`;
     const todayName = DOW_NAMES[new Date().getDay()];
     $("#meal-days").innerHTML = MEAL_PLAN.map((d) => {
-      const kcal = d.meals.reduce((t, m) => t + m.kcal, 0);
-      const p = d.meals.reduce((t, m) => t + m.p, 0);
+      const kcal = mealsOf(d).reduce((t, m) => t + m.kcal, 0);
+      const p = mealsOf(d).reduce((t, m) => t + m.p, 0);
       const isToday = d.day === todayName;
       return `<details class="meal-day ${isToday ? "today" : ""}" ${isToday ? "open" : ""}>
         <summary><span class="meal-day-name">${escapeHtml(d.day)}${isToday ? " <em>Hoje</em>" : ""}</span><span class="muted small">≈${kcal} kcal · ≈${p} g proteína por pessoa</span></summary>
-        <ul class="meal-list">${d.meals
-          .map((m) => `<li><span class="meal-name">${escapeHtml(m.meal)}</span><span class="meal-food">${escapeHtml(scaleFood(m.food, mealPeople))}</span><span class="meal-num" title="por pessoa">${m.kcal} kcal · ${m.p} g</span></li>`)
+        <ul class="meal-list">${mealsOf(d)
+          .map((m) => `<li class="${m.free ? "free" : ""}"><span class="meal-name">${escapeHtml(m.free ? `${m.meal} · livre` : m.meal)}</span><span class="meal-food">${escapeHtml(scaleFood(m.food, mealPeople))}</span><span class="meal-num" title="por pessoa">${m.kcal} kcal · ${m.p} g</span></li>`)
           .join("")}</ul>
         ${mealKids ? `<p class="meal-kid"><strong>${mealKids === 1 ? "Filho" : `Crianças (${mealKids})`}:</strong> ${escapeHtml(scaleFood(d.kid, mealKids))}</p>` : ""}
       </details>`;
@@ -1385,7 +1400,7 @@
     const b = e.target.closest("[data-meal]");
     if (!b) return;
     const [day, i] = b.dataset.meal.split(":");
-    const m = MEAL_PLAN.find((d) => d.day === day).meals[Number(i)];
+    const m = mealsOf(MEAL_PLAN.find((d) => d.day === day))[Number(i)];
     const date = bodyDate();
     const list = (days[date] || {}).protein || [];
     const on = list.some((it) => it.meal === b.dataset.meal);

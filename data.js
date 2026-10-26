@@ -548,7 +548,7 @@ const PROTEIN_FOODS = [
 // Quantidades para 7 dias (as da ementa em MEAL_PLAN), numa só ida ao supermercado.
 // price = custo estimado em € dessa quantidade (preços médios em Portugal, marca própria).
 // Sobe SHOP_VERSION quando mudares a lista sugerida: as listas guardadas são atualizadas.
-const SHOP_VERSION = 3;
+const SHOP_VERSION = 4;
 const SHOP_CATEGORIES = [
   { id: "protein", name: "Proteína (peixe, ovos, lácteos, vegetal)" },
   { id: "veg", name: "Legumes e verduras" },
@@ -557,6 +557,7 @@ const SHOP_CATEGORIES = [
   { id: "fats", name: "Gorduras boas e sementes" },
   { id: "frozen", name: "Congelados (reserva para o fim da semana)" },
   { id: "drinks", name: "Bebidas" },
+  { id: "out", name: "Fora de casa" },
   { id: "kid", name: "Só para o filho" },
   { id: "other", name: "Outros" },
 ];
@@ -568,7 +569,7 @@ const SHOP_DEFAULT = [
   { cat: "protein", name: "Ovos", qty: "3 dúzias", price: 8.7 },
   { cat: "protein", name: "Claras de ovo líquidas", qty: "2 × 500 ml", price: 5 },
   { cat: "protein", name: "Skyr ou iogurte grego natural 0%", qty: "22 unid.", price: 16.5 },
-  { cat: "protein", name: "Queijo cottage", qty: "7 × 200 g", price: 10.5 },
+  { cat: "protein", name: "Queijo cottage", qty: "8 × 200 g", price: 12 },
   { cat: "protein", name: "Queijo fresco magro / batido 0%", qty: "4 × 200 g", price: 6.4 },
   { cat: "protein", name: "Requeijão", qty: "1 unid.", price: 1.6 },
   { cat: "protein", name: "Tofu firme", qty: "3 blocos", price: 6 },
@@ -579,10 +580,10 @@ const SHOP_DEFAULT = [
   { cat: "veg", name: "Espinafres / rúcula / alface (comer até 3.º dia)", qty: "4 sacos", price: 5.2 },
   { cat: "veg", name: "Cogumelos (comer até 4.º dia)", qty: "750 g", price: 3.4 },
   { cat: "veg", name: "Brócolos", qty: "1 kg", price: 2.5 },
-  { cat: "veg", name: "Couve-flor", qty: "1 unid.", price: 1.8 },
-  { cat: "veg", name: "Curgete", qty: "4 unid.", price: 2.7 },
+  { cat: "veg", name: "Couve-flor", qty: "2 unid.", price: 3.6 },
+  { cat: "veg", name: "Curgete", qty: "5 unid.", price: 3.4 },
   { cat: "veg", name: "Pimentos", qty: "4 unid.", price: 2 },
-  { cat: "veg", name: "Tomate", qty: "1,5 kg", price: 3 },
+  { cat: "veg", name: "Tomate (e tomate cherry)", qty: "1,5 kg", price: 3 },
   { cat: "veg", name: "Pepino", qty: "3 unid.", price: 1.8 },
   { cat: "veg", name: "Beringela", qty: "2 unid.", price: 2 },
   { cat: "veg", name: "Couve lombarda ou repolho (aguenta a semana)", qty: "1 unid.", price: 1.5 },
@@ -593,35 +594,30 @@ const SHOP_DEFAULT = [
   { cat: "veg", name: "Limões", qty: "4 unid.", price: 1.2 },
   { cat: "veg", name: "Ervas frescas (salsa, coentros)", qty: "2 molhos", price: 1.6 },
   // fruta de índice glicémico baixo
-  { cat: "fruit", name: "Maçãs", qty: "1,5 kg", price: 2.4 },
-  { cat: "fruit", name: "Peras", qty: "1 kg", price: 1.8 },
-  { cat: "fruit", name: "Kiwis", qty: "6 unid.", price: 2 },
-  { cat: "fruit", name: "Laranjas ou tangerinas", qty: "1,5 kg", price: 2 },
-  { cat: "fruit", name: "Abacates", qty: "3 unid.", price: 3 },
+  { cat: "fruit", name: "Abacates", qty: "5 unid.", price: 5 },
   // leguminosas e hidratos integrais, em porções controladas
   { cat: "pantry", name: "Grão-de-bico cozido (frasco)", qty: "3 frascos", price: 2.7 },
   { cat: "pantry", name: "Feijão preto ou vermelho cozido", qty: "2 frascos", price: 1.8 },
   { cat: "pantry", name: "Lentilhas vermelhas secas", qty: "500 g", price: 1.5 },
-  { cat: "pantry", name: "Massa de leguminosas (lentilha ou grão)", qty: "1 × 250 g", price: 2.2 },
-  { cat: "pantry", name: "Flocos de aveia", qty: "500 g", price: 1.3 },
-  { cat: "pantry", name: "Quinoa", qty: "500 g", price: 3 },
-  { cat: "pantry", name: "Pão 100% integral ou de centeio", qty: "1 pão", price: 2.5 },
+  { cat: "pantry", name: "Flocos de aveia (pouca: 15–30 g por vez)", qty: "500 g", price: 1.3 },
   { cat: "pantry", name: "Tomate pelado / passata sem açúcar", qty: "3 unid.", price: 2.1 },
   { cat: "pantry", name: "Caldo de legumes (sem açúcar)", qty: "1 emb.", price: 1.5 },
   { cat: "pantry", name: "Especiarias (canela, cominhos, curcuma, paprika)", qty: "repor", price: 1 },
   { cat: "pantry", name: "Vinagre e mostarda", qty: "repor", price: 0.8 },
   // gorduras: pouca quantidade, muito valor
   { cat: "fats", name: "Azeite virgem extra", qty: "repor (≈1 L/mês)", price: 1.75 },
-  { cat: "fats", name: "Nozes / amêndoas naturais", qty: "200 g", price: 3 },
+  { cat: "fats", name: "Nozes / amêndoas naturais", qty: "300 g", price: 4.5 },
   { cat: "fats", name: "Sementes de chia ou linhaça", qty: "250 g", price: 2 },
   { cat: "fats", name: "Manteiga de amendoim 100%", qty: "1 frasco", price: 3 },
   // congelados: a reserva para quando o fresco acaba (fica longe de tudo)
   { cat: "frozen", name: "Peixe congelado (bacalhau ou pescada)", qty: "≈600 g", price: 5 },
   { cat: "frozen", name: "Camarão ou miolo de marisco", qty: "400 g", price: 4.5 },
-  { cat: "frozen", name: "Edamame", qty: "1 × 400 g", price: 2.5 },
+  { cat: "frozen", name: "Edamame", qty: "2 × 400 g", price: 5 },
   { cat: "frozen", name: "Mistura de legumes / salteado", qty: "2 × 1 kg", price: 3.6 },
   { cat: "frozen", name: "Espinafres em cubos", qty: "1 kg", price: 1.8 },
-  { cat: "frozen", name: "Frutos vermelhos", qty: "2 × 500 g", price: 6 },
+  { cat: "frozen", name: "Frutos vermelhos (a única fruta dos adultos)", qty: "3 × 500 g", price: 9 },
+  // a refeição livre da semana, fora de casa (não é do supermercado, mas conta no custo)
+  { cat: "out", name: "Refeição livre: sushi all you can eat", qty: "2 pessoas", price: 40 },
   // bebidas
   { cat: "drinks", name: "Refrigerante zero (garrafa de 1,5 L)", qty: "4 garrafas", price: 5.6 },
   // o filho come o mesmo que os pais, mais isto
@@ -632,62 +628,77 @@ const SHOP_DEFAULT = [
   { cat: "kid", name: "Leite meio-gordo", qty: "4 L", price: 3.4 },
   { cat: "kid", name: "Queijo flamengo", qty: "1 emb.", price: 2.2 },
   { cat: "kid", name: "Bananas", qty: "1 kg", price: 1.2 },
+  { cat: "kid", name: "Fruta (maçã, pera, laranja)", qty: "1 kg", price: 1.8 },
+  { cat: "kid", name: "Pão", qty: "1 pão", price: 1.5 },
   { cat: "kid", name: "Arroz", qty: "1 kg", price: 1.3 },
   { cat: "kid", name: "Massa", qty: "500 g", price: 0.9 },
   { cat: "kid", name: "Batatas", qty: "1,5 kg", price: 1.8 },
 ];
 
-// Ementa de 7 dias para cada adulto (~1550 kcal, ~130 g de proteína, sem carne),
-// feita com a lista de compras. O peixe fresco e as folhas vêm primeiro.
+// Ementa de 7 dias para cada adulto (~1450 kcal, ~130 g de proteína, sem carne), feita com a
+// lista de compras: sem pão, massa, arroz nem quinoa; fruta só frutos vermelhos.
+// O peixe fresco e as folhas vêm primeiro.
 // Valores aproximados; "kid" = jantar e lanche de uma criança de 5 anos (doses dela).
 const MEAL_PLAN = [
   { day: "Segunda", kid: "Jantar: salmão (80 g) com arroz (40 g cru) e brócolos. Lanche: 1 pacotinho de sumo e 1 pão com 1 fatia de fiambre.", meals: [
     { meal: "Pequeno-almoço", food: "Skyr (170 g) com aveia (30 g), frutos vermelhos (80 g) e nozes (10 g)", kcal: 320, p: 25 },
     { meal: "Almoço", food: "Salada de folhas, tomate e pepino com atum (1 lata), grão (100 g), ½ abacate e limão", kcal: 355, p: 31 },
-    { meal: "Lanche", food: "Cottage (200 g) e 1 kiwi", kcal: 225, p: 22 },
-    { meal: "Jantar", food: "Salmão no forno (150 g), brócolos (250 g) e quinoa (40 g), 1 c. chá de azeite", kcal: 565, p: 40 },
-    { meal: "Ceia", food: "Iogurte grego 0% (120 g)", kcal: 65, p: 12 },
+    { meal: "Lanche", food: "Cottage (200 g) com frutos vermelhos (80 g)", kcal: 215, p: 22 },
+    { meal: "Jantar", food: "Salmão no forno (150 g), brócolos (250 g) e puré de couve-flor (200 g), 1 c. chá de azeite", kcal: 465, p: 39 },
+    { meal: "Ceia", food: "Iogurte grego 0% (120 g) e nozes (10 g)", kcal: 130, p: 14 },
   ] },
   { day: "Terça", kid: "Jantar: pescada (80 g) com batata cozida (150 g) e cenoura. Lanche: 1 banana e 1 copo de leite (200 ml).", meals: [
-    { meal: "Pequeno-almoço", food: "Omelete de 2 ovos + 100 ml de claras com espinafres, 1 fatia de pão integral (40 g)", kcal: 305, p: 29 },
-    { meal: "Almoço", food: "Tofu salteado (200 g) com curgete e pimento (250 g), quinoa (40 g), 1 c. sopa de azeite", kcal: 560, p: 35 },
-    { meal: "Lanche", food: "Skyr (170 g) e 1 maçã", kcal: 185, p: 19 },
-    { meal: "Jantar", food: "Pescada no forno (180 g) com cogumelos e couve-flor (300 g), grão (80 g), 1 c. chá de azeite", kcal: 360, p: 43 },
+    { meal: "Pequeno-almoço", food: "Omelete de 2 ovos + 100 ml de claras com espinafres, ½ abacate", kcal: 325, p: 26 },
+    { meal: "Almoço", food: "Tofu salteado (200 g) com curgete e pimento (250 g), grão (80 g), 1 c. sopa de azeite", kcal: 505, p: 36 },
+    { meal: "Lanche", food: "Skyr (170 g) com frutos vermelhos (80 g) e chia (10 g)", kcal: 190, p: 21 },
+    { meal: "Jantar", food: "Pescada no forno (180 g) com cogumelos e couve-flor (300 g), feijão (80 g), 1 c. chá de azeite", kcal: 340, p: 42 },
     { meal: "Ceia", food: "Iogurte grego 0% (120 g) e nozes (10 g)", kcal: 130, p: 14 },
   ] },
   { day: "Quarta", kid: "Jantar: frango aos cubos (70 g) com arroz (40 g cru), sem picante. Lanche: 1 pacotinho de sumo e 2 fatias de queijo flamengo.", meals: [
-    { meal: "Pequeno-almoço", food: "Skyr (170 g) com aveia (30 g), chia (10 g) e 1 kiwi", kcal: 315, p: 25 },
-    { meal: "Almoço", food: "Taça de quinoa (40 g), edamame (100 g), cenoura ralada, pepino e 2 ovos cozidos", kcal: 460, p: 31 },
-    { meal: "Lanche", food: "Queijo fresco magro (100 g) com tomate, 1 fatia de pão integral e 1 laranja", kcal: 260, p: 16 },
-    { meal: "Jantar", food: "Caril de camarão (150 g) e grão (100 g) com tomate pelado e espinafres, 1 c. chá de azeite", kcal: 345, p: 38 },
-    { meal: "Ceia", food: "Cottage (150 g)", kcal: 135, p: 17 },
+    { meal: "Pequeno-almoço", food: "Skyr (170 g) com aveia (20 g), chia (10 g), frutos vermelhos (80 g) e nozes (10 g)", kcal: 330, p: 25 },
+    { meal: "Almoço", food: "Taça de edamame (100 g), grão (80 g), 2 ovos cozidos, cenoura ralada, pepino e folhas, 1 c. chá de azeite", kcal: 430, p: 30 },
+    { meal: "Lanche", food: "Queijo fresco magro (100 g) com tomate e amêndoas (15 g)", kcal: 195, p: 15 },
+    { meal: "Jantar", food: "Caril de camarão (150 g) com couve-flor (200 g), espinafres e tomate pelado, 1 c. sopa de azeite", kcal: 320, p: 35 },
+    { meal: "Ceia", food: "Cottage (200 g)", kcal: 180, p: 22 },
   ] },
   { day: "Quinta", kid: "Jantar: frango salteado (70 g) com massa (50 g crua) e cenoura. Lanche: 1 iogurte e 1 peça de fruta.", meals: [
     { meal: "Pequeno-almoço", food: "Panquecas de aveia (30 g), 1 ovo e 100 ml de claras, com skyr (100 g) e frutos vermelhos (100 g)", kcal: 335, p: 33 },
     { meal: "Almoço", food: "Salada de lentilhas vermelhas (40 g secas) com sardinhas (1 lata), tomate, pepino, cebola e salsa", kcal: 370, p: 32 },
-    { meal: "Lanche", food: "Iogurte grego 0% (170 g), manteiga de amendoim (15 g) e 1 maçã", kcal: 265, p: 21 },
-    { meal: "Jantar", food: "Tempeh salteado (100 g) com couve lombarda e cenoura (300 g), quinoa (30 g), 1 c. sopa de azeite", kcal: 470, p: 28 },
+    { meal: "Lanche", food: "Iogurte grego 0% (170 g), manteiga de amendoim (15 g) e frutos vermelhos (50 g)", kcal: 205, p: 21 },
+    { meal: "Jantar", food: "Tempeh salteado (100 g) com couve lombarda e cenoura (300 g), sementes (10 g), 1 c. sopa de azeite", kcal: 415, p: 27 },
     { meal: "Ceia", food: "Queijo fresco batido 0% (200 g)", kcal: 95, p: 16 },
   ] },
   { day: "Sexta", kid: "Jantar: peixe (80 g) com batata (150 g) e abóbora assada. Lanche: 1 pacotinho de sumo e 1 pão com 1 fatia de queijo.", meals: [
-    { meal: "Pequeno-almoço", food: "2 ovos mexidos + 100 ml de claras, 1 fatia de pão integral e ½ abacate", kcal: 400, p: 29 },
-    { meal: "Almoço", food: "Massa de lentilha (60 g) com molho de tomate, atum (1 lata) e curgete", kcal: 370, p: 37 },
-    { meal: "Lanche", food: "Cottage (200 g) e 1 pera", kcal: 265, p: 22 },
+    { meal: "Pequeno-almoço", food: "2 ovos mexidos + 100 ml de claras com tomate, ½ abacate", kcal: 320, p: 26 },
+    { meal: "Almoço", food: "Esparguete de curgete com molho de tomate, atum (1 lata), grão (80 g) e edamame (100 g), 1 c. chá de azeite", kcal: 430, p: 40 },
+    { meal: "Lanche", food: "Cottage (200 g) com frutos vermelhos (80 g)", kcal: 215, p: 22 },
     { meal: "Jantar", food: "Bacalhau ou pescada congelada (180 g) no forno com abóbora e beringela (300 g), 1 c. sopa de azeite", kcal: 325, p: 36 },
     { meal: "Ceia", food: "Iogurte grego 0% (120 g) e nozes (10 g)", kcal: 130, p: 14 },
   ] },
   { day: "Sábado", kid: "Jantar: hambúrguer de carne picada (80 g) no pão com batata assada (150 g). Lanche: 1 banana e 1 copo de leite (200 ml).", meals: [
-    { meal: "Pequeno-almoço", food: "Skyr (170 g) com aveia (30 g), maçã ralada e canela", kcal: 300, p: 23 },
-    { meal: "Almoço", food: "Omelete de forno (3 ovos + 100 ml de claras) com cogumelos e espinafres, salada, 1 fatia de pão integral", kcal: 415, p: 36 },
-    { meal: "Lanche", food: "Queijo fresco magro (100 g), 1 kiwi e amêndoas (10 g)", kcal: 190, p: 13 },
+    { meal: "Pequeno-almoço", food: "Skyr (170 g) com frutos vermelhos (80 g), chia (10 g) e nozes (10 g)", kcal: 260, p: 23 },
+    { meal: "Almoço", food: "Omelete de forno (3 ovos + 100 ml de claras) com cogumelos e espinafres, salada e ½ abacate", kcal: 435, p: 33 },
+    { meal: "Lanche", food: "Queijo fresco magro (100 g) com tomate cherry e amêndoas (10 g)", kcal: 160, p: 13 },
     { meal: "Jantar", food: "Hambúrguer caseiro de feijão preto (100 g), tofu (100 g) e aveia (15 g), salada e edamame (100 g)", kcal: 465, p: 33 },
     { meal: "Ceia", food: "Cottage (200 g)", kcal: 180, p: 22 },
   ] },
   { day: "Domingo", kid: "Jantar: frango assado (70 g) com arroz (40 g cru) e a mesma sopa. Lanche: 1 pacotinho de sumo e 1 peça de fruta.", meals: [
-    { meal: "Pequeno-almoço", food: "Omelete de 2 ovos + 100 ml de claras com tomate, 1 fatia de pão integral", kcal: 300, p: 28 },
-    { meal: "Almoço", food: "Seitan grelhado (120 g) com legumes salteados congelados (300 g), feijão (80 g), 1 c. sopa de azeite e 1 laranja", kcal: 445, p: 39 },
+    { meal: "Pequeno-almoço", food: "Omelete de 2 ovos + 100 ml de claras com tomate, ½ abacate", kcal: 320, p: 27 },
+    { meal: "Almoço", food: "Seitan grelhado (120 g) com legumes salteados congelados (300 g), feijão (80 g), 1 c. sopa de azeite", kcal: 380, p: 39 },
     { meal: "Lanche", food: "Skyr (170 g) com frutos vermelhos (80 g) e chia (10 g)", kcal: 190, p: 21 },
-    { meal: "Jantar", food: "Sopa de abóbora, cenoura e couve com cavala (1 lata) e 1 fatia de pão integral", kcal: 390, p: 26 },
+    { meal: "Jantar", food: "Sopa de abóbora, cenoura e couve com cavala (1 lata) e sementes (10 g)", kcal: 305, p: 24 },
     { meal: "Ceia", food: "Iogurte grego 0% (170 g) e manteiga de amendoim (15 g)", kcal: 185, p: 21 },
   ] },
+];
+// Refeição livre semanal (ex.: sushi all you can eat). Substitui a refeição escolhida na Ementa.
+const FREE_MEAL = {
+  food: "Refeição livre: sushi all you can eat (ou outra). Começa por sopa miso, edamame e sashimi; menos tempura, molhos doces e peças com muito arroz.",
+  kcal: 1400,
+  p: 55,
+};
+const FREE_MEAL_SLOTS = [
+  { id: "Sábado:3", label: "Sábado ao jantar" },
+  { id: "Domingo:1", label: "Domingo ao almoço" },
+  { id: "Domingo:3", label: "Domingo ao jantar" },
+  { id: "", label: "Sem refeição livre" },
 ];
