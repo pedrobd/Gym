@@ -4,6 +4,7 @@
   const STORE_DAYS = "gym.days.v1";
   const STORE_FOODS = "gym.foods.v1";
   const STORE_SHOP = "gym.shop.v1";
+  const STORE_PROFILE = "gym.profile.v1";
 
   const $ = (sel, el = document) => el.querySelector(sel);
   const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
@@ -54,6 +55,8 @@
     ? Array.isArray(storedShop) ? migrateShop(storedShop, 1) : migrateShop(storedShop.items || [], storedShop.v || 1)
     : defaultShop();
   let shopCustomized = !!storedShop;
+  // Dados para o gasto em repouso: { height, age, sex: "m" | "f" }.
+  let profile = load(STORE_PROFILE, {});
   let remote = null; // { col } quando a base de dados está disponível
   let assets = null;
   let currentWorkout = "A";
@@ -93,6 +96,10 @@
   async function persistDay(d) {
     if (remote) await remote.col.doc("d_" + d.date).set({ ...d, kind: "day" });
     else saveLocal(STORE_DAYS, days);
+  }
+  async function persistProfile() {
+    if (remote) await remote.col.doc("profile").set({ kind: "profile", ...profile });
+    else saveLocal(STORE_PROFILE, profile);
   }
   async function persistFoods() {
     foodsCustomized = true;
@@ -764,6 +771,58 @@
     if (d.flowDone && !parts.some((p) => p.label === WORKOUTS.W.short)) parts.push({ label: "Animal Flow", kcal: metKcal(BURN.flow.met, Number(d.flowMin) || BURN.flow.minutes, kg) });
     return { kcal: parts.reduce((t, p) => t + p.kcal, 0), parts, kgKnown: !!kgFor(date) };
   }
+  // Gasto em repouso (Mifflin-St Jeor × 1,2); 0 se faltarem dados.
+  function restKcal(date) {
+    const kg = kgFor(date);
+    const { height, age, sex } = profile;
+    if (!kg || !height || !age || !sex) return 0;
+    return Math.round((10 * kg + 6.25 * height - 5 * age + (sex === "m" ? 5 : -161)) * 1.2);
+  }
+  const eatenOf = (date) => ((days[date] || {}).protein || []).reduce((t, it) => t + (Number(it.kcal) || 0), 0);
+
+  function renderBalance(date) {
+    const eaten = eatenOf(date);
+    const burn = burnOf(date).kcal;
+    const rest = restKcal(date);
+    const fmtSigned = (n) => (n > 0 ? "+" : n < 0 ? "−" : "") + Math.abs(n).toLocaleString("pt-PT");
+    const bal = eaten - rest - burn;
+    $("#balance-stats").innerHTML = `
+      <li><b>${eaten ? eaten.toLocaleString("pt-PT") : "–"}</b><span>comido (kcal)</span></li>
+      <li><b>${rest ? (rest + burn).toLocaleString("pt-PT") : "–"}</b><span>gasto: ${rest ? `${rest.toLocaleString("pt-PT")} repouso + ${burn} exercício` : `${burn} em exercício`}</span></li>
+      <li class="${!rest || !eaten ? "" : bal < 0 ? "deficit" : "surplus"}"><b>${rest && eaten ? fmtSigned(bal) : "–"}</b><span>${!rest || !eaten ? "balanço" : bal < 0 ? "défice" : "excedente"}</span></li>`;
+    const msg = $("#balance-msg");
+    if (!rest) {
+      msg.textContent = !kgFor(date) ? "Regista o teu peso em baixo e preenche os teus dados para calcular o balanço." : "Preenche a altura, a idade e o sexo em baixo para calcular o balanço.";
+      $("#profile-box").open = true;
+    } else if (!eaten) {
+      msg.textContent = "Ainda não registaste o que comeste neste dia. O balanço só é fiável se registares tudo (refeições da ementa, atalhos e outros alimentos).";
+    } else if (bal < -1000) {
+      msg.innerHTML = `<strong>Défice muito grande.</strong> Mais de 1000 kcal por dia, com treino de força, aumenta o risco de perderes músculo. Se for um dia normal, come mais um pouco (proteína e uma porção de hidratos).`;
+    } else if (bal < 0) {
+      msg.textContent = `Se todos os dias fossem assim, perderias ≈${fmt1((-bal * 7) / 7700)} kg por semana (7700 kcal ≈ 1 kg de gordura).`;
+    } else {
+      msg.textContent = "Comeste mais do que gastaste neste dia. Um dia assim não estraga nada; conta a média da semana.";
+    }
+
+    // média dos últimos 7 dias com refeições registadas, e o que diz a balança
+    const end = new Date(date + "T12:00:00");
+    const logged = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(end);
+      d.setDate(end.getDate() - i);
+      return isoDate(d);
+    }).filter((d) => eatenOf(d) && restKcal(d));
+    const rate = weeklyRate();
+    if (logged.length >= 2) {
+      const avg = Math.round(logged.reduce((t, d) => t + eatenOf(d) - restKcal(d) - burnOf(d).kcal, 0) / logged.length);
+      $("#balance-week").innerHTML = `<strong>Últimos 7 dias</strong> (${logged.length} com registo): balanço médio <b>${fmtSigned(avg)} kcal/dia</b>, o que dá ≈${fmt1((avg * 7) / 7700)} kg por semana.${
+        rate !== null ? ` A balança diz ${rate > 0 ? "+" : ""}${fmt1(rate)} kg por semana${Math.abs(rate - (avg * 7) / 7700) > 0.4 ? ": a diferença é normal, mas se se mantiver ajusta as porções registadas ou os teus dados." : "."}` : ""
+      }`;
+    } else $("#balance-week").innerHTML = "";
+    if (document.activeElement !== $("#profile-height")) $("#profile-height").value = profile.height || "";
+    if (document.activeElement !== $("#profile-age")) $("#profile-age").value = profile.age || "";
+    $("#profile-sex").value = profile.sex || "";
+  }
+
   function updateWorkoutKcal() {
     const def = WORKOUTS[currentWorkout];
     const date = $("#session-date").value || today();
@@ -878,6 +937,7 @@
     } else $("#body-meals").innerHTML = "";
     const kcalLogged = items.reduce((t, it) => t + (Number(it.kcal) || 0), 0);
     const kcalTarget = plan ? plan.meals.reduce((t, m) => t + m.kcal, 0) : 1600;
+    renderBalance(date);
     const burn = burnOf(date);
     $("#kcal-msg").innerHTML = `<b>≈${kcalLogged} kcal</b> registadas · objetivo ≈${kcalTarget} kcal${kcalLogged > kcalTarget ? ` <span class="danger-text">(+${kcalLogged - kcalTarget})</span>` : kcalLogged ? ` · faltam ≈${kcalTarget - kcalLogged}` : ""}
       ${burn.kcal ? `<br><span class="burn-tag">🔥 ≈${burn.kcal} kcal gastas em exercício</span> <span class="muted small">(${escapeHtml(burn.parts.map((p) => `${p.label} ${p.kcal}`).join(" · "))}). As ~1600 kcal já contam com o exercício normal da semana, por isso não é para comer estas calorias de volta.</span>` : ""}`;
@@ -1224,6 +1284,14 @@
     inp.blur();
     updateDay(date, { protein: list });
   });
+  $("#profile-box").addEventListener("change", (e) => {
+    const f = { "profile-height": "height", "profile-age": "age", "profile-sex": "sex" }[e.target.id];
+    if (!f) return;
+    profile = { ...profile, [f]: f === "sex" ? e.target.value : Math.round(Number(e.target.value)) || 0 };
+    persistProfile().catch(() => {});
+    e.target.blur();
+    renderBody();
+  });
   $("#body-meals").addEventListener("click", (e) => {
     const b = e.target.closest("[data-meal]");
     if (!b) return;
@@ -1559,7 +1627,7 @@
 
   let downloads = null;
   $("#export-btn").addEventListener("click", async () => {
-    const data = JSON.stringify({ sessions, videos: media, days, foods, shop }, null, 2);
+    const data = JSON.stringify({ sessions, videos: media, days, foods, shop, profile }, null, 2);
     const filename = `treino-backup-${today()}.json`;
     const status = $("#backup-status");
     if (downloads) {
@@ -1619,6 +1687,10 @@
           .map((f) => ({ name: f.name, g: Math.max(0, Math.round(Number(f.g) || 0)), kcal: Math.max(0, Math.round(Number(f.kcal) || 0)) }));
         await persistFoods();
       }
+      if (data.profile && typeof data.profile === "object") {
+        profile = { height: Number(data.profile.height) || 0, age: Number(data.profile.age) || 0, sex: data.profile.sex === "f" ? "f" : data.profile.sex === "m" ? "m" : "" };
+        await persistProfile();
+      }
       if (Array.isArray(data.shop)) {
         shop = data.shop
           .filter((it) => it && typeof it.name === "string")
@@ -1663,6 +1735,7 @@
         const remoteSessions = docs.filter((d) => d.kind === "session").map(({ kind, ...s }) => s);
         const m = docs.find((d) => d.kind === "media");
         const fd = docs.find((d) => d.kind === "foods");
+        const pf = docs.find((d) => d.kind === "profile");
         const sd = docs.find((d) => d.kind === "shop");
         const st = docs.find((d) => d.kind === "settings");
         if (st && PROGRAMS[st.mode] && st.mode !== mode) setMode(st.mode, false);
@@ -1692,6 +1765,11 @@
         sessions = remoteSessions;
         days = remoteDays;
         if (m) media = normalizeMedia(m.items);
+        if (pf) {
+          const { kind, ...rest } = pf;
+          profile = rest;
+        }
+        else if (profile.height || profile.age || profile.sex) persistProfile().catch(() => {});
         if (fd && Array.isArray(fd.items)) foods = withKcal(fd.items);
         else if (foodsCustomized) persistFoods().catch(() => {});
         if (sd && Array.isArray(sd.items)) {

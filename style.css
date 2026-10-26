@@ -596,3 +596,15 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
 .burn-msg { margin: 0; font-size: .9rem; }
 .burn-msg b { color: var(--accent); }
 #week-burn { margin: -.25rem 0 1rem; }
+
+/* balanço calórico */
+.balance-card .week-stats { margin: 0; }
+.balance-stats li { background: var(--bg); }
+.balance-stats li.deficit b { color: var(--ok); }
+.balance-stats li.surplus b { color: var(--accent); }
+.balance-card > p { margin: 0; }
+.balance-week { font-size: .9rem; }
+.balance-week:empty { display: none; }
+.profile-form { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; margin: .75rem 0 .5rem; }
+.profile-form label { display: flex; flex-direction: column; gap: .3rem; }
+.profile-form input { text-align: center; font-weight: 700; }

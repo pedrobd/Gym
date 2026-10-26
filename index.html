@@ -135,6 +135,22 @@
       <h3>Últimos 7 dias</h3>
       <div class="protein-week" id="protein-week"></div>
 
+      <h2>Balanço calórico</h2>
+      <div class="protein-card balance-card">
+        <ul class="week-stats balance-stats" id="balance-stats"></ul>
+        <p id="balance-msg" class="muted small"></p>
+        <div class="balance-week" id="balance-week"></div>
+        <details class="flow-tips" id="profile-box">
+          <summary>Os teus dados (para o gasto em repouso)</summary>
+          <div class="profile-form">
+            <label>Altura (cm)<input type="number" id="profile-height" inputmode="numeric" min="120" max="230" step="1" placeholder="–"></label>
+            <label>Idade<input type="number" id="profile-age" inputmode="numeric" min="14" max="100" step="1" placeholder="–"></label>
+            <label>Sexo<select id="profile-sex"><option value="">–</option><option value="m">Homem</option><option value="f">Mulher</option></select></label>
+          </div>
+          <p class="muted small">Gasto em repouso pela fórmula de Mifflin-St Jeor × 1,2 (dia normal sem exercício), com o peso mais recente. O exercício soma-se à parte.</p>
+        </details>
+      </div>
+
       <h2>Peso e cintura</h2>
       <p class="muted small">Pesa-te de manhã, em jejum, depois da casa de banho, 1–2 vezes por semana. Mede a cintura à altura do umbigo, sem apertar.</p>
       <div class="weigh-form">
