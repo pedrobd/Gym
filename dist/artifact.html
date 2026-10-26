@@ -550,6 +550,13 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
 .day[data-tone="mixed"] { --tone: var(--tint-warm); }
 #tab-workout[data-workout="W"] .session-bar { background: var(--tint-warm); }
 .mixed-list { margin: 0; padding-left: 1.1rem; display: grid; gap: .2rem; font-size: .9rem; }
+
+/* manhã: caminhada + intervalos */
+.morning { width: 100%; display: grid; gap: .5rem; background: var(--bg); border-radius: var(--r-md); padding: .85rem 1rem; }
+.morning > * { margin: 0; }
+.morning-tag { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; background: var(--ink); color: var(--on-ink); border-radius: 999px; padding: .2rem .55rem; margin-right: .3rem; vertical-align: .1em; }
+#week-stats { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 600px) { #week-stats { grid-template-columns: repeat(2, 1fr); } }
 </style>
 <header class="top">
     <div class="bar">
@@ -735,6 +742,7 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
         <li><strong>Começa no dia a seguir às compras:</strong> o peixe fresco e as folhas estão no início da semana; do 4.º dia em diante entram as latas e os congelados.</li>
         <li><strong>O filho come o mesmo</strong> ao pequeno-almoço e ao lanche (com o leite, a fruta e o pacotinho de sumo dele). Ao jantar, cada dia diz o que muda no prato dele.</li>
         <li><strong>Bebidas:</strong> água e refrigerante zero não contam para as calorias. Bebe água primeiro, cerca de 2 L por dia.</li>
+        <li><strong>Dias de 3×3:</strong> se tiveres muita fome ou o peso descer mais de 1% por semana, junta 1 peça de fruta e 1 fatia de pão integral nesses dias (≈150 kcal).</li>
         <li><strong>Trocas:</strong> podes trocar dias inteiros entre si. Dentro de uma refeição, troca proteína por proteína (ex.: tofu ↔ seitan, atum ↔ sardinha).</li>
       </ul>
       <div id="meal-days" class="meal-days"></div>
@@ -799,6 +807,8 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
       <ul class="rules">
         <li><strong>Terça e quinta:</strong> pelo menos 11 000 passos ao longo do dia. Regista o número no separador Semana.</li>
         <li><strong>Quarta:</strong> 10 min de Animal Flow como aquecimento, com os vídeos do <a href="https://www.youtube.com/@strengthsidefollowalongs" target="_blank" rel="noopener">Strength Side</a>, e depois um circuito de 3 voltas que alterna exercícios de peso do corpo (flexões inclinadas, glute bridge a uma perna, beast hold) com exercícios com uma só kettlebell, de 6 ou 12 kg (goblet squat para a cadeira, remada apoiada, pullover no chão, suitcase carry). Abre o circuito no separador Semana para registar as reps; o site sugere o próximo passo como nos outros treinos.</li>
+        <li><strong>Todas as manhãs:</strong> caminhada de ~6000 passos. Os intervalos 3×3 (3 min a correr a 150–160 bpm + 3 min a andar) ficam melhor em <strong>3 manhãs por semana, sem treino de força</strong> (terça, quinta e sábado): 150–160 bpm já é intensidade alta, e com 1600 kcal a recuperação é limitada. Nos outros dias, caminhada a ritmo de conversa.</li>
+        <li><strong>Correr com as hérnias:</strong> 5 min a andar antes do 1.º intervalo, passada curta e leve, piso macio (terra, relva, pista) e boas sapatilhas. Se a lombar ou a anca se queixarem, faz os mesmos 3×3 a subir uma rampa a andar depressa, ou de bicicleta, até chegares aos mesmos batimentos. Os sinais para parar são os mesmos.</li>
         <li><strong>Sábado e domingo:</strong> descanso. Caminhada leve se te apetecer e 10 min de estabilização lombar (bird dog, side plank, dead bug).</li>
       </ul>
       <p>Os dias livres não devem virar mais ginásio: a recuperação é a peça central do protocolo, e com 1600 kcal já está limitada.</p>
@@ -1296,6 +1306,13 @@ const PROGRAMS = {
 
 // Semana: 0 = domingo … 6 = sábado (como Date.getDay()).
 const STEPS_GOAL = 11000;
+// Manhã, todos os dias: caminhada (~6000 passos) e, em alguns dias, intervalos 3×3.
+// Sugere os 3×3 em dias sem treino de força (terça, quinta, sábado) para recuperar bem.
+const MORNING = {
+  steps: 6000,
+  intervals: "3 × (3 min a correr a 150–160 bpm + 3 min a andar)",
+  intervalDays: [2, 4, 6],
+};
 const FLOW_CHANNEL = "https://www.youtube.com/@strengthsidefollowalongs";
 const FLOW_START = "2026-10-26"; // primeira quarta-feira conta a partir desta semana
 
@@ -2112,7 +2129,27 @@ const MEAL_PLAN = [
         </details>`;
   }
 
+  // Bloco da manhã, igual em todos os dias: caminhada e intervalos 3×3.
+  function morningHtml(date, d) {
+    const dow = new Date(date + "T12:00:00").getDay();
+    const good = MORNING.intervalDays.includes(dow);
+    return `
+      <div class="morning">
+        <p class="day-desc"><span class="morning-tag">Manhã</span> Caminhada de ~${MORNING.steps.toLocaleString("pt-PT")} passos.
+          ${good ? `<strong>Bom dia para os 3×3:</strong> ${escapeHtml(MORNING.intervals)}.` : `Sugestão: só caminhada, sem intervalos${morningHint(dow)}.`}</p>
+        <div class="flow-row">
+          <label class="check"><input type="checkbox" id="walk-${date}" data-day="${date}" data-field="walkDone" ${d.walkDone ? "checked" : ""}><span>Caminhada feita</span></label>
+          <label class="check"><input type="checkbox" id="hiit-${date}" data-day="${date}" data-field="hiitDone" ${d.hiitDone ? "checked" : ""}><span>3×3 feito</span></label>
+        </div>
+      </div>`;
+  }
+  const morningHint = (dow) => (dow === 1 || dow === 5 ? " (dia de treino de força)" : dow === 3 ? " (já há circuito)" : " (recuperação)");
+
   function dayBody(plan, date) {
+    return morningHtml(date, days[date] || {}) + dayPlanBody(plan, date);
+  }
+
+  function dayPlanBody(plan, date) {
     const d = days[date] || {};
     if (plan.type === "workout") {
       const def = WORKOUTS[slotWorkout(plan.slot)];
@@ -2124,7 +2161,7 @@ const MEAL_PLAN = [
       const n = Number(d.steps) || 0;
       const pct = Math.min(100, Math.round((n / STEPS_GOAL) * 100));
       return `
-        <p class="day-desc">Pelo menos ${STEPS_GOAL.toLocaleString("pt-PT")} passos ao longo do dia. Divide em 2–3 caminhadas se for mais fácil.</p>
+        <p class="day-desc">Pelo menos ${STEPS_GOAL.toLocaleString("pt-PT")} passos ao longo do dia; os ~${MORNING.steps.toLocaleString("pt-PT")} da manhã já contam. Regista aqui o total do dia.</p>
         <div class="steps-row">
           <label for="steps-${date}">Passos</label>
           <input type="number" inputmode="numeric" min="0" step="100" id="steps-${date}" data-day="${date}" data-field="steps" value="${n || ""}" placeholder="0">
@@ -2199,7 +2236,8 @@ const MEAL_PLAN = [
     $("#week-stats").innerHTML = `
       <li><b>${done}/${planned}</b><span>dias cumpridos</span></li>
       <li><b>${stepsDays ? Math.round(stepsTotal / stepsDays).toLocaleString("pt-PT") : "–"}</b><span>média de passos</span></li>
-      <li><b>${dates.filter((dt) => { const p = WEEK.find((w) => w.dow === dt.getDay()); return p.type === "workout" && slotSession(p.slot, isoDate(dt)); }).length}/2</b><span>treinos de força</span></li>`;
+      <li><b>${dates.filter((dt) => { const p = WEEK.find((w) => w.dow === dt.getDay()); return p.type === "workout" && slotSession(p.slot, isoDate(dt)); }).length}/2</b><span>treinos de força</span></li>
+      <li><b>${dates.filter((dt) => (days[isoDate(dt)] || {}).hiitDone).length}/${MORNING.intervalDays.length}</b><span>3×3 de manhã</span></li>`;
   }
 
   async function saveDayField(date, field, value) {

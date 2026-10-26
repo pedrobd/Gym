@@ -472,6 +472,13 @@ const PROGRAMS = {
 
 // Semana: 0 = domingo … 6 = sábado (como Date.getDay()).
 const STEPS_GOAL = 11000;
+// Manhã, todos os dias: caminhada (~6000 passos) e, em alguns dias, intervalos 3×3.
+// Sugere os 3×3 em dias sem treino de força (terça, quinta, sábado) para recuperar bem.
+const MORNING = {
+  steps: 6000,
+  intervals: "3 × (3 min a correr a 150–160 bpm + 3 min a andar)",
+  intervalDays: [2, 4, 6],
+};
 const FLOW_CHANNEL = "https://www.youtube.com/@strengthsidefollowalongs";
 const FLOW_START = "2026-10-26"; // primeira quarta-feira conta a partir desta semana
 
