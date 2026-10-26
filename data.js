@@ -446,11 +446,11 @@ const PROTEIN_FOODS = [
   { name: "Leguminosas (1 chávena cozida)", g: 15 },
 ];
 
-// Lista de compras semanal: 2 adultos (vegetarianos, ~1600 kcal, proteína alta,
-// baixo índice glicémico) + 1 criança de 5 anos que come carne e peixe.
+// Lista de compras semanal: 2 adultos (comem peixe mas não carne, ~1600 kcal,
+// proteína alta, baixo índice glicémico) + 1 criança de 5 anos que também come carne.
 // Quantidades para 7 dias, a pensar numa só ida ao supermercado por semana.
 const SHOP_CATEGORIES = [
-  { id: "protein", name: "Proteína (ovos, lácteos, vegetal)" },
+  { id: "protein", name: "Proteína (peixe, ovos, lácteos, vegetal)" },
   { id: "veg", name: "Legumes e verduras" },
   { id: "fruit", name: "Fruta" },
   { id: "pantry", name: "Leguminosas, cereais e despensa" },
@@ -461,15 +461,17 @@ const SHOP_CATEGORIES = [
 ];
 const SHOP_DEFAULT = [
   // proteína: base dos ~130 g/dia de cada adulto
+  { cat: "protein", name: "Peixe fresco (salmão, pescada, dourada) — comer até 2.º dia ou congelar", qty: "1 kg" },
+  { cat: "protein", name: "Atum ao natural (lata)", qty: "6 latas" },
+  { cat: "protein", name: "Sardinha ou cavala em azeite (lata)", qty: "4 latas" },
   { cat: "protein", name: "Ovos", qty: "3 dúzias" },
   { cat: "protein", name: "Claras de ovo líquidas", qty: "2 × 500 ml" },
   { cat: "protein", name: "Skyr ou iogurte grego natural 0%", qty: "16 unid." },
   { cat: "protein", name: "Queijo fresco magro", qty: "4 × 200 g" },
   { cat: "protein", name: "Queijo cottage", qty: "3 × 200 g" },
   { cat: "protein", name: "Requeijão", qty: "2 unid." },
-  { cat: "protein", name: "Tofu firme", qty: "4 blocos" },
-  { cat: "protein", name: "Tempeh", qty: "2 unid." },
-  { cat: "protein", name: "Seitan", qty: "2 unid." },
+  { cat: "protein", name: "Tofu firme", qty: "3 blocos" },
+  { cat: "protein", name: "Tempeh ou seitan", qty: "2 unid." },
   { cat: "protein", name: "Bebida de soja sem açúcar", qty: "2 L" },
   // legumes: os frágeis primeiro, os resistentes ficam para o fim da semana
   { cat: "veg", name: "Espinafres / rúcula / alface (comer até 3.º dia)", qty: "4 sacos" },
@@ -512,14 +514,15 @@ const SHOP_DEFAULT = [
   { cat: "fats", name: "Sementes de chia ou linhaça", qty: "250 g" },
   { cat: "fats", name: "Manteiga de amendoim 100%", qty: "1 frasco" },
   // congelados: a reserva para quando o fresco acaba (fica longe de tudo)
-  { cat: "frozen", name: "Edamame", qty: "2 × 400 g" },
+  { cat: "frozen", name: "Peixe congelado (pescada, bacalhau, salmão)", qty: "1 kg" },
+  { cat: "frozen", name: "Camarão ou miolo de marisco", qty: "400 g" },
+  { cat: "frozen", name: "Edamame", qty: "1 × 400 g" },
   { cat: "frozen", name: "Mistura de legumes / salteado", qty: "2 × 1 kg" },
   { cat: "frozen", name: "Espinafres em cubos", qty: "1 kg" },
   { cat: "frozen", name: "Frutos vermelhos", qty: "2 × 500 g" },
   // o filho come o mesmo que os pais, mais isto
   { cat: "kid", name: "Peito de frango ou peru", qty: "600 g" },
   { cat: "kid", name: "Carne picada (vaca ou peru)", qty: "400 g" },
-  { cat: "kid", name: "Peixe (pescada, salmão)", qty: "500 g" },
   { cat: "kid", name: "Fiambre de peru", qty: "1 emb." },
   { cat: "kid", name: "Leite meio-gordo", qty: "4 L" },
   { cat: "kid", name: "Queijo flamengo", qty: "1 emb." },
@@ -531,7 +534,7 @@ const SHOP_DEFAULT = [
 // Dia tipo de um adulto (~1550 kcal, ~130 g de proteína). Valores aproximados.
 const SHOP_DAY_EXAMPLE = [
   { meal: "Pequeno-almoço", food: "Skyr (170 g) + aveia (30 g) + frutos vermelhos (80 g) + nozes (10 g)", kcal: 315, p: 24 },
-  { meal: "Almoço", food: "Tofu salteado (200 g) + legumes (250 g) + grão (80 g) + azeite (1 c. sopa)", kcal: 535, p: 38 },
+  { meal: "Almoço", food: "Salmão ou pescada (150 g) + legumes (250 g) + grão (80 g) + azeite (1 c. sopa)", kcal: 515, p: 41 },
   { meal: "Lanche", food: "Queijo fresco batido ou cottage (200 g) + 1 maçã", kcal: 220, p: 22 },
   { meal: "Jantar", food: "Omelete de 2 ovos + 150 ml de claras, cogumelos e espinafres + pão integral (40 g)", kcal: 410, p: 37 },
   { meal: "Ceia (opcional)", food: "Iogurte grego 0% (120 g)", kcal: 70, p: 12 },
