@@ -612,3 +612,8 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
 .bal-tag.deficit { color: var(--ok); }
 .bal-tag.surplus { color: var(--accent); }
 #week-burn .bal-tag { margin-left: 0; }
+#meal-people button { flex: 1 1 auto; }
+@media (max-width: 600px) {
+  #meal-people { width: 100%; }
+  #meal-people button { padding: .6rem .3rem; font-size: .78rem; }
+}

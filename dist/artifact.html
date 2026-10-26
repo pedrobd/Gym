@@ -616,6 +616,11 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
 .bal-tag.deficit { color: var(--ok); }
 .bal-tag.surplus { color: var(--accent); }
 #week-burn .bal-tag { margin-left: 0; }
+#meal-people button { flex: 1 1 auto; }
+@media (max-width: 600px) {
+  #meal-people { width: 100%; }
+  #meal-people button { padding: .6rem .3rem; font-size: .78rem; }
+}
 </style>
 <header class="top">
     <div class="bar">
@@ -820,8 +825,12 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
       <div class="week-head meals-head">
         <div class="session-title">
           <h2>Ementa da semana</h2>
-          <span>Por adulto · ≈1550 kcal · ≈130 g de proteína · peixe, sem carne</span>
+          <span id="meals-sub">Por pessoa · ≈1550 kcal · ≈130 g de proteína · peixe, sem carne</span>
         </div>
+      </div>
+      <div class="mode-row">
+        <span>Quantidades para</span>
+        <div class="mode-switch" id="meal-people" role="radiogroup" aria-label="Número de pessoas"></div>
       </div>
       <ul class="rules">
         <li><strong>Começa no dia a seguir às compras:</strong> o peixe fresco e as folhas estão no início da semana; do 4.º dia em diante entram as latas e os congelados.</li>
@@ -2742,21 +2751,47 @@ const MEAL_PLAN = [
   const fmtEur = (n) => n.toLocaleString("pt-PT", { style: "currency", currency: "EUR" });
 
   // ---------- ementa ----------
+  // Número de adultos a comer a ementa (as quantidades multiplicam; kcal e proteína são por pessoa).
+  let mealPeople = 2;
+  try { mealPeople = Number(localStorage.getItem("gym.mealPeople")) || 2; } catch {}
+  const PLURAL = { ovo: "ovos", lata: "latas", fatia: "fatias", kiwi: "kiwis", "maçã": "maçãs", laranja: "laranjas", pera: "peras", abacate: "abacates" };
+  // "Skyr (170 g) e 1 kiwi" × 2 → "Skyr (340 g) e 2 kiwis"
+  function scaleFood(text, n) {
+    if (n === 1) return text;
+    return text.replace(/(\d+(?:,\d+)?|½)\s?(g|ml|ovos?|latas?|fatias?|kiwis?|maçãs?|laranjas?|peras?|abacates?|c\. sopa|c\. chá)(?![\wà-ú])/g, (_, num, unit) => {
+      const v = (num === "½" ? 0.5 : Number(num.replace(",", "."))) * n;
+      const out = Number.isInteger(v) ? String(v) : v === 0.5 ? "½" : fmt1(v).replace(/,0$/, "");
+      return `${out} ${v > 1 && PLURAL[unit] ? PLURAL[unit] : unit}`;
+    });
+  }
+
   function renderMeals() {
+    $("#meal-people").innerHTML = [1, 2, 3, 4]
+      .map((n) => `<button role="radio" aria-checked="${n === mealPeople}" class="${n === mealPeople ? "on" : ""}" data-people="${n}">${n} ${n === 1 ? "pessoa" : "pessoas"}</button>`)
+      .join("");
+    $("#meals-sub").textContent = `${mealPeople === 1 ? "Quantidades para 1 pessoa" : `Quantidades para ${mealPeople} pessoas`} · por pessoa ≈1550 kcal e ≈130 g de proteína · peixe, sem carne`;
     const todayName = DOW_NAMES[new Date().getDay()];
     $("#meal-days").innerHTML = MEAL_PLAN.map((d) => {
       const kcal = d.meals.reduce((t, m) => t + m.kcal, 0);
       const p = d.meals.reduce((t, m) => t + m.p, 0);
       const isToday = d.day === todayName;
       return `<details class="meal-day ${isToday ? "today" : ""}" ${isToday ? "open" : ""}>
-        <summary><span class="meal-day-name">${escapeHtml(d.day)}${isToday ? " <em>Hoje</em>" : ""}</span><span class="muted small">≈${kcal} kcal · ≈${p} g proteína</span></summary>
+        <summary><span class="meal-day-name">${escapeHtml(d.day)}${isToday ? " <em>Hoje</em>" : ""}</span><span class="muted small">≈${kcal} kcal · ≈${p} g proteína por pessoa</span></summary>
         <ul class="meal-list">${d.meals
-          .map((m) => `<li><span class="meal-name">${escapeHtml(m.meal)}</span><span class="meal-food">${escapeHtml(m.food)}</span><span class="meal-num">${m.kcal} kcal · ${m.p} g</span></li>`)
+          .map((m) => `<li><span class="meal-name">${escapeHtml(m.meal)}</span><span class="meal-food">${escapeHtml(scaleFood(m.food, mealPeople))}</span><span class="meal-num" title="por pessoa">${m.kcal} kcal · ${m.p} g</span></li>`)
           .join("")}</ul>
         <p class="meal-kid"><strong>Filho:</strong> ${escapeHtml(d.kid)}</p>
       </details>`;
     }).join("");
   }
+  $("#meal-people").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-people]");
+    if (!b) return;
+    mealPeople = Number(b.dataset.people);
+    try { localStorage.setItem("gym.mealPeople", String(mealPeople)); } catch {}
+    renderMeals();
+  });
+
   function shopItem(id) {
     return shop.find((it) => it.id === id);
   }
