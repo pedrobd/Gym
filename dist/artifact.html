@@ -557,6 +557,25 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
 .morning-tag { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; background: var(--ink); color: var(--on-ink); border-radius: 999px; padding: .2rem .55rem; margin-right: .3rem; vertical-align: .1em; }
 #week-stats { grid-template-columns: repeat(4, 1fr); }
 @media (max-width: 600px) { #week-stats { grid-template-columns: repeat(2, 1fr); } }
+
+/* corpo: refeições da ementa */
+.body-meals { display: grid; gap: .5rem; }
+.body-meals:empty { display: none; }
+.body-meals > p { margin: 0; }
+.body-meals .food-head .small { text-transform: none; letter-spacing: 0; font-weight: 500; }
+.body-meal-list { display: grid; gap: .4rem; }
+.body-meal {
+  display: flex; justify-content: space-between; align-items: center; gap: .75rem; text-align: left; width: 100%;
+  background: var(--bg); color: var(--ink); border: 1.5px solid transparent; border-radius: var(--r-md);
+  padding: .65rem .85rem; cursor: pointer; font: 500 .86rem/1.3 var(--font-body);
+}
+.body-meal:hover { border-color: var(--ink); }
+.body-meal.on { background: var(--tint-ok); }
+.body-meal-text { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
+.body-meal-text small, .body-meal-num small { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.body-meal-num { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: .15rem; }
+.body-meal-num b { font: 800 .95rem/1 var(--font-display); font-stretch: 110%; color: var(--accent); white-space: nowrap; }
+.body-meal.on .body-meal-num b { color: var(--ok); }
 </style>
 <header class="top">
     <div class="bar">
@@ -655,6 +674,7 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
         </div>
         <div class="bar-track big"><span id="protein-bar"></span></div>
         <p id="protein-msg" class="muted small"></p>
+        <div id="body-meals" class="body-meals"></div>
         <div class="food-head">
           <span>Atalhos</span>
           <button id="foods-edit" class="link">Editar atalhos</button>
@@ -2324,6 +2344,27 @@ const MEAL_PLAN = [
         : `<p class="muted small">Sem atalhos. Carrega em "Editar atalhos" para criar.</p>`;
     }
     const items = (days[date] || {}).protein || [];
+
+    // refeições da ementa para este dia da semana
+    const plan = MEAL_PLAN.find((d) => d.day === DOW_NAMES[new Date(date + "T12:00:00").getDay()]);
+    if (plan) {
+      const eaten = plan.meals.filter((m, i) => items.some((it) => it.meal === `${plan.day}:${i}`));
+      const kcalPlan = plan.meals.reduce((t, m) => t + m.kcal, 0);
+      const kcalDay = items.reduce((t, it) => t + (Number(it.kcal) || 0), 0);
+      $("#body-meals").innerHTML = `
+        <div class="food-head"><span>Ementa de ${escapeHtml(plan.day.toLowerCase())}</span><span class="muted small">${eaten.length}/${plan.meals.length} refeições · ≈${kcalDay} / ${kcalPlan} kcal</span></div>
+        <div class="body-meal-list">${plan.meals
+          .map((m, i) => {
+            const on = items.some((it) => it.meal === `${plan.day}:${i}`);
+            return `<button class="body-meal ${on ? "on" : ""}" data-meal="${plan.day}:${i}" aria-pressed="${on}">
+              <span class="body-meal-text"><small>${escapeHtml(m.meal)}</small>${escapeHtml(m.food)}</span>
+              <span class="body-meal-num"><b>${on ? "✓" : "+"}${m.p} g</b><small>${m.kcal} kcal</small></span>
+            </button>`;
+          })
+          .join("")}</div>
+        <p class="muted small">Toca numa refeição quando a comeres: a proteína entra no total do dia. Toca outra vez para tirar. Se comeres outra coisa, usa os atalhos em baixo.</p>`;
+    } else $("#body-meals").innerHTML = "";
+
     $("#food-log").innerHTML = items.length
       ? items
           .map(
@@ -2658,6 +2699,18 @@ const MEAL_PLAN = [
     list[i] = { ...list[i], g: Math.max(0, Math.round(Number(inp.value) || 0)) };
     inp.blur();
     updateDay(date, { protein: list });
+  });
+  $("#body-meals").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-meal]");
+    if (!b) return;
+    const [day, i] = b.dataset.meal.split(":");
+    const m = MEAL_PLAN.find((d) => d.day === day).meals[Number(i)];
+    const date = bodyDate();
+    const list = (days[date] || {}).protein || [];
+    const on = list.some((it) => it.meal === b.dataset.meal);
+    updateDay(date, {
+      protein: on ? list.filter((it) => it.meal !== b.dataset.meal) : [...list, { name: `${m.meal} (ementa)`, g: m.p, kcal: m.kcal, meal: b.dataset.meal }],
+    });
   });
   $("#food-grid").addEventListener("click", (e) => {
     const b = e.target.closest("[data-food]");

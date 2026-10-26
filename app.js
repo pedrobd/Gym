@@ -814,6 +814,27 @@
         : `<p class="muted small">Sem atalhos. Carrega em "Editar atalhos" para criar.</p>`;
     }
     const items = (days[date] || {}).protein || [];
+
+    // refeições da ementa para este dia da semana
+    const plan = MEAL_PLAN.find((d) => d.day === DOW_NAMES[new Date(date + "T12:00:00").getDay()]);
+    if (plan) {
+      const eaten = plan.meals.filter((m, i) => items.some((it) => it.meal === `${plan.day}:${i}`));
+      const kcalPlan = plan.meals.reduce((t, m) => t + m.kcal, 0);
+      const kcalDay = items.reduce((t, it) => t + (Number(it.kcal) || 0), 0);
+      $("#body-meals").innerHTML = `
+        <div class="food-head"><span>Ementa de ${escapeHtml(plan.day.toLowerCase())}</span><span class="muted small">${eaten.length}/${plan.meals.length} refeições · ≈${kcalDay} / ${kcalPlan} kcal</span></div>
+        <div class="body-meal-list">${plan.meals
+          .map((m, i) => {
+            const on = items.some((it) => it.meal === `${plan.day}:${i}`);
+            return `<button class="body-meal ${on ? "on" : ""}" data-meal="${plan.day}:${i}" aria-pressed="${on}">
+              <span class="body-meal-text"><small>${escapeHtml(m.meal)}</small>${escapeHtml(m.food)}</span>
+              <span class="body-meal-num"><b>${on ? "✓" : "+"}${m.p} g</b><small>${m.kcal} kcal</small></span>
+            </button>`;
+          })
+          .join("")}</div>
+        <p class="muted small">Toca numa refeição quando a comeres: a proteína entra no total do dia. Toca outra vez para tirar. Se comeres outra coisa, usa os atalhos em baixo.</p>`;
+    } else $("#body-meals").innerHTML = "";
+
     $("#food-log").innerHTML = items.length
       ? items
           .map(
@@ -1148,6 +1169,18 @@
     list[i] = { ...list[i], g: Math.max(0, Math.round(Number(inp.value) || 0)) };
     inp.blur();
     updateDay(date, { protein: list });
+  });
+  $("#body-meals").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-meal]");
+    if (!b) return;
+    const [day, i] = b.dataset.meal.split(":");
+    const m = MEAL_PLAN.find((d) => d.day === day).meals[Number(i)];
+    const date = bodyDate();
+    const list = (days[date] || {}).protein || [];
+    const on = list.some((it) => it.meal === b.dataset.meal);
+    updateDay(date, {
+      protein: on ? list.filter((it) => it.meal !== b.dataset.meal) : [...list, { name: `${m.meal} (ementa)`, g: m.p, kcal: m.kcal, meal: b.dataset.meal }],
+    });
   });
   $("#food-grid").addEventListener("click", (e) => {
     const b = e.target.closest("[data-food]");
