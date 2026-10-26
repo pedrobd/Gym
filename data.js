@@ -7,6 +7,8 @@ const WORKOUTS = {
     short: "Treino A",
     warmup: "<strong>Aquecimento:</strong> 5 min de bicicleta. Nos três primeiros exercícios: 1 série a 50% × 6 e 1 a 70% × 3 (valores calculados em cada cartão).",
     day: "Segunda-feira",
+    minutes: 60,
+    met: 3.5,
     exercises: [
       {
         id: "leg-press",
@@ -139,6 +141,8 @@ const WORKOUTS = {
     short: "Treino B",
     warmup: "<strong>Aquecimento:</strong> 5 min de bicicleta. Nos três primeiros exercícios: 1 série a 50% × 6 e 1 a 70% × 3 (valores calculados em cada cartão).",
     day: "Sexta-feira",
+    minutes: 60,
+    met: 3.5,
     exercises: [
       {
         id: "supino-inclinado",
@@ -274,6 +278,8 @@ WORKOUTS.KA = {
   short: "Casa 1",
   day: "Segunda-feira",
   home: true,
+  minutes: 45,
+  met: 4,
   warmup: HOME_WARMUP,
   exercises: [
     {
@@ -335,6 +341,8 @@ WORKOUTS.KB = {
   short: "Casa 2",
   day: "Sexta-feira",
   home: true,
+  minutes: 45,
+  met: 4,
   warmup: HOME_WARMUP,
   exercises: [
     {
@@ -401,6 +409,8 @@ WORKOUTS.W = {
   short: "Quarta",
   day: "Quarta-feira",
   home: true,
+  minutes: 35,
+  met: 4.5,
   circuit: true,
   warmup:
     "<strong>Como fazer:</strong> 10 min de Animal Flow (vídeo no separador Semana) como aquecimento. Depois faz o circuito: 1 série de cada exercício seguida, com 20–30 s entre exercícios, e descansa 90 s no fim de cada volta. 3 voltas. Só precisas de uma kettlebell de cada vez.",
@@ -472,6 +482,15 @@ const PROGRAMS = {
 
 // Semana: 0 = domingo … 6 = sábado (como Date.getDay()).
 const STEPS_GOAL = 11000;
+// Gasto estimado em exercício: MET × peso (kg) × horas. "met" e "minutes" de cada treino
+// estão em WORKOUTS; aqui os valores das outras atividades. Sem peso registado usa 80 kg.
+const BURN = {
+  defaultKg: 80,
+  kcalPerStepPerKg: 0.0005, // ≈0,04 kcal por passo a 80 kg
+  intervals: { minutes: 9, met: 9 }, // os 9 min a correr dos 3×3 (a parte a andar conta nos passos)
+  core: { minutes: 10, met: 3 },
+  flow: { minutes: 30, met: 4 },
+};
 // Manhã, todos os dias: caminhada (~6000 passos) e, em alguns dias, intervalos 3×3.
 // Sugere os 3×3 em dias sem treino de força (terça, quinta, sábado) para recuperar bem.
 const MORNING = {

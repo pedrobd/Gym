@@ -56,6 +56,7 @@
         <div class="mode-switch" role="radiogroup" aria-label="Onde vais treinar"></div>
       </div>
       <ul class="week-stats" id="week-stats"></ul>
+      <p id="week-burn" class="muted small"></p>
       <div id="week-days" class="week-days"></div>
     </section>
 
@@ -81,6 +82,12 @@
       <label class="notes-field">Notas da sessão
         <textarea id="session-notes" rows="2" placeholder="Como te sentiste? Alguma dor, cansaço…"></textarea>
       </label>
+      <div class="burn-row">
+        <label class="inline-num" for="session-minutes">Duração (min)
+          <input type="number" id="session-minutes" inputmode="numeric" min="5" max="240" step="5">
+        </label>
+        <p id="workout-kcal" class="burn-msg"></p>
+      </div>
       <div class="actions">
         <button id="save-session" class="primary">Guardar treino</button>
         <span id="save-status" class="muted"></span>

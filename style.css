@@ -588,3 +588,11 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
   .food-log li .log-g:first-of-type { margin-left: auto; }
   .food-edit-row { grid-template-columns: 1fr auto auto; }
 }
+
+/* calorias gastas */
+.burn-tag { display: inline-block; font-size: .78rem; font-weight: 700; color: var(--accent); white-space: nowrap; }
+.day-status .burn-tag { margin-left: .2rem; }
+.burn-row { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-top: 1rem; }
+.burn-msg { margin: 0; font-size: .9rem; }
+.burn-msg b { color: var(--accent); }
+#week-burn { margin: -.25rem 0 1rem; }

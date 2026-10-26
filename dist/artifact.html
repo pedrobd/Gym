@@ -592,6 +592,14 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
   .food-log li .log-g:first-of-type { margin-left: auto; }
   .food-edit-row { grid-template-columns: 1fr auto auto; }
 }
+
+/* calorias gastas */
+.burn-tag { display: inline-block; font-size: .78rem; font-weight: 700; color: var(--accent); white-space: nowrap; }
+.day-status .burn-tag { margin-left: .2rem; }
+.burn-row { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-top: 1rem; }
+.burn-msg { margin: 0; font-size: .9rem; }
+.burn-msg b { color: var(--accent); }
+#week-burn { margin: -.25rem 0 1rem; }
 </style>
 <header class="top">
     <div class="bar">
@@ -638,6 +646,7 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
         <div class="mode-switch" role="radiogroup" aria-label="Onde vais treinar"></div>
       </div>
       <ul class="week-stats" id="week-stats"></ul>
+      <p id="week-burn" class="muted small"></p>
       <div id="week-days" class="week-days"></div>
     </section>
 
@@ -663,6 +672,12 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
       <label class="notes-field">Notas da sessão
         <textarea id="session-notes" rows="2" placeholder="Como te sentiste? Alguma dor, cansaço…"></textarea>
       </label>
+      <div class="burn-row">
+        <label class="inline-num" for="session-minutes">Duração (min)
+          <input type="number" id="session-minutes" inputmode="numeric" min="5" max="240" step="5">
+        </label>
+        <p id="workout-kcal" class="burn-msg"></p>
+      </div>
       <div class="actions">
         <button id="save-session" class="primary">Guardar treino</button>
         <span id="save-status" class="muted"></span>
@@ -879,6 +894,8 @@ const WORKOUTS = {
     short: "Treino A",
     warmup: "<strong>Aquecimento:</strong> 5 min de bicicleta. Nos três primeiros exercícios: 1 série a 50% × 6 e 1 a 70% × 3 (valores calculados em cada cartão).",
     day: "Segunda-feira",
+    minutes: 60,
+    met: 3.5,
     exercises: [
       {
         id: "leg-press",
@@ -1011,6 +1028,8 @@ const WORKOUTS = {
     short: "Treino B",
     warmup: "<strong>Aquecimento:</strong> 5 min de bicicleta. Nos três primeiros exercícios: 1 série a 50% × 6 e 1 a 70% × 3 (valores calculados em cada cartão).",
     day: "Sexta-feira",
+    minutes: 60,
+    met: 3.5,
     exercises: [
       {
         id: "supino-inclinado",
@@ -1146,6 +1165,8 @@ WORKOUTS.KA = {
   short: "Casa 1",
   day: "Segunda-feira",
   home: true,
+  minutes: 45,
+  met: 4,
   warmup: HOME_WARMUP,
   exercises: [
     {
@@ -1207,6 +1228,8 @@ WORKOUTS.KB = {
   short: "Casa 2",
   day: "Sexta-feira",
   home: true,
+  minutes: 45,
+  met: 4,
   warmup: HOME_WARMUP,
   exercises: [
     {
@@ -1273,6 +1296,8 @@ WORKOUTS.W = {
   short: "Quarta",
   day: "Quarta-feira",
   home: true,
+  minutes: 35,
+  met: 4.5,
   circuit: true,
   warmup:
     "<strong>Como fazer:</strong> 10 min de Animal Flow (vídeo no separador Semana) como aquecimento. Depois faz o circuito: 1 série de cada exercício seguida, com 20–30 s entre exercícios, e descansa 90 s no fim de cada volta. 3 voltas. Só precisas de uma kettlebell de cada vez.",
@@ -1344,6 +1369,15 @@ const PROGRAMS = {
 
 // Semana: 0 = domingo … 6 = sábado (como Date.getDay()).
 const STEPS_GOAL = 11000;
+// Gasto estimado em exercício: MET × peso (kg) × horas. "met" e "minutes" de cada treino
+// estão em WORKOUTS; aqui os valores das outras atividades. Sem peso registado usa 80 kg.
+const BURN = {
+  defaultKg: 80,
+  kcalPerStepPerKg: 0.0005, // ≈0,04 kcal por passo a 80 kg
+  intervals: { minutes: 9, met: 9 }, // os 9 min a correr dos 3×3 (a parte a andar conta nos passos)
+  core: { minutes: 10, met: 3 },
+  flow: { minutes: 30, met: 4 },
+};
 // Manhã, todos os dias: caminhada (~6000 passos) e, em alguns dias, intervalos 3×3.
 // Sugere os 3×3 em dias sem treino de força (terça, quinta, sábado) para recuperar bem.
 const MORNING = {
@@ -1813,6 +1847,9 @@ const MEAL_PLAN = [
     $("#warmup-callout").innerHTML = def.warmup || "";
     $("#workout-day").textContent = def.day + (def.home ? " · kettlebell em casa" : "");
     $("#session-notes").value = existing ? existing.notes || "" : "";
+    $("#session-minutes").value = existing && existing.minutes ? existing.minutes : "";
+    $("#session-minutes").placeholder = def.minutes || 60;
+    updateWorkoutKcal();
 
     variants = existing && existing.variants ? { ...existing.variants } : {};
     $("#exercise-list").innerHTML = def.exercises.map((ex, i) => renderCard(ex, i, date, existing)).join("");
@@ -1940,12 +1977,13 @@ const MEAL_PLAN = [
       return;
     }
     const notes = $("#session-notes").value.trim();
+    const minutes = Math.round(Number($("#session-minutes").value)) || 0;
     const used = collectVariants(entries);
     let s = sessionFor(currentWorkout, date);
     if (s) {
-      Object.assign(s, { entries, variants: used, notes, savedAt: Date.now() });
+      Object.assign(s, { entries, variants: used, notes, minutes, savedAt: Date.now() });
     } else {
-      s = { id: sessionId(currentWorkout, date), workout: currentWorkout, date, entries, variants: used, notes, savedAt: Date.now() };
+      s = { id: sessionId(currentWorkout, date), workout: currentWorkout, date, entries, variants: used, notes, minutes, savedAt: Date.now() };
       sessions.push(s);
     }
     status.textContent = "A guardar…";
@@ -2251,7 +2289,7 @@ const MEAL_PLAN = [
     $("#week-range").textContent = `${fmt(dates[0])} – ${fmt(dates[6])}`;
     $("#week-today").disabled = weekOffset === 0;
 
-    let planned = 0, done = 0, stepsTotal = 0, stepsDays = 0;
+    let planned = 0, done = 0, stepsTotal = 0, stepsDays = 0, burnWeek = 0;
     const cards = dates.map((dt) => {
       const date = isoDate(dt);
       const plan = WEEK.find((w) => w.dow === dt.getDay());
@@ -2263,13 +2301,15 @@ const MEAL_PLAN = [
       const n = Number((days[date] || {}).steps) || 0;
       if (n) { stepsTotal += n; stepsDays++; }
       const tone = plan.type === "workout" ? `workout-${plan.slot ? "B" : "A"}` : plan.type;
+      const burn = burnOf(date);
+      burnWeek += burn.kcal;
       return `
         <article class="day ${date === todayIso ? "today" : ""} ${st.done ? "done" : ""}" data-tone="${tone}">
           <header class="day-head">
             <div class="day-date"><span>${DOW_NAMES[dt.getDay()]}</span><b>${dt.getDate()}</b></div>
             <div class="day-title">
               <h3>${escapeHtml(plan.type === "workout" ? WORKOUTS[slotWorkout(plan.slot)].name : plan.title)}</h3>
-              <span class="day-status">${date === todayIso ? `<em>Hoje</em>` : ""}${st.done ? `<i class="ok">✓ ${escapeHtml(st.label)}</i>` : st.label ? escapeHtml(st.label) : plan.type === "rest" ? "" : "Por fazer"}</span>
+              <span class="day-status">${date === todayIso ? `<em>Hoje</em>` : ""}${st.done ? `<i class="ok">✓ ${escapeHtml(st.label)}</i>` : st.label ? escapeHtml(st.label) : plan.type === "rest" ? "" : "Por fazer"}${burn.kcal ? `<span class="burn-tag" title="${escapeHtml(burn.parts.map((p) => `${p.label}: ${p.kcal} kcal`).join(" · "))}">🔥 ≈${burn.kcal} kcal</span>` : ""}</span>
             </div>
           </header>
           <div class="day-body">${dayBody(plan, date)}</div>
@@ -2281,6 +2321,37 @@ const MEAL_PLAN = [
       <li><b>${stepsDays ? Math.round(stepsTotal / stepsDays).toLocaleString("pt-PT") : "–"}</b><span>média de passos</span></li>
       <li><b>${dates.filter((dt) => { const p = WEEK.find((w) => w.dow === dt.getDay()); return p.type === "workout" && slotSession(p.slot, isoDate(dt)); }).length}/2</b><span>treinos de força</span></li>
       <li><b>${dates.filter((dt) => (days[isoDate(dt)] || {}).hiitDone).length}/${MORNING.intervalDays.length}</b><span>3×3 de manhã</span></li>`;
+    $("#week-burn").textContent = burnWeek
+      ? `Gasto estimado em exercício esta semana: ≈${burnWeek.toLocaleString("pt-PT")} kcal (média ≈${Math.round(burnWeek / 7)} por dia).`
+      : "";
+  }
+
+  // ---------- calorias gastas (estimativa) ----------
+  const kgFor = (date) => latestWeight(date) || latestWeight() || 0;
+  const metKcal = (met, minutes, kg) => Math.round((met * kg * minutes) / 60);
+  function workoutKcal(s, kg) {
+    const def = WORKOUTS[s.workout];
+    return metKcal(def.met || 3.5, Number(s.minutes) || def.minutes || 60, kg);
+  }
+  // Gasto estimado em exercício num dia: treinos registados, passos (ou a caminhada da manhã),
+  // intervalos 3×3 e estabilização lombar.
+  function burnOf(date) {
+    const kg = kgFor(date) || BURN.defaultKg;
+    const d = days[date] || {};
+    const parts = sessions.filter((s) => s.date === date && WORKOUTS[s.workout]).map((s) => ({ label: WORKOUTS[s.workout].short, kcal: workoutKcal(s, kg) }));
+    const steps = Number(d.steps) || (d.walkDone ? MORNING.steps : 0);
+    if (steps) parts.push({ label: `${steps.toLocaleString("pt-PT")} passos`, kcal: Math.round(steps * BURN.kcalPerStepPerKg * kg) });
+    if (d.hiitDone) parts.push({ label: "3×3", kcal: metKcal(BURN.intervals.met, BURN.intervals.minutes, kg) });
+    if (d.coreDone) parts.push({ label: "estabilização", kcal: metKcal(BURN.core.met, BURN.core.minutes, kg) });
+    if (d.flowDone && !parts.some((p) => p.label === WORKOUTS.W.short)) parts.push({ label: "Animal Flow", kcal: metKcal(BURN.flow.met, Number(d.flowMin) || BURN.flow.minutes, kg) });
+    return { kcal: parts.reduce((t, p) => t + p.kcal, 0), parts, kgKnown: !!kgFor(date) };
+  }
+  function updateWorkoutKcal() {
+    const def = WORKOUTS[currentWorkout];
+    const date = $("#session-date").value || today();
+    const minutes = Number($("#session-minutes").value) || def.minutes || 60;
+    const kg = kgFor(date);
+    $("#workout-kcal").innerHTML = `Gasto estimado: <b>≈${metKcal(def.met || 3.5, minutes, kg || BURN.defaultKg)} kcal</b> (${minutes} min, ${kg ? fmt1(kg) + " kg" : "80 kg por omissão: regista o peso no separador Corpo"}).`;
   }
 
   async function saveDayField(date, field, value) {
@@ -2389,7 +2460,9 @@ const MEAL_PLAN = [
     } else $("#body-meals").innerHTML = "";
     const kcalLogged = items.reduce((t, it) => t + (Number(it.kcal) || 0), 0);
     const kcalTarget = plan ? plan.meals.reduce((t, m) => t + m.kcal, 0) : 1600;
-    $("#kcal-msg").innerHTML = `<b>≈${kcalLogged} kcal</b> registadas · objetivo ≈${kcalTarget} kcal${kcalLogged > kcalTarget ? ` <span class="danger-text">(+${kcalLogged - kcalTarget})</span>` : kcalLogged ? ` · faltam ≈${kcalTarget - kcalLogged}` : ""}`;
+    const burn = burnOf(date);
+    $("#kcal-msg").innerHTML = `<b>≈${kcalLogged} kcal</b> registadas · objetivo ≈${kcalTarget} kcal${kcalLogged > kcalTarget ? ` <span class="danger-text">(+${kcalLogged - kcalTarget})</span>` : kcalLogged ? ` · faltam ≈${kcalTarget - kcalLogged}` : ""}
+      ${burn.kcal ? `<br><span class="burn-tag">🔥 ≈${burn.kcal} kcal gastas em exercício</span> <span class="muted small">(${escapeHtml(burn.parts.map((p) => `${p.label} ${p.kcal}`).join(" · "))}). As ~1600 kcal já contam com o exercício normal da semana, por isso não é para comer estas calorias de volta.</span>` : ""}`;
 
     $("#food-log").innerHTML = items.length
       ? items
@@ -2928,6 +3001,10 @@ const MEAL_PLAN = [
   });
   $("#save-session").addEventListener("click", saveSession);
   $("#session-notes").addEventListener("input", () => (dirty = true));
+  $("#session-minutes").addEventListener("input", () => {
+    dirty = true;
+    updateWorkoutKcal();
+  });
   $("#progress-exercise").addEventListener("change", renderProgress);
   $("#progress-variant").addEventListener("change", renderProgress);
 
@@ -3103,7 +3180,7 @@ const MEAL_PLAN = [
       let n = 0;
       for (const raw of data.sessions) {
         if (!raw || !WORKOUTS[raw.workout] || !/^\d{4}-\d{2}-\d{2}$/.test(raw.date) || typeof raw.entries !== "object") continue;
-        const s = { id: sessionId(raw.workout, raw.date), workout: raw.workout, date: raw.date, entries: raw.entries, variants: raw.variants && typeof raw.variants === "object" ? raw.variants : {}, notes: String(raw.notes || ""), savedAt: Number(raw.savedAt) || Date.now() };
+        const s = { id: sessionId(raw.workout, raw.date), workout: raw.workout, date: raw.date, entries: raw.entries, variants: raw.variants && typeof raw.variants === "object" ? raw.variants : {}, notes: String(raw.notes || ""), minutes: Number(raw.minutes) || 0, savedAt: Number(raw.savedAt) || Date.now() };
         sessions = sessions.filter((x) => !(x.workout === s.workout && x.date === s.date));
         sessions.push(s);
         if (remote) await persistSession(s);
