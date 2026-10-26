@@ -1082,6 +1082,60 @@
       <text x="${Math.min(x(lastP.date), W - P.r - 20)}" y="${y(lastP.v) - 10}" class="label" text-anchor="middle">${fmt1(lastP.v)}</text></svg>`;
   }
 
+  // ---------- pessoas (ementa e compras) ----------
+  // Número de adultos a comer a ementa (as quantidades multiplicam; kcal e proteína são por pessoa).
+  // A lista sugerida está feita para 2 adultos: os alimentos deles escalam, os do filho e as bebidas não.
+  let mealPeople = 2;
+  try { mealPeople = Number(localStorage.getItem("gym.mealPeople")) || 2; } catch {}
+  const SHOP_SCALED = ["protein", "veg", "fruit", "pantry", "fats", "frozen"];
+  const shopFactor = (it) => (String(it.id).startsWith("d") && SHOP_SCALED.includes(it.cat) ? mealPeople / 2 : 1);
+  // O preço acompanha a quantidade arredondada (1 pão para 1 pessoa custa 1 pão).
+  const shopPrice = (it) => (Number(it.price) || 0) * (it.priceFixed ? 1 : it.qtyFixed ? shopFactor(it) : scaleQty(it.qty || "", shopFactor(it)).ratio);
+  const SINGULAR = { latas: "lata", frascos: "frasco", blocos: "bloco", garrafas: "garrafa", sacos: "saco", molhos: "molho", "dúzias": "dúzia", "cabeças": "cabeça", "pães": "pão" };
+  const PLURAL_QTY = Object.fromEntries(Object.entries(SINGULAR).map(([p, s]) => [s, p]));
+  // "3 dúzias" × 1,5 → "4,5 dúzias"; "2 × 500 ml" × 0,5 → "1 × 500 ml"; "750 g" × 0,5 → "400 g".
+  // Devolve o texto e a proporção real depois de arredondar (para o preço).
+  function scaleQty(qty, f) {
+    if (f === 1 || !qty || /^repor/.test(qty)) return { text: qty, ratio: f };
+    const num = (x) => Number(x.replace(",", "."));
+    const show = (v) => (Number.isInteger(v) ? String(v) : fmt1(v).replace(/,0$/, ""));
+    let m = qty.match(/^(≈?)(\d+(?:,\d+)?)(\s*×\s*.*)$/);
+    if (m) {
+      const v = Math.max(1, Math.ceil(num(m[2]) * f));
+      return { text: `${m[1]}${v}${m[3]}`, ratio: v / num(m[2]) };
+    }
+    m = qty.match(/^(≈?)(\d+(?:,\d+)?)\s*(.*)$/);
+    if (!m) return { text: qty, ratio: f };
+    let v = num(m[2]) * f;
+    let unit = m[3];
+    if (/^(kg|L)\b/.test(unit)) v = Math.max(0.1, Math.round(v * 10) / 10);
+    else if (/^(g|ml)\b/.test(unit)) v = Math.max(50, Math.round(v / 50) * 50);
+    else if (/^dúzia/.test(unit)) v = Math.max(0.5, Math.ceil(v * 2) / 2);
+    else v = Math.max(1, Math.ceil(v));
+    const word = unit.split(" ")[0];
+    if (v <= 1 && SINGULAR[word]) unit = unit.replace(word, SINGULAR[word]);
+    else if (v > 1 && PLURAL_QTY[word]) unit = unit.replace(word, PLURAL_QTY[word]);
+    const ratio = v / num(m[2]);
+    if (/^g\b/.test(unit) && v >= 1000) return { text: `${m[1]}${(v / 1000).toLocaleString("pt-PT", { maximumFractionDigits: 2 })} ${unit.replace(/^g/, "kg")}`, ratio };
+    return { text: `${m[1]}${show(v)} ${unit}`, ratio };
+  }
+  const shopQty = (it) => (it.qtyFixed ? it.qty || "" : scaleQty(it.qty || "", shopFactor(it)).text);
+  function renderPeopleSwitches() {
+    $$(".people-switch").forEach((el) => {
+      el.innerHTML = [1, 2, 3, 4]
+        .map((n) => `<button role="radio" aria-checked="${n === mealPeople}" class="${n === mealPeople ? "on" : ""}" data-people="${n}">${n} ${n === 1 ? "pessoa" : "pessoas"}</button>`)
+        .join("");
+    });
+  }
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-people]");
+    if (!b) return;
+    mealPeople = Number(b.dataset.people);
+    try { localStorage.setItem("gym.mealPeople", String(mealPeople)); } catch {}
+    if (currentTab === "shop") renderShop();
+    else renderMeals();
+  });
+
   // ---------- compras ----------
   let shopHide = false;
   try { shopHide = localStorage.getItem("gym.shopHide") === "1"; } catch {}
@@ -1095,7 +1149,9 @@
     $("#shop-total").textContent = `/ ${shop.length} no carrinho`;
     $("#shop-bar").style.width = (shop.length ? Math.round((done / shop.length) * 100) : 0) + "%";
     $("#shop-bar").classList.toggle("ok", shop.length > 0 && done === shop.length);
-    const cost = (list) => list.reduce((t, it) => t + (Number(it.price) || 0), 0);
+    renderPeopleSwitches();
+    $("#shop-sub").textContent = `${mealPeople} ${mealPeople === 1 ? "adulto" : "adultos"} com peixe e sem carne + 1 criança · ~1600 kcal, proteína alta, baixo índice glicémico`;
+    const cost = (list) => list.reduce((t, it) => t + shopPrice(it), 0);
     const total = cost(shop);
     const left = cost(shop.filter((it) => !it.done));
     $("#shop-cost").innerHTML = `
@@ -1115,8 +1171,8 @@
             .map(
               (it) => `<li class="${it.done ? "done" : ""}">
               <label class="check"><input type="checkbox" data-shop-done="${it.id}" ${it.done ? "checked" : ""}> <span>${escapeHtml(it.name)}</span></label>
-              <input type="text" class="shop-qty" data-shop-qty="${it.id}" value="${escapeHtml(it.qty || "")}" placeholder="qtd." aria-label="Quantidade de ${escapeHtml(it.name)}">
-              <label class="shop-price">€<input type="number" inputmode="decimal" min="0" step="0.01" data-shop-price="${it.id}" value="${Number(it.price) ? Number(it.price).toFixed(2) : ""}" placeholder="–" aria-label="Preço de ${escapeHtml(it.name)}"></label>
+              <input type="text" class="shop-qty" data-shop-qty="${it.id}" value="${escapeHtml(shopQty(it))}" placeholder="qtd." aria-label="Quantidade de ${escapeHtml(it.name)}">
+              <label class="shop-price">€<input type="number" inputmode="decimal" min="0" step="0.01" data-shop-price="${it.id}" value="${shopPrice(it) ? shopPrice(it).toFixed(2) : ""}" placeholder="–" aria-label="Preço de ${escapeHtml(it.name)}"></label>
               <button class="link" data-shop-del="${it.id}" aria-label="Remover ${escapeHtml(it.name)}">✕</button></li>`
             )
             .join("")}</ul>` : ""}
@@ -1128,9 +1184,6 @@
   const fmtEur = (n) => n.toLocaleString("pt-PT", { style: "currency", currency: "EUR" });
 
   // ---------- ementa ----------
-  // Número de adultos a comer a ementa (as quantidades multiplicam; kcal e proteína são por pessoa).
-  let mealPeople = 2;
-  try { mealPeople = Number(localStorage.getItem("gym.mealPeople")) || 2; } catch {}
   const PLURAL = { ovo: "ovos", lata: "latas", fatia: "fatias", kiwi: "kiwis", "maçã": "maçãs", laranja: "laranjas", pera: "peras", abacate: "abacates" };
   // "Skyr (170 g) e 1 kiwi" × 2 → "Skyr (340 g) e 2 kiwis"
   function scaleFood(text, n) {
@@ -1143,9 +1196,7 @@
   }
 
   function renderMeals() {
-    $("#meal-people").innerHTML = [1, 2, 3, 4]
-      .map((n) => `<button role="radio" aria-checked="${n === mealPeople}" class="${n === mealPeople ? "on" : ""}" data-people="${n}">${n} ${n === 1 ? "pessoa" : "pessoas"}</button>`)
-      .join("");
+    renderPeopleSwitches();
     $("#meals-sub").textContent = `${mealPeople === 1 ? "Quantidades para 1 pessoa" : `Quantidades para ${mealPeople} pessoas`} · por pessoa ≈1550 kcal e ≈130 g de proteína · peixe, sem carne`;
     const todayName = DOW_NAMES[new Date().getDay()];
     $("#meal-days").innerHTML = MEAL_PLAN.map((d) => {
@@ -1161,14 +1212,6 @@
       </details>`;
     }).join("");
   }
-  $("#meal-people").addEventListener("click", (e) => {
-    const b = e.target.closest("[data-people]");
-    if (!b) return;
-    mealPeople = Number(b.dataset.people);
-    try { localStorage.setItem("gym.mealPeople", String(mealPeople)); } catch {}
-    renderMeals();
-  });
-
   function shopItem(id) {
     return shop.find((it) => it.id === id);
   }
@@ -1428,9 +1471,11 @@
     if (cb) it.done = cb.checked;
     else if (q) {
       it.qty = q.value.trim();
+      it.qtyFixed = shopFactor(it) !== 1 || it.qtyFixed;
       q.blur();
     } else {
       it.price = Math.max(0, Math.round((Number(pr.value) || 0) * 100) / 100);
+      it.priceFixed = shopFactor(it) !== 1 || it.priceFixed;
       pr.blur();
     }
     saveShop();
@@ -1455,10 +1500,10 @@
     const text = SHOP_CATEGORIES.concat({ id: null })
       .map((c) => {
         const items = shop.filter((it) => !it.done && (c.id ? (it.cat || "other") === c.id : !SHOP_CATEGORIES.some((x) => x.id === it.cat)));
-        return items.length ? `${c.name || "Outros"}\n${items.map((it) => `- ${it.name}${it.qty ? ` (${it.qty})` : ""}`).join("\n")}` : "";
+        return items.length ? `${c.name || "Outros"}\n${items.map((it) => `- ${it.name}${shopQty(it) ? ` (${shopQty(it)})` : ""}`).join("\n")}` : "";
       })
       .filter(Boolean)
-      .join("\n\n") + `\n\nEstimativa: ${fmtEur(shop.filter((it) => !it.done).reduce((t, it) => t + (Number(it.price) || 0), 0))}`;
+      .join("\n\n") + `\n\nEstimativa: ${fmtEur(shop.filter((it) => !it.done).reduce((t, it) => t + shopPrice(it), 0))}`;
     const status = $("#shop-status");
     if (!text) {
       status.textContent = "Já está tudo no carrinho.";
@@ -1728,7 +1773,7 @@
       if (Array.isArray(data.shop)) {
         shop = data.shop
           .filter((it) => it && typeof it.name === "string")
-          .map((it, i) => ({ id: String(it.id || "i" + i), cat: String(it.cat || "other"), name: it.name, qty: String(it.qty || ""), price: Number(it.price) || 0, done: !!it.done }));
+          .map((it, i) => ({ id: String(it.id || "i" + i), cat: String(it.cat || "other"), name: it.name, qty: String(it.qty || ""), price: Number(it.price) || 0, done: !!it.done, qtyFixed: !!it.qtyFixed, priceFixed: !!it.priceFixed }));
         await persistShop();
       }
       if (data.videos) {
