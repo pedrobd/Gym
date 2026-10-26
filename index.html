@@ -183,7 +183,7 @@
       </div>
       <div class="bar-track big shop-bar"><span id="shop-bar"></span></div>
       <ul class="week-stats" id="shop-cost"></ul>
-      <p class="muted small">Preços médios de supermercado em Portugal (marca própria). Muda o preço de um artigo para o que pagas e os totais acompanham. Azeite, especiarias, quinoa e sementes duram mais de uma semana, por isso nas semanas seguintes gastas um pouco menos. O número de adultos ajusta as quantidades e os preços (o mesmo da Ementa); a secção do filho e as bebidas não mudam. Se escreveres uma quantidade ou um preço num artigo, esse valor fica fixo.</p>
+      <p class="muted small">Preços médios de supermercado em Portugal (marca própria). Muda o preço de um artigo para o que pagas e os totais acompanham. Azeite, especiarias, aveia e sementes duram mais de uma semana, por isso nas semanas seguintes gastas um pouco menos. O número de adultos ajusta as quantidades e os preços (o mesmo da Ementa); a secção do filho e as bebidas não mudam. Se escreveres uma quantidade ou um preço num artigo, esse valor fica fixo.</p>
 
       <div class="protein-card shop-add">
         <div class="food-head"><span>Acrescentar à lista</span></div>
@@ -211,7 +211,7 @@
       <h2>Porque esta lista</h2>
       <ul class="rules">
         <li><strong>Proteína em todas as refeições:</strong> peixe, ovos, claras, skyr, queijo fresco, cottage e tofu chegam a ~130 g por dia sem carne e sem passar as 1600 kcal. Peixe 3–4 vezes por semana, com salmão, sardinha ou cavala pelo menos 2 (ómega-3).</li>
-        <li><strong>Pouca insulina:</strong> sem açúcar, sumos nem farinhas refinadas. Os hidratos vêm das leguminosas, da aveia, da quinoa e do pão integral, sempre junto com proteína e legumes. Fruta inteira, não em sumo.</li>
+        <li><strong>Pouca insulina:</strong> para os adultos não há pão, massa, arroz, quinoa, açúcar nem sumos, e a fruta é só frutos vermelhos. Os hidratos vêm das leguminosas, dos legumes e de um pouco de aveia, sempre com proteína.</li>
         <li><strong>Longe do supermercado:</strong> come primeiro as folhas, os cogumelos e os frutos vermelhos frescos. Do 5.º dia em diante usa a couve, a cenoura, a abóbora e os congelados. O peixe fresco come-se nos 2 primeiros dias ou vai logo para o congelador; o congelado e as latas de atum, sardinha e cavala garantem proteína até à próxima ida às compras.</li>
         <li><strong>O filho come o mesmo:</strong> o vosso peixe, legumes, ovos e lácteos, com carne na secção dele e um pouco mais de arroz, massa, batata e fruta, porque aos 5 anos precisa de mais hidratos do que vocês.</li>
       </ul>
@@ -222,7 +222,7 @@
       <div class="week-head meals-head">
         <div class="session-title">
           <h2>Ementa da semana</h2>
-          <span id="meals-sub">Por pessoa · ≈1550 kcal · ≈130 g de proteína · peixe, sem carne</span>
+          <span id="meals-sub">Por adulto · ≈1450 kcal · ≈130 g de proteína · sem carne, pão, massa nem arroz</span>
         </div>
       </div>
       <div class="mode-row">
@@ -233,15 +233,21 @@
         <span>Crianças</span>
         <div class="mode-switch kids-switch" role="radiogroup" aria-label="Número de crianças"></div>
       </div>
+      <div class="mode-row">
+        <span>Refeição livre</span>
+        <div class="mode-switch free-switch" id="free-switch" role="radiogroup" aria-label="Refeição livre da semana"></div>
+      </div>
       <ul class="rules">
+        <li><strong>Sem pão, massa, arroz nem quinoa;</strong> a única fruta são os frutos vermelhos. Os hidratos vêm das leguminosas, dos legumes e de um pouco de aveia (15–30 g, nalguns pequenos-almoços). Se também cortaste a aveia, troca-a por mais 10 g de chia ou de nozes.</li>
+        <li><strong>Refeição livre:</strong> 1 por semana (ex.: sushi all you can eat), conta ≈1400 kcal. Nesse dia ficas acima, mas a média da semana continua em défice. Começa pela proteína (sashimi, edamame, sopa miso), vai devagar e para quando estiveres satisfeito; no dia seguinte volta à ementa normal, sem compensar a passar fome.</li>
         <li><strong>Começa no dia a seguir às compras:</strong> o peixe fresco e as folhas estão no início da semana; do 4.º dia em diante entram as latas e os congelados.</li>
         <li><strong>O filho come o mesmo</strong> ao pequeno-almoço (em dose de criança). O jantar e o lanche dele, com as doses de uma criança de 5 anos, estão em cada dia e multiplicam pelo número de crianças.</li>
         <li><strong>Bebidas:</strong> água e refrigerante zero não contam para as calorias. Bebe água primeiro, cerca de 2 L por dia.</li>
-        <li><strong>Dias de 3×3:</strong> se tiveres muita fome ou o peso descer mais de 1% por semana, junta 1 peça de fruta e 1 fatia de pão integral nesses dias (≈150 kcal).</li>
+        <li><strong>Dias de 3×3:</strong> se tiveres muita fome ou o peso descer mais de 1% por semana, junta 1 iogurte grego com frutos vermelhos ou 1 c. sopa de manteiga de amendoim nesses dias (≈150 kcal).</li>
         <li><strong>Trocas:</strong> podes trocar dias inteiros entre si. Dentro de uma refeição, troca proteína por proteína (ex.: tofu ↔ seitan, atum ↔ sardinha).</li>
       </ul>
       <div id="meal-days" class="meal-days"></div>
-      <p class="muted small">Calorias e proteína aproximadas, pesos em cru. Se tiveres fome a mais ou perderes mais de 1 kg por semana, junta 1 fatia de pão integral ou 1 peça de fruta por dia.</p>
+      <p class="muted small">Calorias e proteína aproximadas, pesos em cru. Se tiveres fome a mais ou perderes mais de 1 kg por semana, junta 1 iogurte grego ou um punhado de nozes por dia.</p>
     </section>
 
     <section id="tab-progress" class="tab-panel" hidden>
