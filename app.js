@@ -714,7 +714,7 @@
     $("#week-range").textContent = `${fmt(dates[0])} – ${fmt(dates[6])}`;
     $("#week-today").disabled = weekOffset === 0;
 
-    let planned = 0, done = 0, stepsTotal = 0, stepsDays = 0, burnWeek = 0;
+    let planned = 0, done = 0, stepsTotal = 0, stepsDays = 0, burnWeek = 0, balWeek = 0, balDays = 0;
     const cards = dates.map((dt) => {
       const date = isoDate(dt);
       const plan = WEEK.find((w) => w.dow === dt.getDay());
@@ -728,13 +728,16 @@
       const tone = plan.type === "workout" ? `workout-${plan.slot ? "B" : "A"}` : plan.type;
       const burn = burnOf(date);
       burnWeek += burn.kcal;
+      const eaten = eatenOf(date), rest = restKcal(date);
+      const bal = eaten && rest ? eaten - rest - burn.kcal : null;
+      if (bal !== null) { balWeek += bal; balDays++; }
       return `
         <article class="day ${date === todayIso ? "today" : ""} ${st.done ? "done" : ""}" data-tone="${tone}">
           <header class="day-head">
             <div class="day-date"><span>${DOW_NAMES[dt.getDay()]}</span><b>${dt.getDate()}</b></div>
             <div class="day-title">
               <h3>${escapeHtml(plan.type === "workout" ? WORKOUTS[slotWorkout(plan.slot)].name : plan.title)}</h3>
-              <span class="day-status">${date === todayIso ? `<em>Hoje</em>` : ""}${st.done ? `<i class="ok">✓ ${escapeHtml(st.label)}</i>` : st.label ? escapeHtml(st.label) : plan.type === "rest" ? "" : "Por fazer"}${burn.kcal ? `<span class="burn-tag" title="${escapeHtml(burn.parts.map((p) => `${p.label}: ${p.kcal} kcal`).join(" · "))}">🔥 ≈${burn.kcal} kcal</span>` : ""}</span>
+              <span class="day-status">${date === todayIso ? `<em>Hoje</em>` : ""}${st.done ? `<i class="ok">✓ ${escapeHtml(st.label)}</i>` : st.label ? escapeHtml(st.label) : plan.type === "rest" ? "" : "Por fazer"}${burn.kcal ? `<span class="burn-tag" title="${escapeHtml(burn.parts.map((p) => `${p.label}: ${p.kcal} kcal`).join(" · "))}">🔥 ≈${burn.kcal} kcal</span>` : ""}${bal !== null ? `<span class="bal-tag ${bal < 0 ? "deficit" : "surplus"}" title="Comido ${eaten} − repouso ${rest} − exercício ${burn.kcal}">⚖ ${fmtSigned(bal)} kcal</span>` : ""}</span>
             </div>
           </header>
           <div class="day-body">${dayBody(plan, date)}</div>
@@ -746,9 +749,12 @@
       <li><b>${stepsDays ? Math.round(stepsTotal / stepsDays).toLocaleString("pt-PT") : "–"}</b><span>média de passos</span></li>
       <li><b>${dates.filter((dt) => { const p = WEEK.find((w) => w.dow === dt.getDay()); return p.type === "workout" && slotSession(p.slot, isoDate(dt)); }).length}/2</b><span>treinos de força</span></li>
       <li><b>${dates.filter((dt) => (days[isoDate(dt)] || {}).hiitDone).length}/${MORNING.intervalDays.length}</b><span>3×3 de manhã</span></li>`;
-    $("#week-burn").textContent = burnWeek
-      ? `Gasto estimado em exercício esta semana: ≈${burnWeek.toLocaleString("pt-PT")} kcal (média ≈${Math.round(burnWeek / 7)} por dia).`
-      : "";
+    $("#week-burn").innerHTML = [
+      burnWeek ? `Gasto estimado em exercício esta semana: ≈${burnWeek.toLocaleString("pt-PT")} kcal (média ≈${Math.round(burnWeek / 7)} por dia).` : "",
+      balDays
+        ? `<span class="bal-tag ${balWeek < 0 ? "deficit" : "surplus"}">⚖ Balanço: ${fmtSigned(balWeek)} kcal</span> em ${balDays} ${balDays === 1 ? "dia" : "dias"} com registo (média ${fmtSigned(Math.round(balWeek / balDays))} por dia, ${kgWeek((balWeek / balDays) * 7)}).`
+        : restKcal(today()) ? "" : "Para veres o balanço de cada dia, regista o que comes e preenche os teus dados no separador Corpo.",
+    ].filter(Boolean).join("<br>");
   }
 
   // ---------- calorias gastas (estimativa) ----------
@@ -778,13 +784,15 @@
     if (!kg || !height || !age || !sex) return 0;
     return Math.round((10 * kg + 6.25 * height - 5 * age + (sex === "m" ? 5 : -161)) * 1.2);
   }
+  // Balanço semanal em kcal → "≈0,6 kg a menos por semana" (7700 kcal ≈ 1 kg).
+  const kgWeek = (kcal) => `≈${fmt1(Math.abs(kcal) / 7700)} kg ${kcal < 0 ? "a menos" : "a mais"} por semana`;
+  const fmtSigned = (n) => (n > 0 ? "+" : n < 0 ? "−" : "") + Math.abs(n).toLocaleString("pt-PT");
   const eatenOf = (date) => ((days[date] || {}).protein || []).reduce((t, it) => t + (Number(it.kcal) || 0), 0);
 
   function renderBalance(date) {
     const eaten = eatenOf(date);
     const burn = burnOf(date).kcal;
     const rest = restKcal(date);
-    const fmtSigned = (n) => (n > 0 ? "+" : n < 0 ? "−" : "") + Math.abs(n).toLocaleString("pt-PT");
     const bal = eaten - rest - burn;
     $("#balance-stats").innerHTML = `
       <li><b>${eaten ? eaten.toLocaleString("pt-PT") : "–"}</b><span>comido (kcal)</span></li>
@@ -814,7 +822,7 @@
     const rate = weeklyRate();
     if (logged.length >= 2) {
       const avg = Math.round(logged.reduce((t, d) => t + eatenOf(d) - restKcal(d) - burnOf(d).kcal, 0) / logged.length);
-      $("#balance-week").innerHTML = `<strong>Últimos 7 dias</strong> (${logged.length} com registo): balanço médio <b>${fmtSigned(avg)} kcal/dia</b>, o que dá ≈${fmt1((avg * 7) / 7700)} kg por semana.${
+      $("#balance-week").innerHTML = `<strong>Últimos 7 dias</strong> (${logged.length} com registo): balanço médio <b>${fmtSigned(avg)} kcal/dia</b>, o que dá ${kgWeek(avg * 7)}.${
         rate !== null ? ` A balança diz ${rate > 0 ? "+" : ""}${fmt1(rate)} kg por semana${Math.abs(rate - (avg * 7) / 7700) > 0.4 ? ": a diferença é normal, mas se se mantiver ajusta as porções registadas ou os teus dados." : "."}` : ""
       }`;
     } else $("#balance-week").innerHTML = "";
