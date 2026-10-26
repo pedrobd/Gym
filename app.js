@@ -619,7 +619,27 @@
         </details>`;
   }
 
+  // Bloco da manhã, igual em todos os dias: caminhada e intervalos 3×3.
+  function morningHtml(date, d) {
+    const dow = new Date(date + "T12:00:00").getDay();
+    const good = MORNING.intervalDays.includes(dow);
+    return `
+      <div class="morning">
+        <p class="day-desc"><span class="morning-tag">Manhã</span> Caminhada de ~${MORNING.steps.toLocaleString("pt-PT")} passos.
+          ${good ? `<strong>Bom dia para os 3×3:</strong> ${escapeHtml(MORNING.intervals)}.` : `Sugestão: só caminhada, sem intervalos${morningHint(dow)}.`}</p>
+        <div class="flow-row">
+          <label class="check"><input type="checkbox" id="walk-${date}" data-day="${date}" data-field="walkDone" ${d.walkDone ? "checked" : ""}><span>Caminhada feita</span></label>
+          <label class="check"><input type="checkbox" id="hiit-${date}" data-day="${date}" data-field="hiitDone" ${d.hiitDone ? "checked" : ""}><span>3×3 feito</span></label>
+        </div>
+      </div>`;
+  }
+  const morningHint = (dow) => (dow === 1 || dow === 5 ? " (dia de treino de força)" : dow === 3 ? " (já há circuito)" : " (recuperação)");
+
   function dayBody(plan, date) {
+    return morningHtml(date, days[date] || {}) + dayPlanBody(plan, date);
+  }
+
+  function dayPlanBody(plan, date) {
     const d = days[date] || {};
     if (plan.type === "workout") {
       const def = WORKOUTS[slotWorkout(plan.slot)];
@@ -631,7 +651,7 @@
       const n = Number(d.steps) || 0;
       const pct = Math.min(100, Math.round((n / STEPS_GOAL) * 100));
       return `
-        <p class="day-desc">Pelo menos ${STEPS_GOAL.toLocaleString("pt-PT")} passos ao longo do dia. Divide em 2–3 caminhadas se for mais fácil.</p>
+        <p class="day-desc">Pelo menos ${STEPS_GOAL.toLocaleString("pt-PT")} passos ao longo do dia; os ~${MORNING.steps.toLocaleString("pt-PT")} da manhã já contam. Regista aqui o total do dia.</p>
         <div class="steps-row">
           <label for="steps-${date}">Passos</label>
           <input type="number" inputmode="numeric" min="0" step="100" id="steps-${date}" data-day="${date}" data-field="steps" value="${n || ""}" placeholder="0">
@@ -706,7 +726,8 @@
     $("#week-stats").innerHTML = `
       <li><b>${done}/${planned}</b><span>dias cumpridos</span></li>
       <li><b>${stepsDays ? Math.round(stepsTotal / stepsDays).toLocaleString("pt-PT") : "–"}</b><span>média de passos</span></li>
-      <li><b>${dates.filter((dt) => { const p = WEEK.find((w) => w.dow === dt.getDay()); return p.type === "workout" && slotSession(p.slot, isoDate(dt)); }).length}/2</b><span>treinos de força</span></li>`;
+      <li><b>${dates.filter((dt) => { const p = WEEK.find((w) => w.dow === dt.getDay()); return p.type === "workout" && slotSession(p.slot, isoDate(dt)); }).length}/2</b><span>treinos de força</span></li>
+      <li><b>${dates.filter((dt) => (days[isoDate(dt)] || {}).hiitDone).length}/${MORNING.intervalDays.length}</b><span>3×3 de manhã</span></li>`;
   }
 
   async function saveDayField(date, field, value) {
