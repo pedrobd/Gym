@@ -446,7 +446,7 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
 #body-trend.danger { background: var(--tint-danger); }
 #body-table { overflow-x: auto; }
 @media (max-width: 600px) {
-  .tabs { display: grid; grid-template-columns: repeat(3, 1fr); border-radius: 22px; overflow: visible; }
+  .tabs { display: grid; grid-template-columns: repeat(4, 1fr); border-radius: 22px; overflow: visible; }
   .tabs button { padding: .6rem .3rem; font-size: .7rem; }
   .weigh-form { grid-template-columns: 1fr 1fr; }
   .weigh-form .pill-btn { grid-column: 1 / -1; }
@@ -485,6 +485,35 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
 .ex-vids { margin: .75rem 0 .25rem; }
 .ex-vids .vid.featured { padding: .85rem 1rem; }
 .ex-vids .vid.featured .vid-play { width: 2.8rem; height: 2.8rem; }
+
+/* ---------- compras ---------- */
+.shop-head { background: var(--tint-a); }
+.shop-head .session-title > span { font-size: .9rem; opacity: .7; }
+.shop-count { display: flex; align-items: baseline; gap: .4rem; }
+.shop-count b { font: 900 2.4rem/1 var(--font-display); font-stretch: 120%; font-variant-numeric: tabular-nums; }
+.shop-count span { font-weight: 700; color: var(--muted); }
+.shop-bar { background: var(--surface); margin: 1rem 0; }
+.shop-form { display: grid; grid-template-columns: 1fr 9rem 12rem auto; gap: .5rem; align-items: center; }
+.shop-form input, .shop-form select { min-width: 0; }
+.shop-tools { display: grid; gap: .75rem; margin: 1.25rem 0; }
+.shop-tools p { margin: 0; min-height: 1.2em; }
+.shop-list { display: grid; gap: 1rem; }
+.shop-group { background: var(--surface); border-radius: var(--r-lg); padding: 1rem; display: grid; gap: .6rem; }
+.shop-group .food-head .small { text-transform: none; letter-spacing: 0; font-weight: 500; }
+.shop-group .food-log li { gap: .5rem; }
+.shop-group .check { flex: 1; min-width: 0; align-items: center; }
+.shop-group li.done .check span { text-decoration: line-through; color: var(--muted); }
+.shop-qty { width: 8.5rem; padding: .4rem .5rem; font-size: .85rem; font-weight: 700; text-align: right; border-color: transparent; background: transparent; }
+.shop-qty:focus { background: var(--bg); }
+#shop-day { background: var(--surface); border-radius: var(--r-lg); padding: .5rem 1rem; overflow-x: auto; }
+#shop-day td.wrap { white-space: normal; min-width: 14rem; }
+@media (max-width: 600px) {
+  .shop-form { grid-template-columns: 1fr 1fr; }
+  .shop-form input[type="text"]:first-child { grid-column: 1 / -1; }
+  .shop-form .pill-btn { grid-column: 1 / -1; }
+  .shop-qty { width: 6.5rem; }
+  .shop-count b { font-size: 2rem; }
+}
 </style>
 <header class="top">
     <div class="bar">
@@ -494,6 +523,7 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
         <button data-tab="A">Treino A</button>
         <button data-tab="B">Treino B</button>
         <button data-tab="body">Corpo</button>
+        <button data-tab="shop">Compras</button>
         <button data-tab="progress">Evolução</button>
         <button data-tab="info">Regras</button>
       </nav>
@@ -610,6 +640,51 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
       <div id="body-trend" class="callout"></div>
       <div id="weight-chart" class="chart"></div>
       <div id="body-table"></div>
+    </section>
+
+    <section id="tab-shop" class="tab-panel" hidden>
+      <div class="week-head shop-head">
+        <div class="session-title">
+          <h2>Compras da semana</h2>
+          <span>2 adultos sem carne + 1 criança · ~1600 kcal, proteína alta, baixo índice glicémico</span>
+        </div>
+        <div class="shop-count"><b id="shop-done">0</b><span id="shop-total">/ 0 no carrinho</span></div>
+      </div>
+      <div class="bar-track big shop-bar"><span id="shop-bar"></span></div>
+
+      <div class="protein-card shop-add">
+        <div class="food-head"><span>Acrescentar à lista</span></div>
+        <div class="shop-form">
+          <input type="text" id="shop-name" placeholder="Alimento (ex.: hummus)" aria-label="Alimento">
+          <input type="text" id="shop-qty" placeholder="Quantidade" aria-label="Quantidade">
+          <select id="shop-cat" aria-label="Secção"></select>
+          <button id="shop-add" class="pill-btn dark">Adicionar</button>
+        </div>
+      </div>
+
+      <div class="shop-tools">
+        <label class="check"><input type="checkbox" id="shop-hide"> Esconder o que já está no carrinho</label>
+        <div class="foods-editor-actions">
+          <button class="pill-btn" id="shop-copy">Copiar o que falta</button>
+          <button class="pill-btn" id="shop-new">Nova semana</button>
+          <button class="link" id="shop-reset">Repor lista sugerida</button>
+        </div>
+        <p id="shop-status" class="muted small"></p>
+      </div>
+
+      <div id="shop-list" class="shop-list"></div>
+
+      <h2>Porque esta lista</h2>
+      <ul class="rules">
+        <li><strong>Proteína em todas as refeições:</strong> ovos, claras, skyr, queijo fresco, cottage, tofu, tempeh e seitan chegam a ~130 g por dia sem carne e sem passar as 1600 kcal.</li>
+        <li><strong>Pouca insulina:</strong> sem açúcar, sumos nem farinhas refinadas. Os hidratos vêm das leguminosas, da aveia, da quinoa e do pão integral, sempre junto com proteína e legumes. Fruta inteira, não em sumo.</li>
+        <li><strong>Longe do supermercado:</strong> come primeiro as folhas, os cogumelos e os frutos vermelhos frescos. Do 5.º dia em diante usa a couve, a cenoura, a abóbora e os congelados. Ovos, frascos de leguminosas e tofu aguentam bem a semana.</li>
+        <li><strong>O filho come o mesmo:</strong> a mesma base de legumes, ovos e lácteos, com carne ou peixe na secção dele e um pouco mais de arroz, massa, batata e fruta, porque aos 5 anos precisa de mais hidratos do que vocês.</li>
+      </ul>
+
+      <h3>Exemplo de dia (um adulto)</h3>
+      <div id="shop-day"></div>
+      <p class="muted small">Valores aproximados. Ajusta as quantidades às tuas refeições: se uma semana sobrar ou faltar alguma coisa, muda a quantidade na lista e ela fica guardada.</p>
     </section>
 
     <section id="tab-progress" class="tab-panel" hidden>
@@ -1140,6 +1215,97 @@ const PROTEIN_FOODS = [
   { name: "Leite (1 copo, 250 ml)", g: 8 },
   { name: "Leguminosas (1 chávena cozida)", g: 15 },
 ];
+
+// Lista de compras semanal: 2 adultos (vegetarianos, ~1600 kcal, proteína alta,
+// baixo índice glicémico) + 1 criança de 5 anos que come carne e peixe.
+// Quantidades para 7 dias, a pensar numa só ida ao supermercado por semana.
+const SHOP_CATEGORIES = [
+  { id: "protein", name: "Proteína (ovos, lácteos, vegetal)" },
+  { id: "veg", name: "Legumes e verduras" },
+  { id: "fruit", name: "Fruta" },
+  { id: "pantry", name: "Leguminosas, cereais e despensa" },
+  { id: "fats", name: "Gorduras boas e sementes" },
+  { id: "frozen", name: "Congelados (reserva para o fim da semana)" },
+  { id: "kid", name: "Só para o filho" },
+  { id: "other", name: "Outros" },
+];
+const SHOP_DEFAULT = [
+  // proteína: base dos ~130 g/dia de cada adulto
+  { cat: "protein", name: "Ovos", qty: "3 dúzias" },
+  { cat: "protein", name: "Claras de ovo líquidas", qty: "2 × 500 ml" },
+  { cat: "protein", name: "Skyr ou iogurte grego natural 0%", qty: "16 unid." },
+  { cat: "protein", name: "Queijo fresco magro", qty: "4 × 200 g" },
+  { cat: "protein", name: "Queijo cottage", qty: "3 × 200 g" },
+  { cat: "protein", name: "Requeijão", qty: "2 unid." },
+  { cat: "protein", name: "Tofu firme", qty: "4 blocos" },
+  { cat: "protein", name: "Tempeh", qty: "2 unid." },
+  { cat: "protein", name: "Seitan", qty: "2 unid." },
+  { cat: "protein", name: "Bebida de soja sem açúcar", qty: "2 L" },
+  // legumes: os frágeis primeiro, os resistentes ficam para o fim da semana
+  { cat: "veg", name: "Espinafres / rúcula / alface (comer até 3.º dia)", qty: "4 sacos" },
+  { cat: "veg", name: "Cogumelos (comer até 4.º dia)", qty: "750 g" },
+  { cat: "veg", name: "Brócolos", qty: "1 kg" },
+  { cat: "veg", name: "Couve-flor", qty: "1 unid." },
+  { cat: "veg", name: "Curgete", qty: "4 unid." },
+  { cat: "veg", name: "Pimentos", qty: "4 unid." },
+  { cat: "veg", name: "Tomate", qty: "1,5 kg" },
+  { cat: "veg", name: "Pepino", qty: "3 unid." },
+  { cat: "veg", name: "Beringela", qty: "2 unid." },
+  { cat: "veg", name: "Couve lombarda ou repolho (aguenta a semana)", qty: "1 unid." },
+  { cat: "veg", name: "Cenoura", qty: "1 kg" },
+  { cat: "veg", name: "Abóbora", qty: "1 kg" },
+  { cat: "veg", name: "Cebola", qty: "1 kg" },
+  { cat: "veg", name: "Alho", qty: "1 cabeça" },
+  { cat: "veg", name: "Limões", qty: "4 unid." },
+  { cat: "veg", name: "Ervas frescas (salsa, coentros)", qty: "2 molhos" },
+  // fruta de índice glicémico baixo
+  { cat: "fruit", name: "Maçãs", qty: "1,5 kg" },
+  { cat: "fruit", name: "Peras", qty: "1 kg" },
+  { cat: "fruit", name: "Kiwis", qty: "6 unid." },
+  { cat: "fruit", name: "Laranjas ou tangerinas", qty: "1,5 kg" },
+  { cat: "fruit", name: "Abacates", qty: "3 unid." },
+  // leguminosas e hidratos integrais, em porções controladas
+  { cat: "pantry", name: "Grão-de-bico cozido (frasco)", qty: "3 frascos" },
+  { cat: "pantry", name: "Feijão preto ou vermelho cozido", qty: "2 frascos" },
+  { cat: "pantry", name: "Lentilhas vermelhas secas", qty: "500 g" },
+  { cat: "pantry", name: "Massa de leguminosas (lentilha ou grão)", qty: "2 × 250 g" },
+  { cat: "pantry", name: "Flocos de aveia", qty: "500 g" },
+  { cat: "pantry", name: "Quinoa", qty: "500 g" },
+  { cat: "pantry", name: "Pão 100% integral ou de centeio", qty: "1 pão" },
+  { cat: "pantry", name: "Tomate pelado / passata sem açúcar", qty: "3 unid." },
+  { cat: "pantry", name: "Caldo de legumes (sem açúcar)", qty: "1 emb." },
+  { cat: "pantry", name: "Especiarias (canela, cominhos, curcuma, paprika)", qty: "repor" },
+  { cat: "pantry", name: "Vinagre e mostarda", qty: "repor" },
+  // gorduras: pouca quantidade, muito valor
+  { cat: "fats", name: "Azeite virgem extra", qty: "repor (≈1 L/mês)" },
+  { cat: "fats", name: "Nozes / amêndoas naturais", qty: "200 g" },
+  { cat: "fats", name: "Sementes de chia ou linhaça", qty: "250 g" },
+  { cat: "fats", name: "Manteiga de amendoim 100%", qty: "1 frasco" },
+  // congelados: a reserva para quando o fresco acaba (fica longe de tudo)
+  { cat: "frozen", name: "Edamame", qty: "2 × 400 g" },
+  { cat: "frozen", name: "Mistura de legumes / salteado", qty: "2 × 1 kg" },
+  { cat: "frozen", name: "Espinafres em cubos", qty: "1 kg" },
+  { cat: "frozen", name: "Frutos vermelhos", qty: "2 × 500 g" },
+  // o filho come o mesmo que os pais, mais isto
+  { cat: "kid", name: "Peito de frango ou peru", qty: "600 g" },
+  { cat: "kid", name: "Carne picada (vaca ou peru)", qty: "400 g" },
+  { cat: "kid", name: "Peixe (pescada, salmão)", qty: "500 g" },
+  { cat: "kid", name: "Fiambre de peru", qty: "1 emb." },
+  { cat: "kid", name: "Leite meio-gordo", qty: "4 L" },
+  { cat: "kid", name: "Queijo flamengo", qty: "1 emb." },
+  { cat: "kid", name: "Bananas", qty: "1 kg" },
+  { cat: "kid", name: "Arroz", qty: "1 kg" },
+  { cat: "kid", name: "Massa", qty: "500 g" },
+  { cat: "kid", name: "Batatas", qty: "1,5 kg" },
+];
+// Dia tipo de um adulto (~1550 kcal, ~130 g de proteína). Valores aproximados.
+const SHOP_DAY_EXAMPLE = [
+  { meal: "Pequeno-almoço", food: "Skyr (170 g) + aveia (30 g) + frutos vermelhos (80 g) + nozes (10 g)", kcal: 315, p: 24 },
+  { meal: "Almoço", food: "Tofu salteado (200 g) + legumes (250 g) + grão (80 g) + azeite (1 c. sopa)", kcal: 535, p: 38 },
+  { meal: "Lanche", food: "Queijo fresco batido ou cottage (200 g) + 1 maçã", kcal: 220, p: 22 },
+  { meal: "Jantar", food: "Omelete de 2 ovos + 150 ml de claras, cogumelos e espinafres + pão integral (40 g)", kcal: 410, p: 37 },
+  { meal: "Ceia (opcional)", food: "Iogurte grego 0% (120 g)", kcal: 70, p: 12 },
+];
 </script>
 <script>
 (() => {
@@ -1147,6 +1313,7 @@ const PROTEIN_FOODS = [
   const STORE_VIDEOS = "gym.videos.v1";
   const STORE_DAYS = "gym.days.v1";
   const STORE_FOODS = "gym.foods.v1";
+  const STORE_SHOP = "gym.shop.v1";
 
   const $ = (sel, el = document) => el.querySelector(sel);
   const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
@@ -1180,6 +1347,10 @@ const PROTEIN_FOODS = [
   // Atalhos de proteína (editáveis); começam com os valores de data.js.
   let foods = load(STORE_FOODS, null) || PROTEIN_FOODS.map((f) => ({ ...f }));
   let foodsCustomized = !!load(STORE_FOODS, null);
+  // Lista de compras: [{ id, cat, name, qty, done }]; começa com SHOP_DEFAULT.
+  const defaultShop = () => SHOP_DEFAULT.map((it, i) => ({ id: "d" + i, ...it, done: false }));
+  let shop = load(STORE_SHOP, null) || defaultShop();
+  let shopCustomized = !!load(STORE_SHOP, null);
   let remote = null; // { col } quando a base de dados está disponível
   let assets = null;
   let currentWorkout = "A";
@@ -1219,6 +1390,11 @@ const PROTEIN_FOODS = [
     foodsCustomized = true;
     if (remote) await remote.col.doc("foods").set({ kind: "foods", items: foods });
     else saveLocal(STORE_FOODS, foods);
+  }
+  async function persistShop() {
+    shopCustomized = true;
+    if (remote) await remote.col.doc("shop").set({ kind: "shop", items: shop });
+    else saveLocal(STORE_SHOP, shop);
   }
   async function persistMedia() {
     if (remote) await remote.col.doc("media").set({ kind: "media", items: media });
@@ -2025,6 +2201,56 @@ const PROTEIN_FOODS = [
       <text x="${Math.min(x(lastP.date), W - P.r - 20)}" y="${y(lastP.v) - 10}" class="label" text-anchor="middle">${fmt1(lastP.v)}</text></svg>`;
   }
 
+  // ---------- compras ----------
+  let shopHide = false;
+  try { shopHide = localStorage.getItem("gym.shopHide") === "1"; } catch {}
+  function renderShop() {
+    const sel = $("#shop-cat");
+    if (!sel.options.length) sel.innerHTML = SHOP_CATEGORIES.map((c) => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
+    if (!sel.value) sel.value = "other";
+    $("#shop-hide").checked = shopHide;
+    const done = shop.filter((it) => it.done).length;
+    $("#shop-done").textContent = done;
+    $("#shop-total").textContent = `/ ${shop.length} no carrinho`;
+    $("#shop-bar").style.width = (shop.length ? Math.round((done / shop.length) * 100) : 0) + "%";
+    $("#shop-bar").classList.toggle("ok", shop.length > 0 && done === shop.length);
+    const cats = [...SHOP_CATEGORIES, ...[...new Set(shop.map((it) => it.cat))].filter((c) => !SHOP_CATEGORIES.some((x) => x.id === c)).map((id) => ({ id, name: id }))];
+    const groups = cats
+      .map((c) => {
+        const all = shop.filter((it) => (it.cat || "other") === c.id);
+        const items = shopHide ? all.filter((it) => !it.done) : all;
+        if (!all.length) return "";
+        const left = all.filter((it) => !it.done).length;
+        return `<div class="shop-group">
+          <div class="food-head"><span>${escapeHtml(c.name)}</span><span class="muted small">${left ? `faltam ${left}` : "tudo no carrinho"}</span></div>
+          ${items.length ? `<ul class="food-log">${items
+            .map(
+              (it) => `<li class="${it.done ? "done" : ""}">
+              <label class="check"><input type="checkbox" data-shop-done="${it.id}" ${it.done ? "checked" : ""}> <span>${escapeHtml(it.name)}</span></label>
+              <input type="text" class="shop-qty" data-shop-qty="${it.id}" value="${escapeHtml(it.qty || "")}" placeholder="qtd." aria-label="Quantidade de ${escapeHtml(it.name)}">
+              <button class="link" data-shop-del="${it.id}" aria-label="Remover ${escapeHtml(it.name)}">✕</button></li>`
+            )
+            .join("")}</ul>` : ""}
+        </div>`;
+      })
+      .join("");
+    $("#shop-list").innerHTML = groups || `<p class="empty muted">A lista está vazia. Acrescenta alimentos em cima ou repõe a lista sugerida.</p>`;
+    if (!$("#shop-day").innerHTML) {
+      const tk = SHOP_DAY_EXAMPLE.reduce((a, m) => a + m.kcal, 0);
+      const tp = SHOP_DAY_EXAMPLE.reduce((a, m) => a + m.p, 0);
+      $("#shop-day").innerHTML = `<div class="table-wrap"><table><thead><tr><th>Refeição</th><th>O quê</th><th>kcal</th><th>Proteína</th></tr></thead><tbody>${SHOP_DAY_EXAMPLE.map(
+        (m) => `<tr><td>${escapeHtml(m.meal)}</td><td class="wrap">${escapeHtml(m.food)}</td><td>${m.kcal}</td><td>${m.p} g</td></tr>`
+      ).join("")}<tr><th>Total</th><th></th><th>≈${tk}</th><th>≈${tp} g</th></tr></tbody></table></div>`;
+    }
+  }
+  function shopItem(id) {
+    return shop.find((it) => it.id === id);
+  }
+  function saveShop() {
+    persistShop().catch(() => {});
+    renderShop();
+  }
+
   async function updateDay(date, patch) {
     const d = { ...(days[date] || {}), date, ...patch };
     days[date] = d;
@@ -2068,7 +2294,9 @@ const PROTEIN_FOODS = [
     $("#tab-info").hidden = tab !== "info";
     $("#tab-week").hidden = tab !== "week";
     $("#tab-body").hidden = tab !== "body";
+    $("#tab-shop").hidden = tab !== "shop";
     if (tab === "week") renderWeek();
+    if (tab === "shop") renderShop();
     if (tab === "body") renderBody();
     const active = $(`.tabs button[data-tab="${tab}"]`);
     if (active && active.scrollIntoView) active.scrollIntoView({ block: "nearest", inline: "nearest" });
@@ -2088,6 +2316,7 @@ const PROTEIN_FOODS = [
     if (currentTab === "progress") renderProgress();
     else if (currentTab === "week" && !$("#tab-week").contains(document.activeElement)) renderWeek();
     else if (currentTab === "body") renderBody();
+    else if (currentTab === "shop" && !$("#tab-shop").contains(document.activeElement)) renderShop();
     else if ((currentTab === "A" || currentTab === "B") && !dirty) renderWorkout();
   }
 
@@ -2210,6 +2439,93 @@ const PROTEIN_FOODS = [
       return;
     }
     updateDay(b.dataset.bodyDel, { weight: 0, waist: 0 });
+  });
+
+  function addShopItem() {
+    const name = $("#shop-name").value.trim();
+    if (!name) {
+      $("#shop-name").focus();
+      return;
+    }
+    shop.push({ id: "u" + Date.now().toString(36), cat: $("#shop-cat").value || "other", name, qty: $("#shop-qty").value.trim(), done: false });
+    $("#shop-name").value = "";
+    $("#shop-qty").value = "";
+    $("#shop-status").textContent = `"${name}" adicionado.`;
+    saveShop();
+    $("#shop-name").focus();
+  }
+  $("#shop-add").addEventListener("click", addShopItem);
+  ["#shop-name", "#shop-qty"].forEach((s) =>
+    $(s).addEventListener("keydown", (e) => {
+      if (e.key === "Enter") addShopItem();
+    })
+  );
+  $("#shop-list").addEventListener("change", (e) => {
+    const cb = e.target.closest("[data-shop-done]");
+    const q = e.target.closest("[data-shop-qty]");
+    const it = shopItem(cb ? cb.dataset.shopDone : q ? q.dataset.shopQty : "");
+    if (!it) return;
+    if (cb) it.done = cb.checked;
+    else {
+      it.qty = q.value.trim();
+      q.blur();
+    }
+    saveShop();
+  });
+  $("#shop-list").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-shop-del]");
+    if (!b) return;
+    shop = shop.filter((it) => it.id !== b.dataset.shopDel);
+    saveShop();
+  });
+  $("#shop-hide").addEventListener("change", (e) => {
+    shopHide = e.target.checked;
+    try { localStorage.setItem("gym.shopHide", shopHide ? "1" : "0"); } catch {}
+    renderShop();
+  });
+  $("#shop-new").addEventListener("click", () => {
+    shop.forEach((it) => (it.done = false));
+    $("#shop-status").textContent = "Lista pronta para a próxima ida às compras.";
+    saveShop();
+  });
+  $("#shop-copy").addEventListener("click", async () => {
+    const text = SHOP_CATEGORIES.concat({ id: null })
+      .map((c) => {
+        const items = shop.filter((it) => !it.done && (c.id ? (it.cat || "other") === c.id : !SHOP_CATEGORIES.some((x) => x.id === it.cat)));
+        return items.length ? `${c.name || "Outros"}\n${items.map((it) => `- ${it.name}${it.qty ? ` (${it.qty})` : ""}`).join("\n")}` : "";
+      })
+      .filter(Boolean)
+      .join("\n\n");
+    const status = $("#shop-status");
+    if (!text) {
+      status.textContent = "Já está tudo no carrinho.";
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      status.textContent = "Lista copiada. Cola-a numa mensagem ou nas notas do telemóvel.";
+    } catch {
+      status.textContent = "Não foi possível copiar nesta vista.";
+    }
+  });
+  $("#shop-reset").addEventListener("click", (e) => {
+    const b = e.target;
+    if (!b.dataset.armed) {
+      b.dataset.armed = "1";
+      b.textContent = "Confirmar: apagar alterações e repor";
+      setTimeout(() => {
+        if (b.isConnected) {
+          delete b.dataset.armed;
+          b.textContent = "Repor lista sugerida";
+        }
+      }, 4000);
+      return;
+    }
+    delete b.dataset.armed;
+    b.textContent = "Repor lista sugerida";
+    shop = defaultShop();
+    $("#shop-status").textContent = "Lista sugerida reposta.";
+    saveShop();
   });
 
   $("#week-prev").addEventListener("click", () => { weekOffset--; renderWeek(); });
@@ -2377,7 +2693,7 @@ const PROTEIN_FOODS = [
 
   let downloads = null;
   $("#export-btn").addEventListener("click", async () => {
-    const data = JSON.stringify({ sessions, videos: media, days, foods }, null, 2);
+    const data = JSON.stringify({ sessions, videos: media, days, foods, shop }, null, 2);
     const filename = `treino-backup-${today()}.json`;
     const status = $("#backup-status");
     if (downloads) {
@@ -2437,6 +2753,12 @@ const PROTEIN_FOODS = [
           .map((f) => ({ name: f.name, g: Math.max(0, Math.round(Number(f.g) || 0)) }));
         await persistFoods();
       }
+      if (Array.isArray(data.shop)) {
+        shop = data.shop
+          .filter((it) => it && typeof it.name === "string")
+          .map((it, i) => ({ id: String(it.id || "i" + i), cat: String(it.cat || "other"), name: it.name, qty: String(it.qty || ""), done: !!it.done }));
+        await persistShop();
+      }
       if (data.videos) {
         media = { ...media, ...normalizeMedia(data.videos) };
         await persistMedia();
@@ -2475,6 +2797,7 @@ const PROTEIN_FOODS = [
         const remoteSessions = docs.filter((d) => d.kind === "session").map(({ kind, ...s }) => s);
         const m = docs.find((d) => d.kind === "media");
         const fd = docs.find((d) => d.kind === "foods");
+        const sd = docs.find((d) => d.kind === "shop");
         const st = docs.find((d) => d.kind === "settings");
         if (st && PROGRAMS[st.mode] && st.mode !== mode) setMode(st.mode, false);
         else if (!st && first && mode !== "gym") col.doc("settings").set({ kind: "settings", mode }).catch(() => {});
@@ -2505,6 +2828,8 @@ const PROTEIN_FOODS = [
         if (m) media = normalizeMedia(m.items);
         if (fd && Array.isArray(fd.items)) foods = fd.items;
         else if (foodsCustomized) persistFoods().catch(() => {});
+        if (sd && Array.isArray(sd.items)) shop = sd.items;
+        else if (shopCustomized) persistShop().catch(() => {});
         sync.textContent = "Guardado na tua conta, sincroniza entre aparelhos.";
         sync.classList.add("ok");
         refresh();

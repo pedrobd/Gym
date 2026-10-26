@@ -445,3 +445,94 @@ const PROTEIN_FOODS = [
   { name: "Leite (1 copo, 250 ml)", g: 8 },
   { name: "Leguminosas (1 chávena cozida)", g: 15 },
 ];
+
+// Lista de compras semanal: 2 adultos (vegetarianos, ~1600 kcal, proteína alta,
+// baixo índice glicémico) + 1 criança de 5 anos que come carne e peixe.
+// Quantidades para 7 dias, a pensar numa só ida ao supermercado por semana.
+const SHOP_CATEGORIES = [
+  { id: "protein", name: "Proteína (ovos, lácteos, vegetal)" },
+  { id: "veg", name: "Legumes e verduras" },
+  { id: "fruit", name: "Fruta" },
+  { id: "pantry", name: "Leguminosas, cereais e despensa" },
+  { id: "fats", name: "Gorduras boas e sementes" },
+  { id: "frozen", name: "Congelados (reserva para o fim da semana)" },
+  { id: "kid", name: "Só para o filho" },
+  { id: "other", name: "Outros" },
+];
+const SHOP_DEFAULT = [
+  // proteína: base dos ~130 g/dia de cada adulto
+  { cat: "protein", name: "Ovos", qty: "3 dúzias" },
+  { cat: "protein", name: "Claras de ovo líquidas", qty: "2 × 500 ml" },
+  { cat: "protein", name: "Skyr ou iogurte grego natural 0%", qty: "16 unid." },
+  { cat: "protein", name: "Queijo fresco magro", qty: "4 × 200 g" },
+  { cat: "protein", name: "Queijo cottage", qty: "3 × 200 g" },
+  { cat: "protein", name: "Requeijão", qty: "2 unid." },
+  { cat: "protein", name: "Tofu firme", qty: "4 blocos" },
+  { cat: "protein", name: "Tempeh", qty: "2 unid." },
+  { cat: "protein", name: "Seitan", qty: "2 unid." },
+  { cat: "protein", name: "Bebida de soja sem açúcar", qty: "2 L" },
+  // legumes: os frágeis primeiro, os resistentes ficam para o fim da semana
+  { cat: "veg", name: "Espinafres / rúcula / alface (comer até 3.º dia)", qty: "4 sacos" },
+  { cat: "veg", name: "Cogumelos (comer até 4.º dia)", qty: "750 g" },
+  { cat: "veg", name: "Brócolos", qty: "1 kg" },
+  { cat: "veg", name: "Couve-flor", qty: "1 unid." },
+  { cat: "veg", name: "Curgete", qty: "4 unid." },
+  { cat: "veg", name: "Pimentos", qty: "4 unid." },
+  { cat: "veg", name: "Tomate", qty: "1,5 kg" },
+  { cat: "veg", name: "Pepino", qty: "3 unid." },
+  { cat: "veg", name: "Beringela", qty: "2 unid." },
+  { cat: "veg", name: "Couve lombarda ou repolho (aguenta a semana)", qty: "1 unid." },
+  { cat: "veg", name: "Cenoura", qty: "1 kg" },
+  { cat: "veg", name: "Abóbora", qty: "1 kg" },
+  { cat: "veg", name: "Cebola", qty: "1 kg" },
+  { cat: "veg", name: "Alho", qty: "1 cabeça" },
+  { cat: "veg", name: "Limões", qty: "4 unid." },
+  { cat: "veg", name: "Ervas frescas (salsa, coentros)", qty: "2 molhos" },
+  // fruta de índice glicémico baixo
+  { cat: "fruit", name: "Maçãs", qty: "1,5 kg" },
+  { cat: "fruit", name: "Peras", qty: "1 kg" },
+  { cat: "fruit", name: "Kiwis", qty: "6 unid." },
+  { cat: "fruit", name: "Laranjas ou tangerinas", qty: "1,5 kg" },
+  { cat: "fruit", name: "Abacates", qty: "3 unid." },
+  // leguminosas e hidratos integrais, em porções controladas
+  { cat: "pantry", name: "Grão-de-bico cozido (frasco)", qty: "3 frascos" },
+  { cat: "pantry", name: "Feijão preto ou vermelho cozido", qty: "2 frascos" },
+  { cat: "pantry", name: "Lentilhas vermelhas secas", qty: "500 g" },
+  { cat: "pantry", name: "Massa de leguminosas (lentilha ou grão)", qty: "2 × 250 g" },
+  { cat: "pantry", name: "Flocos de aveia", qty: "500 g" },
+  { cat: "pantry", name: "Quinoa", qty: "500 g" },
+  { cat: "pantry", name: "Pão 100% integral ou de centeio", qty: "1 pão" },
+  { cat: "pantry", name: "Tomate pelado / passata sem açúcar", qty: "3 unid." },
+  { cat: "pantry", name: "Caldo de legumes (sem açúcar)", qty: "1 emb." },
+  { cat: "pantry", name: "Especiarias (canela, cominhos, curcuma, paprika)", qty: "repor" },
+  { cat: "pantry", name: "Vinagre e mostarda", qty: "repor" },
+  // gorduras: pouca quantidade, muito valor
+  { cat: "fats", name: "Azeite virgem extra", qty: "repor (≈1 L/mês)" },
+  { cat: "fats", name: "Nozes / amêndoas naturais", qty: "200 g" },
+  { cat: "fats", name: "Sementes de chia ou linhaça", qty: "250 g" },
+  { cat: "fats", name: "Manteiga de amendoim 100%", qty: "1 frasco" },
+  // congelados: a reserva para quando o fresco acaba (fica longe de tudo)
+  { cat: "frozen", name: "Edamame", qty: "2 × 400 g" },
+  { cat: "frozen", name: "Mistura de legumes / salteado", qty: "2 × 1 kg" },
+  { cat: "frozen", name: "Espinafres em cubos", qty: "1 kg" },
+  { cat: "frozen", name: "Frutos vermelhos", qty: "2 × 500 g" },
+  // o filho come o mesmo que os pais, mais isto
+  { cat: "kid", name: "Peito de frango ou peru", qty: "600 g" },
+  { cat: "kid", name: "Carne picada (vaca ou peru)", qty: "400 g" },
+  { cat: "kid", name: "Peixe (pescada, salmão)", qty: "500 g" },
+  { cat: "kid", name: "Fiambre de peru", qty: "1 emb." },
+  { cat: "kid", name: "Leite meio-gordo", qty: "4 L" },
+  { cat: "kid", name: "Queijo flamengo", qty: "1 emb." },
+  { cat: "kid", name: "Bananas", qty: "1 kg" },
+  { cat: "kid", name: "Arroz", qty: "1 kg" },
+  { cat: "kid", name: "Massa", qty: "500 g" },
+  { cat: "kid", name: "Batatas", qty: "1,5 kg" },
+];
+// Dia tipo de um adulto (~1550 kcal, ~130 g de proteína). Valores aproximados.
+const SHOP_DAY_EXAMPLE = [
+  { meal: "Pequeno-almoço", food: "Skyr (170 g) + aveia (30 g) + frutos vermelhos (80 g) + nozes (10 g)", kcal: 315, p: 24 },
+  { meal: "Almoço", food: "Tofu salteado (200 g) + legumes (250 g) + grão (80 g) + azeite (1 c. sopa)", kcal: 535, p: 38 },
+  { meal: "Lanche", food: "Queijo fresco batido ou cottage (200 g) + 1 maçã", kcal: 220, p: 22 },
+  { meal: "Jantar", food: "Omelete de 2 ovos + 150 ml de claras, cogumelos e espinafres + pão integral (40 g)", kcal: 410, p: 37 },
+  { meal: "Ceia (opcional)", food: "Iogurte grego 0% (120 g)", kcal: 70, p: 12 },
+];
