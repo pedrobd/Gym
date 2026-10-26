@@ -1087,8 +1087,13 @@
   // A lista sugerida está feita para 2 adultos: os alimentos deles escalam, os do filho e as bebidas não.
   let mealPeople = 2;
   try { mealPeople = Number(localStorage.getItem("gym.mealPeople")) || 2; } catch {}
+  // Crianças (a lista sugerida tem as coisas de 1); com 0 a secção do filho fica escondida.
+  let mealKids = 1;
+  try { const k = localStorage.getItem("gym.mealKids"); mealKids = k === null ? 1 : Number(k) || 0; } catch {}
   const SHOP_SCALED = ["protein", "veg", "fruit", "pantry", "fats", "frozen"];
-  const shopFactor = (it) => (String(it.id).startsWith("d") && SHOP_SCALED.includes(it.cat) ? mealPeople / 2 : 1);
+  const shopFactor = (it) =>
+    !String(it.id).startsWith("d") ? 1 : SHOP_SCALED.includes(it.cat) ? mealPeople / 2 : it.cat === "kid" ? mealKids : 1;
+  const shopVisible = (it) => mealKids > 0 || it.cat !== "kid";
   // O preço acompanha a quantidade arredondada (1 pão para 1 pessoa custa 1 pão).
   const shopPrice = (it) => (Number(it.price) || 0) * (it.priceFixed ? 1 : it.qtyFixed ? shopFactor(it) : scaleQty(it.qty || "", shopFactor(it)).ratio);
   const SINGULAR = { latas: "lata", frascos: "frasco", blocos: "bloco", garrafas: "garrafa", sacos: "saco", molhos: "molho", "dúzias": "dúzia", "cabeças": "cabeça", "pães": "pão" };
@@ -1121,17 +1126,20 @@
   }
   const shopQty = (it) => (it.qtyFixed ? it.qty || "" : scaleQty(it.qty || "", shopFactor(it)).text);
   function renderPeopleSwitches() {
-    $$(".people-switch").forEach((el) => {
-      el.innerHTML = [1, 2, 3, 4]
-        .map((n) => `<button role="radio" aria-checked="${n === mealPeople}" class="${n === mealPeople ? "on" : ""}" data-people="${n}">${n} ${n === 1 ? "pessoa" : "pessoas"}</button>`)
-        .join("");
-    });
+    const btns = (list, cur, attr, label) =>
+      list.map((n) => `<button role="radio" aria-checked="${n === cur}" class="${n === cur ? "on" : ""}" data-${attr}="${n}">${label(n)}</button>`).join("");
+    $$(".people-switch").forEach((el) => (el.innerHTML = btns([1, 2, 3, 4], mealPeople, "people", (n) => `${n} ${n === 1 ? "pessoa" : "pessoas"}`)));
+    $$(".kids-switch").forEach((el) => (el.innerHTML = btns([0, 1, 2, 3], mealKids, "kids", (n) => (n ? `${n} ${n === 1 ? "criança" : "crianças"}` : "Nenhuma"))));
   }
   document.addEventListener("click", (e) => {
-    const b = e.target.closest("[data-people]");
+    const b = e.target.closest("[data-people], [data-kids]");
     if (!b) return;
-    mealPeople = Number(b.dataset.people);
-    try { localStorage.setItem("gym.mealPeople", String(mealPeople)); } catch {}
+    if (b.dataset.people) mealPeople = Number(b.dataset.people);
+    else mealKids = Number(b.dataset.kids);
+    try {
+      localStorage.setItem("gym.mealPeople", String(mealPeople));
+      localStorage.setItem("gym.mealKids", String(mealKids));
+    } catch {}
     if (currentTab === "shop") renderShop();
     else renderMeals();
   });
@@ -1144,24 +1152,25 @@
     if (!sel.options.length) sel.innerHTML = SHOP_CATEGORIES.map((c) => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
     if (!sel.value) sel.value = "other";
     $("#shop-hide").checked = shopHide;
-    const done = shop.filter((it) => it.done).length;
+    const list = shop.filter(shopVisible);
+    const done = list.filter((it) => it.done).length;
     $("#shop-done").textContent = done;
-    $("#shop-total").textContent = `/ ${shop.length} no carrinho`;
-    $("#shop-bar").style.width = (shop.length ? Math.round((done / shop.length) * 100) : 0) + "%";
-    $("#shop-bar").classList.toggle("ok", shop.length > 0 && done === shop.length);
+    $("#shop-total").textContent = `/ ${list.length} no carrinho`;
+    $("#shop-bar").style.width = (list.length ? Math.round((done / list.length) * 100) : 0) + "%";
+    $("#shop-bar").classList.toggle("ok", list.length > 0 && done === list.length);
     renderPeopleSwitches();
-    $("#shop-sub").textContent = `${mealPeople} ${mealPeople === 1 ? "adulto" : "adultos"} com peixe e sem carne + 1 criança · ~1600 kcal, proteína alta, baixo índice glicémico`;
+    $("#shop-sub").textContent = `${mealPeople} ${mealPeople === 1 ? "adulto" : "adultos"} com peixe e sem carne${mealKids ? ` + ${mealKids} ${mealKids === 1 ? "criança" : "crianças"}` : ""} · ~1600 kcal, proteína alta, baixo índice glicémico`;
     const cost = (list) => list.reduce((t, it) => t + shopPrice(it), 0);
-    const total = cost(shop);
-    const left = cost(shop.filter((it) => !it.done));
+    const total = cost(list);
+    const left = cost(list.filter((it) => !it.done));
     $("#shop-cost").innerHTML = `
       <li><b>${fmtEur(total)}</b><span>estimativa da semana</span></li>
       <li><b>${fmtEur(left)}</b><span>falta comprar</span></li>
       <li><b>${fmtEur(total - left)}</b><span>já no carrinho</span></li>`;
-    const cats = [...SHOP_CATEGORIES, ...[...new Set(shop.map((it) => it.cat))].filter((c) => !SHOP_CATEGORIES.some((x) => x.id === c)).map((id) => ({ id, name: id }))];
+    const cats = [...SHOP_CATEGORIES, ...[...new Set(list.map((it) => it.cat))].filter((c) => !SHOP_CATEGORIES.some((x) => x.id === c)).map((id) => ({ id, name: id }))];
     const groups = cats
       .map((c) => {
-        const all = shop.filter((it) => (it.cat || "other") === c.id);
+        const all = list.filter((it) => (it.cat || "other") === c.id);
         const items = shopHide ? all.filter((it) => !it.done) : all;
         if (!all.length) return "";
         const left = all.filter((it) => !it.done).length;
@@ -1184,11 +1193,14 @@
   const fmtEur = (n) => n.toLocaleString("pt-PT", { style: "currency", currency: "EUR" });
 
   // ---------- ementa ----------
-  const PLURAL = { ovo: "ovos", lata: "latas", fatia: "fatias", kiwi: "kiwis", "maçã": "maçãs", laranja: "laranjas", pera: "peras", abacate: "abacates" };
+  const PLURAL = {
+    ovo: "ovos", lata: "latas", fatia: "fatias", kiwi: "kiwis", "maçã": "maçãs", laranja: "laranjas", pera: "peras", abacate: "abacates",
+    "pão": "pães", pacotinho: "pacotinhos", banana: "bananas", copo: "copos", iogurte: "iogurtes", "peça": "peças",
+  };
   // "Skyr (170 g) e 1 kiwi" × 2 → "Skyr (340 g) e 2 kiwis"
   function scaleFood(text, n) {
     if (n === 1) return text;
-    return text.replace(/(\d+(?:,\d+)?|½)\s?(g|ml|ovos?|latas?|fatias?|kiwis?|maçãs?|laranjas?|peras?|abacates?|c\. sopa|c\. chá)(?![\wà-ú])/g, (_, num, unit) => {
+    return text.replace(/(\d+(?:,\d+)?|½)\s?(g|ml|ovos?|latas?|fatias?|kiwis?|maçãs?|laranjas?|peras?|abacates?|pão|pães|pacotinhos?|bananas?|copos?|iogurtes?|peças?|c\. sopa|c\. chá)(?![\wà-ú])/g, (_, num, unit) => {
       const v = (num === "½" ? 0.5 : Number(num.replace(",", "."))) * n;
       const out = Number.isInteger(v) ? String(v) : v === 0.5 ? "½" : fmt1(v).replace(/,0$/, "");
       return `${out} ${v > 1 && PLURAL[unit] ? PLURAL[unit] : unit}`;
@@ -1197,7 +1209,7 @@
 
   function renderMeals() {
     renderPeopleSwitches();
-    $("#meals-sub").textContent = `${mealPeople === 1 ? "Quantidades para 1 pessoa" : `Quantidades para ${mealPeople} pessoas`} · por pessoa ≈1550 kcal e ≈130 g de proteína · peixe, sem carne`;
+    $("#meals-sub").textContent = `Quantidades para ${mealPeople} ${mealPeople === 1 ? "adulto" : "adultos"}${mealKids ? ` + ${mealKids} ${mealKids === 1 ? "criança" : "crianças"}` : ""} · por adulto ≈1550 kcal e ≈130 g de proteína · peixe, sem carne`;
     const todayName = DOW_NAMES[new Date().getDay()];
     $("#meal-days").innerHTML = MEAL_PLAN.map((d) => {
       const kcal = d.meals.reduce((t, m) => t + m.kcal, 0);
@@ -1208,7 +1220,7 @@
         <ul class="meal-list">${d.meals
           .map((m) => `<li><span class="meal-name">${escapeHtml(m.meal)}</span><span class="meal-food">${escapeHtml(scaleFood(m.food, mealPeople))}</span><span class="meal-num" title="por pessoa">${m.kcal} kcal · ${m.p} g</span></li>`)
           .join("")}</ul>
-        <p class="meal-kid"><strong>Filho:</strong> ${escapeHtml(d.kid)}</p>
+        ${mealKids ? `<p class="meal-kid"><strong>${mealKids === 1 ? "Filho" : `Crianças (${mealKids})`}:</strong> ${escapeHtml(scaleFood(d.kid, mealKids))}</p>` : ""}
       </details>`;
     }).join("");
   }
@@ -1499,11 +1511,11 @@
   $("#shop-copy").addEventListener("click", async () => {
     const text = SHOP_CATEGORIES.concat({ id: null })
       .map((c) => {
-        const items = shop.filter((it) => !it.done && (c.id ? (it.cat || "other") === c.id : !SHOP_CATEGORIES.some((x) => x.id === it.cat)));
+        const items = shop.filter((it) => shopVisible(it) && !it.done && (c.id ? (it.cat || "other") === c.id : !SHOP_CATEGORIES.some((x) => x.id === it.cat)));
         return items.length ? `${c.name || "Outros"}\n${items.map((it) => `- ${it.name}${shopQty(it) ? ` (${shopQty(it)})` : ""}`).join("\n")}` : "";
       })
       .filter(Boolean)
-      .join("\n\n") + `\n\nEstimativa: ${fmtEur(shop.filter((it) => !it.done).reduce((t, it) => t + shopPrice(it), 0))}`;
+      .join("\n\n") + `\n\nEstimativa: ${fmtEur(shop.filter((it) => shopVisible(it) && !it.done).reduce((t, it) => t + shopPrice(it), 0))}`;
     const status = $("#shop-status");
     if (!text) {
       status.textContent = "Já está tudo no carrinho.";

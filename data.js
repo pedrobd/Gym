@@ -639,51 +639,51 @@ const SHOP_DEFAULT = [
 
 // Ementa de 7 dias para cada adulto (~1550 kcal, ~130 g de proteína, sem carne),
 // feita com a lista de compras. O peixe fresco e as folhas vêm primeiro.
-// Valores aproximados; "kid" = o que muda para o filho ao jantar.
+// Valores aproximados; "kid" = jantar e lanche de uma criança de 5 anos (doses dela).
 const MEAL_PLAN = [
-  { day: "Segunda", kid: "Salmão com arroz e brócolos. Lanche: pacotinho de sumo e pão com fiambre.", meals: [
+  { day: "Segunda", kid: "Jantar: salmão (80 g) com arroz (40 g cru) e brócolos. Lanche: 1 pacotinho de sumo e 1 pão com 1 fatia de fiambre.", meals: [
     { meal: "Pequeno-almoço", food: "Skyr (170 g) com aveia (30 g), frutos vermelhos (80 g) e nozes (10 g)", kcal: 320, p: 25 },
     { meal: "Almoço", food: "Salada de folhas, tomate e pepino com atum (1 lata), grão (100 g), ½ abacate e limão", kcal: 355, p: 31 },
     { meal: "Lanche", food: "Cottage (200 g) e 1 kiwi", kcal: 225, p: 22 },
     { meal: "Jantar", food: "Salmão no forno (150 g), brócolos (250 g) e quinoa (40 g), 1 c. chá de azeite", kcal: 565, p: 40 },
     { meal: "Ceia", food: "Iogurte grego 0% (120 g)", kcal: 65, p: 12 },
   ] },
-  { day: "Terça", kid: "Pescada com batata cozida e cenoura. Lanche: banana e leite.", meals: [
+  { day: "Terça", kid: "Jantar: pescada (80 g) com batata cozida (150 g) e cenoura. Lanche: 1 banana e 1 copo de leite (200 ml).", meals: [
     { meal: "Pequeno-almoço", food: "Omelete de 2 ovos + 100 ml de claras com espinafres, 1 fatia de pão integral (40 g)", kcal: 305, p: 29 },
     { meal: "Almoço", food: "Tofu salteado (200 g) com curgete e pimento (250 g), quinoa (40 g), 1 c. sopa de azeite", kcal: 560, p: 35 },
     { meal: "Lanche", food: "Skyr (170 g) e 1 maçã", kcal: 185, p: 19 },
     { meal: "Jantar", food: "Pescada no forno (180 g) com cogumelos e couve-flor (300 g), grão (80 g), 1 c. chá de azeite", kcal: 360, p: 43 },
     { meal: "Ceia", food: "Iogurte grego 0% (120 g) e nozes (10 g)", kcal: 130, p: 14 },
   ] },
-  { day: "Quarta", kid: "Frango aos cubos com arroz (o caril dele sem picante). Lanche: pacotinho de sumo e queijo.", meals: [
+  { day: "Quarta", kid: "Jantar: frango aos cubos (70 g) com arroz (40 g cru), sem picante. Lanche: 1 pacotinho de sumo e 2 fatias de queijo flamengo.", meals: [
     { meal: "Pequeno-almoço", food: "Skyr (170 g) com aveia (30 g), chia (10 g) e 1 kiwi", kcal: 315, p: 25 },
     { meal: "Almoço", food: "Taça de quinoa (40 g), edamame (100 g), cenoura ralada, pepino e 2 ovos cozidos", kcal: 460, p: 31 },
     { meal: "Lanche", food: "Queijo fresco magro (100 g) com tomate, 1 fatia de pão integral e 1 laranja", kcal: 260, p: 16 },
     { meal: "Jantar", food: "Caril de camarão (150 g) e grão (100 g) com tomate pelado e espinafres, 1 c. chá de azeite", kcal: 345, p: 38 },
     { meal: "Ceia", food: "Cottage (150 g)", kcal: 135, p: 17 },
   ] },
-  { day: "Quinta", kid: "Frango salteado com massa e cenoura. Lanche: iogurte e fruta.", meals: [
+  { day: "Quinta", kid: "Jantar: frango salteado (70 g) com massa (50 g crua) e cenoura. Lanche: 1 iogurte e 1 peça de fruta.", meals: [
     { meal: "Pequeno-almoço", food: "Panquecas de aveia (30 g), 1 ovo e 100 ml de claras, com skyr (100 g) e frutos vermelhos (100 g)", kcal: 335, p: 33 },
     { meal: "Almoço", food: "Salada de lentilhas vermelhas (40 g secas) com sardinhas (1 lata), tomate, pepino, cebola e salsa", kcal: 370, p: 32 },
     { meal: "Lanche", food: "Iogurte grego 0% (170 g), manteiga de amendoim (15 g) e 1 maçã", kcal: 265, p: 21 },
     { meal: "Jantar", food: "Tempeh salteado (100 g) com couve lombarda e cenoura (300 g), quinoa (30 g), 1 c. sopa de azeite", kcal: 470, p: 28 },
     { meal: "Ceia", food: "Queijo fresco batido 0% (200 g)", kcal: 95, p: 16 },
   ] },
-  { day: "Sexta", kid: "Peixe com batata e abóbora assada. Lanche: pacotinho de sumo e pão com queijo.", meals: [
+  { day: "Sexta", kid: "Jantar: peixe (80 g) com batata (150 g) e abóbora assada. Lanche: 1 pacotinho de sumo e 1 pão com 1 fatia de queijo.", meals: [
     { meal: "Pequeno-almoço", food: "2 ovos mexidos + 100 ml de claras, 1 fatia de pão integral e ½ abacate", kcal: 400, p: 29 },
     { meal: "Almoço", food: "Massa de lentilha (60 g) com molho de tomate, atum (1 lata) e curgete", kcal: 370, p: 37 },
     { meal: "Lanche", food: "Cottage (200 g) e 1 pera", kcal: 265, p: 22 },
     { meal: "Jantar", food: "Bacalhau ou pescada congelada (180 g) no forno com abóbora e beringela (300 g), 1 c. sopa de azeite", kcal: 325, p: 36 },
     { meal: "Ceia", food: "Iogurte grego 0% (120 g) e nozes (10 g)", kcal: 130, p: 14 },
   ] },
-  { day: "Sábado", kid: "Hambúrguer de carne picada no pão com batata assada. Lanche: banana e leite.", meals: [
+  { day: "Sábado", kid: "Jantar: hambúrguer de carne picada (80 g) no pão com batata assada (150 g). Lanche: 1 banana e 1 copo de leite (200 ml).", meals: [
     { meal: "Pequeno-almoço", food: "Skyr (170 g) com aveia (30 g), maçã ralada e canela", kcal: 300, p: 23 },
     { meal: "Almoço", food: "Omelete de forno (3 ovos + 100 ml de claras) com cogumelos e espinafres, salada, 1 fatia de pão integral", kcal: 415, p: 36 },
     { meal: "Lanche", food: "Queijo fresco magro (100 g), 1 kiwi e amêndoas (10 g)", kcal: 190, p: 13 },
     { meal: "Jantar", food: "Hambúrguer caseiro de feijão preto (100 g), tofu (100 g) e aveia (15 g), salada e edamame (100 g)", kcal: 465, p: 33 },
     { meal: "Ceia", food: "Cottage (200 g)", kcal: 180, p: 22 },
   ] },
-  { day: "Domingo", kid: "Frango assado com arroz e a mesma sopa. Lanche: pacotinho de sumo e fruta.", meals: [
+  { day: "Domingo", kid: "Jantar: frango assado (70 g) com arroz (40 g cru) e a mesma sopa. Lanche: 1 pacotinho de sumo e 1 peça de fruta.", meals: [
     { meal: "Pequeno-almoço", food: "Omelete de 2 ovos + 100 ml de claras com tomate, 1 fatia de pão integral", kcal: 300, p: 28 },
     { meal: "Almoço", food: "Seitan grelhado (120 g) com legumes salteados congelados (300 g), feijão (80 g), 1 c. sopa de azeite e 1 laranja", kcal: 445, p: 39 },
     { meal: "Lanche", food: "Skyr (170 g) com frutos vermelhos (80 g) e chia (10 g)", kcal: 190, p: 21 },

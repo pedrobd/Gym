@@ -612,8 +612,8 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
 .bal-tag.deficit { color: var(--ok); }
 .bal-tag.surplus { color: var(--accent); }
 #week-burn .bal-tag { margin-left: 0; }
-.people-switch button { flex: 1 1 auto; }
+.people-switch button, .kids-switch button { flex: 1 1 auto; }
 @media (max-width: 600px) {
-  .people-switch { width: 100%; }
-  .people-switch button { padding: .6rem .3rem; font-size: .78rem; }
+  .people-switch, .kids-switch { width: 100%; }
+  .people-switch button, .kids-switch button { padding: .6rem .3rem; font-size: .78rem; }
 }
