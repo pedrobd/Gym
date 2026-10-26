@@ -37,10 +37,23 @@
   // Atalhos de proteína (editáveis); começam com os valores de data.js.
   let foods = load(STORE_FOODS, null) || PROTEIN_FOODS.map((f) => ({ ...f }));
   let foodsCustomized = !!load(STORE_FOODS, null);
-  // Lista de compras: [{ id, cat, name, qty, done }]; começa com SHOP_DEFAULT.
+  // Lista de compras: [{ id, cat, name, qty, price?, done }]; começa com SHOP_DEFAULT.
   const defaultShop = () => SHOP_DEFAULT.map((it, i) => ({ id: "d" + i, ...it, done: false }));
-  let shop = load(STORE_SHOP, null) || defaultShop();
-  let shopCustomized = !!load(STORE_SHOP, null);
+  // Lista guardada numa versão antiga da sugestão: passa à nova, mantendo o que já
+  // estava no carrinho e os alimentos que o utilizador acrescentou.
+  function migrateShop(items, v) {
+    if (v >= SHOP_VERSION) return items;
+    const done = new Set(items.filter((it) => it.done).map((it) => it.name));
+    return [
+      ...defaultShop().map((it) => ({ ...it, done: done.has(it.name) })),
+      ...items.filter((it) => String(it.id).startsWith("u")),
+    ];
+  }
+  const storedShop = load(STORE_SHOP, null);
+  let shop = storedShop
+    ? Array.isArray(storedShop) ? migrateShop(storedShop, 1) : migrateShop(storedShop.items || [], storedShop.v || 1)
+    : defaultShop();
+  let shopCustomized = !!storedShop;
   let remote = null; // { col } quando a base de dados está disponível
   let assets = null;
   let currentWorkout = "A";
@@ -83,8 +96,8 @@
   }
   async function persistShop() {
     shopCustomized = true;
-    if (remote) await remote.col.doc("shop").set({ kind: "shop", items: shop });
-    else saveLocal(STORE_SHOP, shop);
+    if (remote) await remote.col.doc("shop").set({ kind: "shop", items: shop, v: SHOP_VERSION });
+    else saveLocal(STORE_SHOP, { v: SHOP_VERSION, items: shop });
   }
   async function persistMedia() {
     if (remote) await remote.col.doc("media").set({ kind: "media", items: media });
@@ -904,6 +917,13 @@
     $("#shop-total").textContent = `/ ${shop.length} no carrinho`;
     $("#shop-bar").style.width = (shop.length ? Math.round((done / shop.length) * 100) : 0) + "%";
     $("#shop-bar").classList.toggle("ok", shop.length > 0 && done === shop.length);
+    const cost = (list) => list.reduce((t, it) => t + (Number(it.price) || 0), 0);
+    const total = cost(shop);
+    const left = cost(shop.filter((it) => !it.done));
+    $("#shop-cost").innerHTML = `
+      <li><b>${fmtEur(total)}</b><span>estimativa da semana</span></li>
+      <li><b>${fmtEur(left)}</b><span>falta comprar</span></li>
+      <li><b>${fmtEur(total - left)}</b><span>já no carrinho</span></li>`;
     const cats = [...SHOP_CATEGORIES, ...[...new Set(shop.map((it) => it.cat))].filter((c) => !SHOP_CATEGORIES.some((x) => x.id === c)).map((id) => ({ id, name: id }))];
     const groups = cats
       .map((c) => {
@@ -912,12 +932,13 @@
         if (!all.length) return "";
         const left = all.filter((it) => !it.done).length;
         return `<div class="shop-group">
-          <div class="food-head"><span>${escapeHtml(c.name)}</span><span class="muted small">${left ? `faltam ${left}` : "tudo no carrinho"}</span></div>
+          <div class="food-head"><span>${escapeHtml(c.name)}</span><span class="muted small">${left ? `faltam ${left}` : "tudo no carrinho"} · ${fmtEur(cost(all))}</span></div>
           ${items.length ? `<ul class="food-log">${items
             .map(
               (it) => `<li class="${it.done ? "done" : ""}">
               <label class="check"><input type="checkbox" data-shop-done="${it.id}" ${it.done ? "checked" : ""}> <span>${escapeHtml(it.name)}</span></label>
               <input type="text" class="shop-qty" data-shop-qty="${it.id}" value="${escapeHtml(it.qty || "")}" placeholder="qtd." aria-label="Quantidade de ${escapeHtml(it.name)}">
+              <label class="shop-price">€<input type="number" inputmode="decimal" min="0" step="0.01" data-shop-price="${it.id}" value="${Number(it.price) ? Number(it.price).toFixed(2) : ""}" placeholder="–" aria-label="Preço de ${escapeHtml(it.name)}"></label>
               <button class="link" data-shop-del="${it.id}" aria-label="Remover ${escapeHtml(it.name)}">✕</button></li>`
             )
             .join("")}</ul>` : ""}
@@ -925,13 +946,24 @@
       })
       .join("");
     $("#shop-list").innerHTML = groups || `<p class="empty muted">A lista está vazia. Acrescenta alimentos em cima ou repõe a lista sugerida.</p>`;
-    if (!$("#shop-day").innerHTML) {
-      const tk = SHOP_DAY_EXAMPLE.reduce((a, m) => a + m.kcal, 0);
-      const tp = SHOP_DAY_EXAMPLE.reduce((a, m) => a + m.p, 0);
-      $("#shop-day").innerHTML = `<div class="table-wrap"><table><thead><tr><th>Refeição</th><th>O quê</th><th>kcal</th><th>Proteína</th></tr></thead><tbody>${SHOP_DAY_EXAMPLE.map(
-        (m) => `<tr><td>${escapeHtml(m.meal)}</td><td class="wrap">${escapeHtml(m.food)}</td><td>${m.kcal}</td><td>${m.p} g</td></tr>`
-      ).join("")}<tr><th>Total</th><th></th><th>≈${tk}</th><th>≈${tp} g</th></tr></tbody></table></div>`;
-    }
+  }
+  const fmtEur = (n) => n.toLocaleString("pt-PT", { style: "currency", currency: "EUR" });
+
+  // ---------- ementa ----------
+  function renderMeals() {
+    const todayName = DOW_NAMES[new Date().getDay()];
+    $("#meal-days").innerHTML = MEAL_PLAN.map((d) => {
+      const kcal = d.meals.reduce((t, m) => t + m.kcal, 0);
+      const p = d.meals.reduce((t, m) => t + m.p, 0);
+      const isToday = d.day === todayName;
+      return `<details class="meal-day ${isToday ? "today" : ""}" ${isToday ? "open" : ""}>
+        <summary><span class="meal-day-name">${escapeHtml(d.day)}${isToday ? " <em>Hoje</em>" : ""}</span><span class="muted small">≈${kcal} kcal · ≈${p} g proteína</span></summary>
+        <ul class="meal-list">${d.meals
+          .map((m) => `<li><span class="meal-name">${escapeHtml(m.meal)}</span><span class="meal-food">${escapeHtml(m.food)}</span><span class="meal-num">${m.kcal} kcal · ${m.p} g</span></li>`)
+          .join("")}</ul>
+        <p class="meal-kid"><strong>Filho:</strong> ${escapeHtml(d.kid)}</p>
+      </details>`;
+    }).join("");
   }
   function shopItem(id) {
     return shop.find((it) => it.id === id);
@@ -985,7 +1017,9 @@
     $("#tab-week").hidden = tab !== "week";
     $("#tab-body").hidden = tab !== "body";
     $("#tab-shop").hidden = tab !== "shop";
+    $("#tab-meals").hidden = tab !== "meals";
     if (tab === "week") renderWeek();
+    if (tab === "meals") renderMeals();
     if (tab === "shop") renderShop();
     if (tab === "body") renderBody();
     const active = $(`.tabs button[data-tab="${tab}"]`);
@@ -1137,15 +1171,17 @@
       $("#shop-name").focus();
       return;
     }
-    shop.push({ id: "u" + Date.now().toString(36), cat: $("#shop-cat").value || "other", name, qty: $("#shop-qty").value.trim(), done: false });
+    const price = Math.max(0, Math.round((Number($("#shop-price").value) || 0) * 100) / 100);
+    shop.push({ id: "u" + Date.now().toString(36), cat: $("#shop-cat").value || "other", name, qty: $("#shop-qty").value.trim(), price, done: false });
     $("#shop-name").value = "";
     $("#shop-qty").value = "";
+    $("#shop-price").value = "";
     $("#shop-status").textContent = `"${name}" adicionado.`;
     saveShop();
     $("#shop-name").focus();
   }
   $("#shop-add").addEventListener("click", addShopItem);
-  ["#shop-name", "#shop-qty"].forEach((s) =>
+  ["#shop-name", "#shop-qty", "#shop-price"].forEach((s) =>
     $(s).addEventListener("keydown", (e) => {
       if (e.key === "Enter") addShopItem();
     })
@@ -1153,12 +1189,16 @@
   $("#shop-list").addEventListener("change", (e) => {
     const cb = e.target.closest("[data-shop-done]");
     const q = e.target.closest("[data-shop-qty]");
-    const it = shopItem(cb ? cb.dataset.shopDone : q ? q.dataset.shopQty : "");
+    const pr = e.target.closest("[data-shop-price]");
+    const it = shopItem(cb ? cb.dataset.shopDone : q ? q.dataset.shopQty : pr ? pr.dataset.shopPrice : "");
     if (!it) return;
     if (cb) it.done = cb.checked;
-    else {
+    else if (q) {
       it.qty = q.value.trim();
       q.blur();
+    } else {
+      it.price = Math.max(0, Math.round((Number(pr.value) || 0) * 100) / 100);
+      pr.blur();
     }
     saveShop();
   });
@@ -1185,7 +1225,7 @@
         return items.length ? `${c.name || "Outros"}\n${items.map((it) => `- ${it.name}${it.qty ? ` (${it.qty})` : ""}`).join("\n")}` : "";
       })
       .filter(Boolean)
-      .join("\n\n");
+      .join("\n\n") + `\n\nEstimativa: ${fmtEur(shop.filter((it) => !it.done).reduce((t, it) => t + (Number(it.price) || 0), 0))}`;
     const status = $("#shop-status");
     if (!text) {
       status.textContent = "Já está tudo no carrinho.";
@@ -1446,7 +1486,7 @@
       if (Array.isArray(data.shop)) {
         shop = data.shop
           .filter((it) => it && typeof it.name === "string")
-          .map((it, i) => ({ id: String(it.id || "i" + i), cat: String(it.cat || "other"), name: it.name, qty: String(it.qty || ""), done: !!it.done }));
+          .map((it, i) => ({ id: String(it.id || "i" + i), cat: String(it.cat || "other"), name: it.name, qty: String(it.qty || ""), price: Number(it.price) || 0, done: !!it.done }));
         await persistShop();
       }
       if (data.videos) {
@@ -1518,8 +1558,10 @@
         if (m) media = normalizeMedia(m.items);
         if (fd && Array.isArray(fd.items)) foods = fd.items;
         else if (foodsCustomized) persistFoods().catch(() => {});
-        if (sd && Array.isArray(sd.items)) shop = sd.items;
-        else if (shopCustomized) persistShop().catch(() => {});
+        if (sd && Array.isArray(sd.items)) {
+          shop = migrateShop(sd.items, sd.v || 1);
+          if ((sd.v || 1) < SHOP_VERSION) persistShop().catch(() => {});
+        } else if (shopCustomized) persistShop().catch(() => {});
         sync.textContent = "Guardado na tua conta, sincroniza entre aparelhos.";
         sync.classList.add("ok");
         refresh();

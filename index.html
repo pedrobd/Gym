@@ -20,6 +20,7 @@
         <button data-tab="B">Treino B</button>
         <button data-tab="body">Corpo</button>
         <button data-tab="shop">Compras</button>
+        <button data-tab="meals">Ementa</button>
         <button data-tab="progress">Evolução</button>
         <button data-tab="info">Regras</button>
       </nav>
@@ -147,12 +148,15 @@
         <div class="shop-count"><b id="shop-done">0</b><span id="shop-total">/ 0 no carrinho</span></div>
       </div>
       <div class="bar-track big shop-bar"><span id="shop-bar"></span></div>
+      <ul class="week-stats" id="shop-cost"></ul>
+      <p class="muted small">Preços médios de supermercado em Portugal (marca própria). Muda o preço de um artigo para o que pagas e os totais acompanham. Azeite, especiarias, quinoa e sementes duram mais de uma semana, por isso nas semanas seguintes gastas um pouco menos.</p>
 
       <div class="protein-card shop-add">
         <div class="food-head"><span>Acrescentar à lista</span></div>
         <div class="shop-form">
           <input type="text" id="shop-name" placeholder="Alimento (ex.: hummus)" aria-label="Alimento">
           <input type="text" id="shop-qty" placeholder="Quantidade" aria-label="Quantidade">
+          <input type="number" id="shop-price" inputmode="decimal" min="0" step="0.01" placeholder="€ (opcional)" aria-label="Preço estimado em euros">
           <select id="shop-cat" aria-label="Secção"></select>
           <button id="shop-add" class="pill-btn dark">Adicionar</button>
         </div>
@@ -177,10 +181,24 @@
         <li><strong>Longe do supermercado:</strong> come primeiro as folhas, os cogumelos e os frutos vermelhos frescos. Do 5.º dia em diante usa a couve, a cenoura, a abóbora e os congelados. O peixe fresco come-se nos 2 primeiros dias ou vai logo para o congelador; o congelado e as latas de atum, sardinha e cavala garantem proteína até à próxima ida às compras.</li>
         <li><strong>O filho come o mesmo:</strong> o vosso peixe, legumes, ovos e lácteos, com carne na secção dele e um pouco mais de arroz, massa, batata e fruta, porque aos 5 anos precisa de mais hidratos do que vocês.</li>
       </ul>
+      <p class="muted small">As quantidades dão para a ementa da semana (separador Ementa). Se sobrar ou faltar alguma coisa, muda a quantidade na lista e ela fica guardada.</p>
+    </section>
 
-      <h3>Exemplo de dia (um adulto)</h3>
-      <div id="shop-day"></div>
-      <p class="muted small">Valores aproximados. Ajusta as quantidades às tuas refeições: se uma semana sobrar ou faltar alguma coisa, muda a quantidade na lista e ela fica guardada.</p>
+    <section id="tab-meals" class="tab-panel" hidden>
+      <div class="week-head meals-head">
+        <div class="session-title">
+          <h2>Ementa da semana</h2>
+          <span>Por adulto · ≈1550 kcal · ≈130 g de proteína · peixe, sem carne</span>
+        </div>
+      </div>
+      <ul class="rules">
+        <li><strong>Começa no dia a seguir às compras:</strong> o peixe fresco e as folhas estão no início da semana; do 4.º dia em diante entram as latas e os congelados.</li>
+        <li><strong>O filho come o mesmo</strong> ao pequeno-almoço e ao lanche (com o leite, a fruta e o pacotinho de sumo dele). Ao jantar, cada dia diz o que muda no prato dele.</li>
+        <li><strong>Bebidas:</strong> água e refrigerante zero não contam para as calorias. Bebe água primeiro, cerca de 2 L por dia.</li>
+        <li><strong>Trocas:</strong> podes trocar dias inteiros entre si. Dentro de uma refeição, troca proteína por proteína (ex.: tofu ↔ seitan, atum ↔ sardinha).</li>
+      </ul>
+      <div id="meal-days" class="meal-days"></div>
+      <p class="muted small">Calorias e proteína aproximadas, pesos em cru. Se tiveres fome a mais ou perderes mais de 1 kg por semana, junta 1 fatia de pão integral ou 1 peça de fruta por dia.</p>
     </section>
 
     <section id="tab-progress" class="tab-panel" hidden>

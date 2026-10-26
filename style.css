@@ -510,3 +510,34 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
   .shop-qty { width: 6.5rem; }
   .shop-count b { font-size: 2rem; }
 }
+.shop-form { grid-template-columns: 1fr 8rem 7rem 11rem auto; }
+.shop-price { display: inline-flex; align-items: center; gap: .15rem; font-size: .85rem; font-weight: 700; color: var(--muted); text-transform: none; letter-spacing: 0; }
+.shop-price input { width: 4.6rem; padding: .4rem .3rem; font-size: .85rem; font-weight: 700; text-align: right; border-color: transparent; background: transparent; font-variant-numeric: tabular-nums; }
+.shop-price input:focus { background: var(--bg); }
+#shop-cost { margin-bottom: .5rem; }
+#shop-cost b { font-size: 1.35rem; }
+
+/* ---------- ementa ---------- */
+.meals-head { background: var(--tint-warm); }
+.meals-head .session-title > span { font-size: .9rem; opacity: .7; }
+.meal-days { display: grid; gap: .6rem; margin: 1rem 0; }
+.meal-day { background: var(--surface); border-radius: var(--r-lg); padding: 1rem 1.25rem; border: 2px solid transparent; }
+.meal-day.today { border-color: var(--ink); }
+.meal-day summary { cursor: pointer; display: flex; justify-content: space-between; align-items: baseline; gap: .75rem; flex-wrap: wrap; list-style: none; }
+.meal-day summary::-webkit-details-marker { display: none; }
+.meal-day-name { font: 850 1.2rem/1 var(--font-display); font-stretch: 115%; text-transform: uppercase; }
+.meal-day-name em { font: 700 .7rem/1 var(--font-body); font-style: normal; text-transform: uppercase; letter-spacing: .06em; background: var(--ink); color: var(--on-ink); border-radius: 999px; padding: .25rem .55rem; vertical-align: .2em; margin-left: .3rem; }
+.meal-list { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: .35rem; }
+.meal-list li { display: grid; grid-template-columns: 8.5rem 1fr auto; gap: .75rem; align-items: baseline; background: var(--bg); border-radius: var(--r-sm); padding: .6rem .85rem; font-size: .9rem; }
+.meal-name { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.meal-num { font-size: .8rem; font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.meal-kid { margin: .75rem 0 0; font-size: .88rem; background: var(--tint-b); border-radius: var(--r-sm); padding: .6rem .85rem; }
+@media (max-width: 600px) {
+  .shop-form { grid-template-columns: 1fr 1fr; }
+  .shop-form select { grid-column: 1 / -1; }
+  .shop-group .food-log li { flex-wrap: wrap; row-gap: 0; }
+  .shop-group .check { flex-basis: 100%; }
+  .shop-group .shop-qty { margin-left: auto; text-align: right; }
+  .meal-list li { grid-template-columns: 1fr auto; row-gap: .2rem; }
+  .meal-food { grid-column: 1 / -1; grid-row: 2; }
+}
