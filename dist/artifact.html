@@ -864,7 +864,7 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
         <li><strong>O filho come o mesmo</strong> ao pequeno-almoço (em dose de criança). O jantar e o lanche dele, com as doses de uma criança de 5 anos, estão em cada dia e multiplicam pelo número de crianças.</li>
         <li><strong>Bebidas:</strong> água e refrigerante zero não contam para as calorias. Bebe água primeiro, cerca de 2 L por dia.</li>
         <li><strong>Dias de 3×3:</strong> se tiveres muita fome ou o peso descer mais de 1% por semana, junta 1 iogurte grego com frutos vermelhos ou 1 c. sopa de manteiga de amendoim nesses dias (≈150 kcal).</li>
-        <li><strong>Trocas:</strong> podes trocar dias inteiros entre si. Dentro de uma refeição, troca proteína por proteína (ex.: tofu ↔ seitan, atum ↔ sardinha).</li>
+        <li><strong>Trocas:</strong> podes trocar dias inteiros entre si. Dentro de uma refeição, troca proteína por proteína (ex.: tofu ↔ seitan, atum ↔ sardinha, requeijão ↔ queijo fresco ↔ cottage). O requeijão tem um pouco mais de gordura: ≈150 kcal e ≈10 g de proteína por 100 g.</li>
       </ul>
       <div id="meal-days" class="meal-days"></div>
       <p class="muted small">Calorias e proteína aproximadas, pesos em cru. Se tiveres fome a mais ou perderes mais de 1 kg por semana, junta 1 iogurte grego ou um punhado de nozes por dia.</p>
@@ -1503,7 +1503,7 @@ const PROTEIN_FOODS = [
 // Quantidades para 7 dias (as da ementa em MEAL_PLAN), numa só ida ao supermercado.
 // price = custo estimado em € dessa quantidade (preços médios em Portugal, marca própria).
 // Sobe SHOP_VERSION quando mudares a lista sugerida: as listas guardadas são atualizadas.
-const SHOP_VERSION = 5;
+const SHOP_VERSION = 6;
 const SHOP_CATEGORIES = [
   { id: "protein", name: "Proteína (peixe, ovos, lácteos, vegetal)" },
   { id: "veg", name: "Legumes e verduras" },
@@ -1525,8 +1525,8 @@ const SHOP_DEFAULT = [
   { cat: "protein", name: "Claras de ovo líquidas", qty: "1 × 500 ml", price: 2.5 },
   { cat: "protein", name: "Skyr ou iogurte grego natural 0%", qty: "14 unid.", price: 10.5 },
   { cat: "protein", name: "Queijo cottage", qty: "8 × 200 g", price: 12 },
-  { cat: "protein", name: "Queijo fresco magro / batido 0%", qty: "4 × 200 g", price: 6.4 },
-  { cat: "protein", name: "Requeijão", qty: "1 unid.", price: 1.6 },
+  { cat: "protein", name: "Queijo fresco batido 0%", qty: "2 × 200 g", price: 3.2 },
+  { cat: "protein", name: "Requeijão (lanche de quarta e sábado)", qty: "2 × 200 g", price: 3.2 },
   { cat: "protein", name: "Tofu firme", qty: "3 blocos", price: 6 },
   { cat: "protein", name: "Tempeh", qty: "1 unid.", price: 3 },
   { cat: "protein", name: "Seitan", qty: "1 unid.", price: 3 },
@@ -1612,7 +1612,7 @@ const MEAL_PLAN = [
   { day: "Quarta", kid: "Jantar: frango aos cubos (70 g) com arroz (40 g cru), sem picante. Lanche: 1 pacotinho de sumo e 2 fatias de queijo flamengo.", meals: [
     { meal: "Pequeno-almoço", food: "3 ovos (mexidos, cozidos ou em omelete) e manteiga de amendoim (10 g)", kcal: 270, p: 20 },
     { meal: "Almoço", food: "Taça de edamame (100 g), grão (80 g), 2 ovos cozidos, cenoura ralada, pepino e folhas, 1 c. chá de azeite", kcal: 430, p: 30 },
-    { meal: "Lanche", food: "Queijo fresco magro (100 g) com tomate e amêndoas (15 g)", kcal: 195, p: 15 },
+    { meal: "Lanche", food: "Requeijão (100 g) com tomate e pepino, orégãos e pimenta", kcal: 175, p: 11 },
     { meal: "Jantar", food: "Caril de camarão (150 g) com couve-flor (200 g), espinafres e tomate pelado, 1 c. sopa de azeite", kcal: 320, p: 35 },
     { meal: "Ceia", food: "Cottage (200 g)", kcal: 180, p: 22 },
   ] },
@@ -1633,7 +1633,7 @@ const MEAL_PLAN = [
   { day: "Sábado", kid: "Jantar: hambúrguer de carne picada (80 g) no pão com batata assada (150 g). Lanche: 1 banana e 1 copo de leite (200 ml).", meals: [
     { meal: "Pequeno-almoço", food: "3 ovos (mexidos, cozidos ou em omelete) e manteiga de amendoim (10 g)", kcal: 270, p: 20 },
     { meal: "Almoço", food: "Omelete de forno (3 ovos + 100 ml de claras) com cogumelos e espinafres, salada e ½ abacate", kcal: 435, p: 33 },
-    { meal: "Lanche", food: "Queijo fresco magro (100 g) com tomate cherry e amêndoas (10 g)", kcal: 160, p: 13 },
+    { meal: "Lanche", food: "Requeijão (100 g) com tomate cherry e frutos vermelhos (50 g)", kcal: 175, p: 11 },
     { meal: "Jantar", food: "Hambúrguer caseiro de feijão preto (100 g), tofu (100 g) e aveia (15 g), salada e edamame (100 g)", kcal: 465, p: 33 },
     { meal: "Ceia", food: "Cottage (200 g)", kcal: 180, p: 22 },
   ] },
