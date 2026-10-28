@@ -393,6 +393,13 @@ WORKOUTS.KB = {
   ],
 };
 
+// Reels de inspiração enviados para o treino em casa (abrem no Instagram).
+const HOME_REELS = [
+  { url: "https://www.instagram.com/reel/Dd8xQTUuwj4/", title: "Reel de kettlebell 1" },
+  { url: "https://www.instagram.com/reel/De93Li6OvKe/", title: "Reel de kettlebell 2" },
+  { url: "https://www.instagram.com/reel/DezeqK5OACR/", title: "Reel de kettlebell 3" },
+];
+
 // Programas: o plano da semana usa o treino do programa ativo em cada "slot".
 const PROGRAMS = {
   gym: { label: "Ginásio", workouts: ["A", "B"] },

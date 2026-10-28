@@ -481,3 +481,10 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
 .ex-vids { margin: .75rem 0 .25rem; }
 .ex-vids .vid.featured { padding: .85rem 1rem; }
 .ex-vids .vid.featured .vid-play { width: 2.8rem; height: 2.8rem; }
+.reels { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: -.5rem 0 1.5rem; }
+.reels > span { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); width: 100%; }
+.reels a { display: inline-flex; align-items: center; gap: .55rem; text-decoration: none; color: var(--ink); background: var(--surface); border-radius: 999px; padding: .35rem .9rem .35rem .35rem; font: 700 .82rem/1 var(--font-body); }
+.reels a:hover { background: var(--ink); color: var(--on-ink); }
+.reels .vid-play { width: 1.9rem; height: 1.9rem; background: var(--accent); }
+.reels .vid-play::after { border-width: .32rem 0 .32rem .55rem; }
+.reels p { margin: 0; width: 100%; }

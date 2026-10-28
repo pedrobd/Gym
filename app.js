@@ -235,6 +235,12 @@
 
     $("#workout-title").textContent = def.short || def.name;
     $("#warmup-callout").innerHTML = def.warmup || "";
+    $("#home-reels").hidden = !def.home;
+    $("#home-reels").innerHTML = def.home
+      ? `<span>Inspiração</span>${HOME_REELS.map(
+          (r) => `<a href="${r.url}" target="_blank" rel="noopener"><span class="vid-play" aria-hidden="true"></span>${escapeHtml(r.title)}</a>`
+        ).join("")}<p class="muted small">Exercícios destes reels só entram no plano depois de confirmares que não têm swings, peso morto, flexão da lombar com carga nem peso acima da cabeça em pé.</p>`
+      : "";
     $("#workout-day").textContent = def.day + (def.home ? " · kettlebell em casa" : "");
     $("#session-notes").value = existing ? existing.notes || "" : "";
 

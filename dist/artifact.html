@@ -485,6 +485,13 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
 .ex-vids { margin: .75rem 0 .25rem; }
 .ex-vids .vid.featured { padding: .85rem 1rem; }
 .ex-vids .vid.featured .vid-play { width: 2.8rem; height: 2.8rem; }
+.reels { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: -.5rem 0 1.5rem; }
+.reels > span { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); width: 100%; }
+.reels a { display: inline-flex; align-items: center; gap: .55rem; text-decoration: none; color: var(--ink); background: var(--surface); border-radius: 999px; padding: .35rem .9rem .35rem .35rem; font: 700 .82rem/1 var(--font-body); }
+.reels a:hover { background: var(--ink); color: var(--on-ink); }
+.reels .vid-play { width: 1.9rem; height: 1.9rem; background: var(--accent); }
+.reels .vid-play::after { border-width: .32rem 0 .32rem .55rem; }
+.reels p { margin: 0; width: 100%; }
 </style>
 <header class="top">
     <div class="bar">
@@ -548,6 +555,7 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
       </div>
 
       <div class="callout warn" id="warmup-callout"></div>
+      <div class="reels" id="home-reels" hidden></div>
 
       <div id="exercise-list"></div>
 
@@ -1088,6 +1096,13 @@ WORKOUTS.KB = {
   ],
 };
 
+// Reels de inspiração enviados para o treino em casa (abrem no Instagram).
+const HOME_REELS = [
+  { url: "https://www.instagram.com/reel/Dd8xQTUuwj4/", title: "Reel de kettlebell 1" },
+  { url: "https://www.instagram.com/reel/De93Li6OvKe/", title: "Reel de kettlebell 2" },
+  { url: "https://www.instagram.com/reel/DezeqK5OACR/", title: "Reel de kettlebell 3" },
+];
+
 // Programas: o plano da semana usa o treino do programa ativo em cada "slot".
 const PROGRAMS = {
   gym: { label: "Ginásio", workouts: ["A", "B"] },
@@ -1379,6 +1394,12 @@ const PROTEIN_FOODS = [
 
     $("#workout-title").textContent = def.short || def.name;
     $("#warmup-callout").innerHTML = def.warmup || "";
+    $("#home-reels").hidden = !def.home;
+    $("#home-reels").innerHTML = def.home
+      ? `<span>Inspiração</span>${HOME_REELS.map(
+          (r) => `<a href="${r.url}" target="_blank" rel="noopener"><span class="vid-play" aria-hidden="true"></span>${escapeHtml(r.title)}</a>`
+        ).join("")}<p class="muted small">Exercícios destes reels só entram no plano depois de confirmares que não têm swings, peso morto, flexão da lombar com carga nem peso acima da cabeça em pé.</p>`
+      : "";
     $("#workout-day").textContent = def.day + (def.home ? " · kettlebell em casa" : "");
     $("#session-notes").value = existing ? existing.notes || "" : "";
 
