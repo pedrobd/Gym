@@ -270,6 +270,7 @@
 
     $("#workout-title").textContent = def.short || def.name;
     $("#warmup-callout").innerHTML = def.warmup || "";
+    renderWorkoutSkip(date);
     $("#home-reels").hidden = !def.home;
     $("#home-reels").innerHTML = def.home
       ? `<span>Inspiração</span>${HOME_REELS.map(
@@ -286,6 +287,14 @@
     $("#exercise-list").innerHTML = def.exercises.map((ex, i) => renderCard(ex, i, date, existing)).join("");
 
     def.exercises.forEach((ex, i) => i < 3 && updateWarmup(ex));
+  }
+
+  // "Não treinei" no separador do treino: usa a mesma marcação do dia do separador Semana.
+  function renderWorkoutSkip(date) {
+    const d = days[date] || {};
+    $("#workout-skip").innerHTML = d.skipped ? skipHtml(date, d) : "";
+    $("#skip-session").hidden = !!d.skipped;
+    $("#tab-workout").classList.toggle("is-skipped", !!d.skipped);
   }
 
   function planBHtml(ex, v) {
@@ -1629,6 +1638,24 @@
     renderWorkout();
   });
   $("#save-session").addEventListener("click", saveSession);
+  $("#skip-session").addEventListener("click", async () => {
+    const date = $("#session-date").value || today();
+    await saveDayField(date, "skipped", true);
+    renderWorkoutSkip(date);
+    $("#workout-skip").scrollIntoView({ block: "center", behavior: "smooth" });
+  });
+  $("#workout-skip").addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-unskip]");
+    if (!b) return;
+    await saveDayField(b.dataset.unskip, "skipped", false);
+    renderWorkoutSkip(b.dataset.unskip);
+  });
+  $("#workout-skip").addEventListener("change", async (e) => {
+    const sel = e.target.closest("[data-day]");
+    if (!sel) return;
+    await saveDayField(sel.dataset.day, sel.dataset.field, sel.value.trim());
+    renderWorkoutSkip(sel.dataset.day);
+  });
   $("#session-notes").addEventListener("input", () => (dirty = true));
   $("#session-minutes").addEventListener("input", () => {
     dirty = true;
