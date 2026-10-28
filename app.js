@@ -143,7 +143,7 @@
   function variantOf(ex, key) {
     const alt = key && key !== "main" && (ex.alts || []).find((a) => a.id === key);
     if (!alt) return { key: "main", name: ex.name, cues: ex.cues, q: ex.video, photo: ex.photo === false ? null : `img/${ex.photo || ex.id}`, photoNote: ex.photoNote, vids: ex.vids };
-    return { key: alt.id, name: alt.name, cues: alt.cues, q: alt.q, photo: alt.photo === false ? null : `img/alt-${alt.id}`, alt: true };
+    return { key: alt.id, name: alt.name, cues: alt.cues, q: alt.q, photo: alt.photo === false ? null : `img/alt-${alt.id}`, vids: alt.vids, alt: true };
   }
 
   // Último registo de um exercício (na mesma variante) antes de uma data (exclusive).
