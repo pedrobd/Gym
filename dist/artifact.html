@@ -925,7 +925,8 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
 
       <h2>Treino em casa (kettlebell)</h2>
       <ul class="rules">
-        <li><strong>Material:</strong> kettlebells de 6 e 12 kg e halteres de 9 kg. Escolhe "Casa · kettlebell" no separador Semana e os treinos de segunda e sexta passam a Casa 1 e Casa 2.</li>
+        <li><strong>Material:</strong> kettlebells de 6 e 12 kg e halteres de 9 kg. Escolhe "Casa" no separador Semana e os treinos de segunda e sexta passam a Casa 1 e Casa 2.</li>
+        <li><strong>Só 1 kettlebell</strong> (durante a mudança de casa): escolhe "Só 1 KB". Segunda passa a circuito de tronco, braços e antebraços e sexta a pernas, glúteos e core, no formato dos treinos do Frame of David (3–4 voltas, 8–15 reps, 60–90 s no fim de cada volta), mas sem swings, cleans, snatches nem press de pé.</li>
         <li><strong>Fica de fora:</strong> swings, cleans, snatches, peso morto, press de pé e halos. São os movimentos mais típicos de kettlebell, mas carregam ou fletem a lombar, ou levam peso por cima da cabeça.</li>
         <li><strong>3 séries por exercício</strong> em vez de 2, porque as cargas são leves. Descansa 60–90 s.</li>
         <li><strong>Progressão:</strong> como não podes subir de peso aos poucos, primeiro sobes as reps até ao topo da faixa em todas as séries. Depois tornas o exercício mais difícil: descida em 3–4 s, pausas, uma perna ou um braço de cada vez, ou o peso seguinte. Cada cartão diz qual é o próximo passo.</li>
@@ -1443,10 +1444,161 @@ WORKOUTS.W = {
   ],
 };
 
+
+// ---------- Só 1 kettlebell (6 ou 12 kg), estilo Frame of David ----------
+// Circuitos com uma só kettlebell, 3–4 voltas, 8–15 reps, 60–90 s de descanso no fim de cada volta.
+// Segunda: tronco, braços e antebraços. Sexta: pernas, glúteos e core. Mesmas regras de segurança.
+const KB1_WARMUP =
+  "<strong>Como fazer:</strong> 5 min de aquecimento (marcha no lugar, 10 glute bridges, 10 bird dogs por lado). Depois faz o circuito: 1 série de cada exercício seguida, 20–30 s entre exercícios e 60–90 s no fim de cada volta. 3 voltas; quando chegares ao topo das reps em todas, faz uma 4.ª volta. Só precisas de uma kettlebell, de 6 ou 12 kg.";
+
+WORKOUTS.KS1 = {
+  name: "1 KB · Tronco e braços",
+  short: "KB Tronco",
+  day: "Segunda-feira",
+  home: true,
+  circuit: true,
+  minutes: 40,
+  met: 4,
+  warmup: KB1_WARMUP,
+  exercises: [
+    {
+      id: "kbs-floor-press", name: "Floor press a um braço", compound: true, home: true, perSide: true,
+      load: "KB 12 kg", sets: sets3(8, 12, "reps por lado"),
+      cues: ["Deitado no chão, joelhos fletidos e pés no chão, lombar apoiada.", "Kettlebell numa mão, cotovelo a ~45° do corpo; empurra até o braço ficar esticado por cima do ombro.", "Desce até o cotovelo tocar no chão, pausa 1 s. A outra mão no chão para estabilizar."],
+      next: "Descida em 3 s e pausa de 2 s com o cotovelo no chão.",
+      photoNote: "Na foto com as pernas esticadas: dobra os joelhos para a lombar ficar apoiada.",
+      video: "single arm kettlebell floor press",
+    },
+    {
+      id: "kbs-row", photo: "kb-row", name: "Remada unilateral apoiada", compound: true, home: true, perSide: true,
+      vids: [{ id: "eQLvFed1noc", title: "Single Arm Kettlebell Row Bench Supported" }],
+      load: "KB 12 kg", sets: sets3(10, 15, "reps por lado"),
+      cues: ["Mão e joelho numa cadeira ou sofá, coluna neutra e quieta.", "Puxa a kettlebell em direção à anca, sem rodar o tronco.", "Desce em 2–3 s."],
+      next: "Pausa de 2 s em cima e descida em 4 s.",
+      video: "supported one arm kettlebell row",
+    },
+    {
+      id: "kbs-press", photo: "kb-press", name: "Press de ombros sentado, a um braço", home: true, perSide: true,
+      vids: [{ id: "IH39bk3AcCw", title: "Seated Single Arm Neutral Grip Dumbbell Press" }],
+      load: "KB 6 kg", sets: sets3(8, 12, "reps por lado"),
+      cues: ["Sentado com as costas encostadas a uma parede ou cadeira.", "Kettlebell de 6 kg à frente do ombro, pega neutra; empurra para cima e ligeiramente para a frente.", "Se o pescoço reclamar, para no nível da cabeça."],
+      next: "Descida em 3 s; depois passa à de 12 kg com 6–8 reps.",
+      photoNote: "Na foto com dois halteres e sem encosto: aqui é um braço de cada vez, costas apoiadas.",
+      video: "seated single arm kettlebell press",
+    },
+    {
+      id: "kbs-curl", photo: false, name: "Curl de bíceps a duas mãos (pelos cornos)", home: true,
+      load: "KB 12 kg", sets: sets3(10, 15),
+      cues: ["Sentado ou de costas encostadas à parede, kettlebell agarrada pelos lados da pega (cornos).", "Cotovelos colados ao corpo: sobe até ao peito sem balançar.", "Desce em 3 s."],
+      next: "Pausa de 2 s a meio da subida (cotovelo a 90°).",
+      video: "kettlebell horn curl",
+    },
+    {
+      id: "kbs-hammer", photo: "kb-hammer", name: "Curl martelo a um braço", home: true, perSide: true,
+      vids: [{ id: "bdlqQAVdcEk", title: "Seated Dumbbell Hammer Curls (Tutorial + Tips)" }],
+      load: "KB 6 kg (ou 12 kg)", sets: sets3(10, 15, "reps por lado"),
+      cues: ["Sentado com as costas apoiadas, kettlebell pela pega com a palma virada para dentro.", "Cotovelo parado junto ao corpo.", "Trabalha o braquial e o antebraço."],
+      next: "Passa à de 12 kg com 8–10 reps.",
+      photoNote: "Na foto em pé com halteres; sentado com a kettlebell poupa a lombar.",
+      video: "kettlebell hammer curl",
+    },
+    {
+      id: "kbs-kickback", name: "Tríceps kickback apoiado", home: true, perSide: true,
+      load: "KB 6 kg", sets: sets3(10, 15, "reps por lado"),
+      cues: ["Mão e joelho numa cadeira, coluna neutra (como na remada).", "Braço colado ao tronco; estica o cotovelo para trás até o braço ficar direito.", "Sem nada por cima da cabeça: poupa a cervical."],
+      next: "Pausa de 2 s com o braço esticado.",
+      video: "kettlebell tricep kickback",
+    },
+    {
+      id: "kbs-hold", photo: "kb-carry", name: "Pega estática com um braço (antebraço)", home: true, perSide: true,
+      vids: [{ id: "cF_CrM2eC4U", title: "How To Suitcase Carry" }],
+      load: "KB 12 kg", sets: sets3(30, 45, "s por lado"),
+      cues: ["Em pé, kettlebell de 12 kg numa mão ao lado do corpo. Regista os segundos.", "Aperta a pega com força, ombro para baixo, tronco direito sem inclinar.", "Se tiveres espaço, caminha devagar (suitcase carry)."],
+      next: "60 s por lado, ou segura a kettlebell pelo bojo (mais difícil para a pega).",
+      photoNote: "Na foto com dois pesos; aqui é com um.",
+      video: "kettlebell suitcase hold grip",
+    },
+  ],
+};
+
+WORKOUTS.KS2 = {
+  name: "1 KB · Pernas e core",
+  short: "KB Pernas",
+  day: "Sexta-feira",
+  home: true,
+  circuit: true,
+  minutes: 40,
+  met: 4.5,
+  warmup: KB1_WARMUP,
+  exercises: [
+    {
+      id: "kbs-goblet", photo: "kb-goblet", name: "Goblet squat para uma cadeira", compound: true, home: true,
+      vids: [{ id: "xxUok-bsgpQ", title: "Weighted Goblet Squats from a Chair" }],
+      load: "KB 12 kg", sets: sets3(10, 15),
+      cues: ["Kettlebell de 12 kg junto ao peito, agarrada pelos lados.", "Senta-te devagar (3 s) na cadeira e levanta sem balanço: anca e joelho a ~90°.", "Tronco direito, lombar neutra."],
+      next: "Pausa de 2 s sentado sem relaxar, ou descida em 4 s.",
+      photoNote: "Na foto desce mais fundo do que deves: usa a cadeira para parar a ~90°.",
+      video: "goblet box squat kettlebell",
+    },
+    {
+      id: "kbs-split", photo: "kb-split-squat", name: "Split squat com a kettlebell ao peito", compound: true, home: true, perSide: true,
+      vids: [{ id: "5VG4UnfA7Bk", title: "Dumbbell Split Squat - Proper Form & Technique" }],
+      load: "KB 12 kg", sets: sets3(8, 12, "reps por lado"),
+      cues: ["Kettlebell ao peito (goblet), pé de trás no chão, passada média.", "Desce na vertical até o joelho da frente a ~90°, tronco direito.", "Passada curta o suficiente para não esticar demais a anca de trás."],
+      next: "Desce em 3 s e faz pausa de 1 s em baixo.",
+      photoNote: "Na foto com dois halteres e o pé de trás elevado: aqui é com a kettlebell ao peito e os dois pés no chão.",
+      video: "kettlebell goblet split squat",
+    },
+    {
+      id: "kbs-bridge", photo: "kb-bridge", name: "Glute bridge com a kettlebell", compound: true, home: true,
+      vids: [{ id: "pGnUzcsXbSw", title: "How To Do: Kettlebell Bridge" }],
+      load: "KB 12 kg", sets: sets3(12, 20),
+      cues: ["Deitado, kettlebell de 12 kg em cima da anca (com uma toalha).", "Sobe até a anca ficar alinhada, sem arquear a lombar.", "Pausa de 2 s em cima."],
+      next: "Uma perna de cada vez, primeiro sem peso e depois com a de 6 kg.",
+      photoNote: "A foto mostra a versão a uma perna: é a progressão.",
+      video: "kettlebell glute bridge",
+    },
+    {
+      id: "kbs-stepup", photo: "kb-stepup", name: "Step-up para degrau baixo", home: true, perSide: true,
+      vids: [{ id: "Jyzc7eK74Ho", title: "How To Do A Dumbbell Low Box Step Up" }],
+      load: "KB 12 kg (ao peito ou numa mão)", sets: sets3(8, 12, "reps por lado"),
+      cues: ["Degrau de 20–30 cm: o joelho não deve passar dos 90°.", "Empurra com o calcanhar da perna de cima, sem impulso da de baixo.", "Desce devagar."],
+      next: "Desce em 3 s.",
+      photoNote: "Na foto o banco é alto: em casa usa um degrau baixo.",
+      video: "kettlebell step up low step",
+    },
+    {
+      id: "kbs-dead-bug", photo: "kb-dead-bug", name: "Dead bug com kettlebell", home: true, perSide: true,
+      vids: [{ id: "Sa7msHujL3M", title: "Dead Bug With A Kettlebell Variation" }],
+      load: "KB 6 kg", sets: sets3(6, 10, "reps por lado"),
+      cues: ["Kettlebell de 6 kg segura com os braços esticados por cima do peito.", "Lombar colada ao chão durante todo o movimento.", "Estende uma perna de cada vez, devagar."],
+      next: "Estende braço e perna opostos ao mesmo tempo.",
+      video: "dead bug kettlebell",
+    },
+    {
+      id: "kbs-side-plank", photo: "alt-side-bridge", name: "Side plank", home: true, perSide: true,
+      load: "Peso do corpo", sets: sets3(20, 40, "s por lado"),
+      cues: ["Apoio no antebraço, cotovelo por baixo do ombro, corpo em linha reta.", "Começa com os joelhos fletidos no chão se for difícil.", "Regista os segundos nas reps."],
+      next: "Pernas esticadas, depois a mão de cima segura a kettlebell de 6 kg junto ao peito.",
+      video: "side plank technique",
+    },
+    {
+      id: "kbs-carry", photo: "kb-carry", name: "Suitcase carry", home: true, perSide: true,
+      vids: [{ id: "cF_CrM2eC4U", title: "How To Suitcase Carry" }],
+      load: "KB 12 kg", sets: sets3(30, 45, "s por lado"),
+      cues: ["Kettlebell de 12 kg numa mão, de lado. Regista os segundos.", "Caminha devagar com o tronco direito: não deixes inclinar para o lado do peso.", "Ombros para baixo, abdominal ativo."],
+      next: "60 s por lado, com passos mais lentos.",
+      photoNote: "Na foto com dois pesos; aqui é com um, para treinar o core contra a inclinação.",
+      video: "suitcase carry kettlebell",
+    },
+  ],
+};
+
 // Programas: o plano da semana usa o treino do programa ativo em cada "slot".
 const PROGRAMS = {
   gym: { label: "Ginásio", workouts: ["A", "B"] },
-  home: { label: "Casa · kettlebell", workouts: ["KA", "KB"] },
+  home: { label: "Casa", workouts: ["KA", "KB"] },
+  kb: { label: "Só 1 KB", workouts: ["KS1", "KS2"] },
 };
 
 // Semana: 0 = domingo … 6 = sábado (como Date.getDay()).
@@ -1951,7 +2103,7 @@ const FREE_MEAL_SLOTS = [
           (r) => `<a href="${r.url}" target="_blank" rel="noopener"><span class="vid-play" aria-hidden="true"></span>${escapeHtml(r.title)}</a>`
         ).join("")}<p class="muted small">Exercícios destes reels só entram no plano depois de confirmares que não têm swings, peso morto, flexão da lombar com carga nem peso acima da cabeça em pé.</p>`
       : "";
-    $("#workout-day").textContent = def.day + (def.home ? " · kettlebell em casa" : "");
+    $("#workout-day").textContent = def.day + (def.circuit && PROGRAMS.kb.workouts.includes(currentWorkout) ? " · só 1 kettlebell" : def.home ? " · kettlebell em casa" : "");
     $("#session-notes").value = existing ? existing.notes || "" : "";
     $("#session-minutes").value = existing && existing.minutes ? existing.minutes : "";
     $("#session-minutes").placeholder = def.minutes || 60;
@@ -2341,7 +2493,7 @@ const FREE_MEAL_SLOTS = [
     if (plan.type === "workout") {
       const def = WORKOUTS[slotWorkout(plan.slot)];
       return `
-        <p class="day-desc">${def.exercises.length} exercícios · 2 séries · ~60 min com aquecimento.</p>
+        <p class="day-desc">${def.exercises.length} exercícios · ${def.circuit ? "circuito de 3 voltas" : def.home ? "3 séries" : "2 séries"} · ~${def.minutes || 60} min com aquecimento.</p>
         <button class="pill-btn dark" data-open-workout="${plan.slot ? "B" : "A"}" data-date="${date}">Abrir ${def.short}</button>`;
     }
     if (plan.type === "steps") {

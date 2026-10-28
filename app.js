@@ -276,7 +276,7 @@
           (r) => `<a href="${r.url}" target="_blank" rel="noopener"><span class="vid-play" aria-hidden="true"></span>${escapeHtml(r.title)}</a>`
         ).join("")}<p class="muted small">Exercícios destes reels só entram no plano depois de confirmares que não têm swings, peso morto, flexão da lombar com carga nem peso acima da cabeça em pé.</p>`
       : "";
-    $("#workout-day").textContent = def.day + (def.home ? " · kettlebell em casa" : "");
+    $("#workout-day").textContent = def.day + (def.circuit && PROGRAMS.kb.workouts.includes(currentWorkout) ? " · só 1 kettlebell" : def.home ? " · kettlebell em casa" : "");
     $("#session-notes").value = existing ? existing.notes || "" : "";
     $("#session-minutes").value = existing && existing.minutes ? existing.minutes : "";
     $("#session-minutes").placeholder = def.minutes || 60;
@@ -666,7 +666,7 @@
     if (plan.type === "workout") {
       const def = WORKOUTS[slotWorkout(plan.slot)];
       return `
-        <p class="day-desc">${def.exercises.length} exercícios · 2 séries · ~60 min com aquecimento.</p>
+        <p class="day-desc">${def.exercises.length} exercícios · ${def.circuit ? "circuito de 3 voltas" : def.home ? "3 séries" : "2 séries"} · ~${def.minutes || 60} min com aquecimento.</p>
         <button class="pill-btn dark" data-open-workout="${plan.slot ? "B" : "A"}" data-date="${date}">Abrir ${def.short}</button>`;
     }
     if (plan.type === "steps") {
