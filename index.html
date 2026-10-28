@@ -19,6 +19,8 @@
         <button data-tab="A">Treino A</button>
         <button data-tab="B">Treino B</button>
         <button data-tab="body">Corpo</button>
+        <button data-tab="shop">Compras</button>
+        <button data-tab="meals">Ementa</button>
         <button data-tab="progress">Evolução</button>
         <button data-tab="info">Regras</button>
       </nav>
@@ -32,7 +34,7 @@
       <ul class="stats">
         <li><b>2</b><span>treinos de força</span></li>
         <li><b>2</b><span>dias de 11 mil passos</span></li>
-        <li><b>1</b><span>sessão de Animal Flow</span></li>
+        <li><b>1</b><span>circuito de calistenia + kettlebell</span></li>
       </ul>
       <p id="sync" class="sync"></p>
     </section>
@@ -54,6 +56,7 @@
         <div class="mode-switch" role="radiogroup" aria-label="Onde vais treinar"></div>
       </div>
       <ul class="week-stats" id="week-stats"></ul>
+      <p id="week-burn" class="muted small"></p>
       <div id="week-days" class="week-days"></div>
     </section>
 
@@ -80,6 +83,12 @@
       <label class="notes-field">Notas da sessão
         <textarea id="session-notes" rows="2" placeholder="Como te sentiste? Alguma dor, cansaço…"></textarea>
       </label>
+      <div class="burn-row">
+        <label class="inline-num" for="session-minutes">Duração (min)
+          <input type="number" id="session-minutes" inputmode="numeric" min="5" max="240" step="5">
+        </label>
+        <p id="workout-kcal" class="burn-msg"></p>
+      </div>
       <div class="actions">
         <button id="save-session" class="primary">Guardar treino</button>
         <span id="save-status" class="muted"></span>
@@ -107,6 +116,8 @@
         </div>
         <div class="bar-track big"><span id="protein-bar"></span></div>
         <p id="protein-msg" class="muted small"></p>
+        <p id="kcal-msg" class="kcal-msg"></p>
+        <div id="body-meals" class="body-meals"></div>
         <div class="food-head">
           <span>Atalhos</span>
           <button id="foods-edit" class="link">Editar atalhos</button>
@@ -115,14 +126,31 @@
         <div class="foods-editor" id="foods-editor" hidden></div>
         <div class="custom-food">
           <input type="text" id="food-name" placeholder="Outro alimento (opcional)">
-          <input type="number" id="food-g" inputmode="numeric" min="1" step="1" placeholder="g">
+          <input type="number" id="food-g" inputmode="numeric" min="1" step="1" placeholder="g prot.">
+          <input type="number" id="food-kcal" inputmode="numeric" min="0" step="1" placeholder="kcal">
           <button id="food-add" class="pill-btn dark">Adicionar</button>
         </div>
         <ul class="food-log" id="food-log"></ul>
-        <p class="muted small">Valores aproximados por porção. Tenta repartir a proteína por 3–4 refeições.</p>
+        <p class="muted small">Valores aproximados por porção (proteína e calorias). Tenta repartir a proteína por 3–4 refeições.</p>
       </div>
       <h3>Últimos 7 dias</h3>
       <div class="protein-week" id="protein-week"></div>
+
+      <h2>Balanço calórico</h2>
+      <div class="protein-card balance-card">
+        <ul class="week-stats balance-stats" id="balance-stats"></ul>
+        <p id="balance-msg" class="muted small"></p>
+        <div class="balance-week" id="balance-week"></div>
+        <details class="flow-tips" id="profile-box">
+          <summary>Os teus dados (para o gasto em repouso)</summary>
+          <div class="profile-form">
+            <label>Altura (cm)<input type="number" id="profile-height" inputmode="numeric" min="120" max="230" step="1" placeholder="–"></label>
+            <label>Idade<input type="number" id="profile-age" inputmode="numeric" min="14" max="100" step="1" placeholder="–"></label>
+            <label>Sexo<select id="profile-sex"><option value="">–</option><option value="m">Homem</option><option value="f">Mulher</option></select></label>
+          </div>
+          <p class="muted small">Gasto em repouso pela fórmula de Mifflin-St Jeor × 1,2 (dia normal sem exercício), com o peso mais recente. O exercício soma-se à parte.</p>
+        </details>
+      </div>
 
       <h2>Peso e cintura</h2>
       <p class="muted small">Pesa-te de manhã, em jejum, depois da casa de banho, 1–2 vezes por semana. Mede a cintura à altura do umbigo, sem apertar.</p>
@@ -136,6 +164,91 @@
       <div id="body-trend" class="callout"></div>
       <div id="weight-chart" class="chart"></div>
       <div id="body-table"></div>
+    </section>
+
+    <section id="tab-shop" class="tab-panel" hidden>
+      <div class="week-head shop-head">
+        <div class="session-title">
+          <h2>Compras da semana</h2>
+          <span id="shop-sub">2 adultos com peixe e sem carne + 1 criança · ~1600 kcal, proteína alta, baixo índice glicémico</span>
+        </div>
+        <div class="shop-count"><b id="shop-done">0</b><span id="shop-total">/ 0 no carrinho</span></div>
+      </div>
+      <div class="mode-row">
+        <span>Adultos a comer a ementa</span>
+        <div class="mode-switch people-switch" role="radiogroup" aria-label="Número de adultos"></div>
+      </div>
+      <div class="mode-row">
+        <span>Crianças</span>
+        <div class="mode-switch kids-switch" role="radiogroup" aria-label="Número de crianças"></div>
+      </div>
+      <div class="bar-track big shop-bar"><span id="shop-bar"></span></div>
+      <ul class="week-stats" id="shop-cost"></ul>
+      <p class="muted small">Preços médios de supermercado em Portugal (marca própria). Muda o preço de um artigo para o que pagas e os totais acompanham. Azeite, especiarias, aveia e sementes duram mais de uma semana, por isso nas semanas seguintes gastas um pouco menos. O número de adultos ajusta as quantidades e os preços (o mesmo da Ementa); a secção do filho e as bebidas não mudam. Se escreveres uma quantidade ou um preço num artigo, esse valor fica fixo.</p>
+
+      <div class="protein-card shop-add">
+        <div class="food-head"><span>Acrescentar à lista</span></div>
+        <div class="shop-form">
+          <input type="text" id="shop-name" placeholder="Alimento (ex.: hummus)" aria-label="Alimento">
+          <input type="text" id="shop-qty" placeholder="Quantidade" aria-label="Quantidade">
+          <input type="number" id="shop-price" inputmode="decimal" min="0" step="0.01" placeholder="€ (opcional)" aria-label="Preço estimado em euros">
+          <select id="shop-cat" aria-label="Secção"></select>
+          <button id="shop-add" class="pill-btn dark">Adicionar</button>
+        </div>
+      </div>
+
+      <div class="shop-tools">
+        <label class="check"><input type="checkbox" id="shop-hide"> Esconder o que já está no carrinho</label>
+        <div class="foods-editor-actions">
+          <button class="pill-btn" id="shop-copy">Copiar o que falta</button>
+          <button class="pill-btn" id="shop-new">Nova semana</button>
+          <button class="link" id="shop-reset">Repor lista sugerida</button>
+        </div>
+        <p id="shop-status" class="muted small"></p>
+      </div>
+
+      <div id="shop-list" class="shop-list"></div>
+
+      <h2>Porque esta lista</h2>
+      <ul class="rules">
+        <li><strong>Proteína em todas as refeições:</strong> peixe, ovos, claras, skyr, queijo fresco, cottage e tofu chegam a ~130 g por dia sem carne e sem passar as 1600 kcal. Peixe 3–4 vezes por semana, com salmão, sardinha ou cavala pelo menos 2 (ómega-3).</li>
+        <li><strong>Pouca insulina:</strong> para os adultos não há pão, massa, arroz, quinoa, açúcar nem sumos, e a fruta é só frutos vermelhos. Os hidratos vêm das leguminosas, dos legumes e de um pouco de aveia, sempre com proteína.</li>
+        <li><strong>Longe do supermercado:</strong> come primeiro as folhas, os cogumelos e os frutos vermelhos frescos. Do 5.º dia em diante usa a couve, a cenoura, a abóbora e os congelados. O peixe fresco come-se nos 2 primeiros dias ou vai logo para o congelador; o congelado e as latas de atum, sardinha e cavala garantem proteína até à próxima ida às compras.</li>
+        <li><strong>O filho come o mesmo:</strong> o vosso peixe, legumes, ovos e lácteos, com carne na secção dele e um pouco mais de arroz, massa, batata e fruta, porque aos 5 anos precisa de mais hidratos do que vocês.</li>
+      </ul>
+      <p class="muted small">As quantidades dão para a ementa da semana (separador Ementa). Se sobrar ou faltar alguma coisa, muda a quantidade na lista e ela fica guardada.</p>
+    </section>
+
+    <section id="tab-meals" class="tab-panel" hidden>
+      <div class="week-head meals-head">
+        <div class="session-title">
+          <h2>Ementa da semana</h2>
+          <span id="meals-sub">Por adulto · ≈1450 kcal · ≈130 g de proteína · sem carne, pão, massa nem arroz</span>
+        </div>
+      </div>
+      <div class="mode-row">
+        <span>Adultos</span>
+        <div class="mode-switch people-switch" id="meal-people" role="radiogroup" aria-label="Número de adultos"></div>
+      </div>
+      <div class="mode-row">
+        <span>Crianças</span>
+        <div class="mode-switch kids-switch" role="radiogroup" aria-label="Número de crianças"></div>
+      </div>
+      <div class="mode-row">
+        <span>Refeição livre</span>
+        <div class="mode-switch free-switch" id="free-switch" role="radiogroup" aria-label="Refeição livre da semana"></div>
+      </div>
+      <ul class="rules">
+        <li><strong>Sem pão, massa, arroz nem quinoa;</strong> a única fruta são os frutos vermelhos. Os hidratos vêm das leguminosas e dos legumes. O pequeno-almoço é sempre 3 ovos e 10 g de manteiga de amendoim (≈270 kcal, ≈20 g de proteína).</li>
+        <li><strong>Refeição livre:</strong> 1 por semana (ex.: sushi all you can eat), conta ≈1400 kcal. Nesse dia ficas acima, mas a média da semana continua em défice. Começa pela proteína (sashimi, edamame, sopa miso), vai devagar e para quando estiveres satisfeito; no dia seguinte volta à ementa normal, sem compensar a passar fome.</li>
+        <li><strong>Começa no dia a seguir às compras:</strong> o peixe fresco e as folhas estão no início da semana; do 4.º dia em diante entram as latas e os congelados.</li>
+        <li><strong>O filho come o mesmo</strong> ao pequeno-almoço (em dose de criança). O jantar e o lanche dele, com as doses de uma criança de 5 anos, estão em cada dia e multiplicam pelo número de crianças.</li>
+        <li><strong>Bebidas:</strong> água e refrigerante zero não contam para as calorias. Bebe água primeiro, cerca de 2 L por dia.</li>
+        <li><strong>Dias de 3×3:</strong> se tiveres muita fome ou o peso descer mais de 1% por semana, junta 1 iogurte grego com frutos vermelhos ou 1 c. sopa de manteiga de amendoim nesses dias (≈150 kcal).</li>
+        <li><strong>Trocas:</strong> podes trocar dias inteiros entre si. Dentro de uma refeição, troca proteína por proteína (ex.: tofu ↔ seitan, atum ↔ sardinha, requeijão ↔ queijo fresco ↔ cottage). O requeijão tem um pouco mais de gordura: ≈150 kcal e ≈10 g de proteína por 100 g.</li>
+      </ul>
+      <div id="meal-days" class="meal-days"></div>
+      <p class="muted small">Calorias e proteína aproximadas, pesos em cru. Se tiveres fome a mais ou perderes mais de 1 kg por semana, junta 1 iogurte grego ou um punhado de nozes por dia.</p>
     </section>
 
     <section id="tab-progress" class="tab-panel" hidden>
@@ -195,7 +308,9 @@
       <h2>Restantes dias</h2>
       <ul class="rules">
         <li><strong>Terça e quinta:</strong> pelo menos 11 000 passos ao longo do dia. Regista o número no separador Semana.</li>
-        <li><strong>Quarta:</strong> Animal Flow, 20–30 min a intensidade leve a moderada, com os vídeos do <a href="https://www.youtube.com/@strengthsidefollowalongs" target="_blank" rel="noopener">Strength Side</a>. Vê os cuidados no separador Semana.</li>
+        <li><strong>Quarta:</strong> 10 min de Animal Flow como aquecimento, com os vídeos do <a href="https://www.youtube.com/@strengthsidefollowalongs" target="_blank" rel="noopener">Strength Side</a>, e depois um circuito de 3 voltas que alterna exercícios de peso do corpo (flexões inclinadas, glute bridge a uma perna, beast hold) com exercícios com uma só kettlebell, de 6 ou 12 kg (goblet squat para a cadeira, remada apoiada, pullover no chão, suitcase carry). Abre o circuito no separador Semana para registar as reps; o site sugere o próximo passo como nos outros treinos.</li>
+        <li><strong>Todas as manhãs:</strong> caminhada de ~6000 passos. Os intervalos 3×3 (3 min a correr a 150–160 bpm + 3 min a andar) ficam melhor em <strong>3 manhãs por semana, sem treino de força</strong> (terça, quinta e sábado): 150–160 bpm já é intensidade alta, e com 1600 kcal a recuperação é limitada. Nos outros dias, caminhada a ritmo de conversa.</li>
+        <li><strong>Correr com as hérnias:</strong> 5 min a andar antes do 1.º intervalo, passada curta e leve, piso macio (terra, relva, pista) e boas sapatilhas. Se a lombar ou a anca se queixarem, faz os mesmos 3×3 a subir uma rampa a andar depressa, ou de bicicleta, até chegares aos mesmos batimentos. Os sinais para parar são os mesmos.</li>
         <li><strong>Sábado e domingo:</strong> descanso. Caminhada leve se te apetecer e 10 min de estabilização lombar (bird dog, side plank, dead bug).</li>
       </ul>
       <p>Os dias livres não devem virar mais ginásio: a recuperação é a peça central do protocolo, e com 1600 kcal já está limitada.</p>

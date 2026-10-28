@@ -7,6 +7,8 @@ const WORKOUTS = {
     short: "Treino A",
     warmup: "<strong>Aquecimento:</strong> 5 min de bicicleta. Nos três primeiros exercícios: 1 série a 50% × 6 e 1 a 70% × 3 (valores calculados em cada cartão).",
     day: "Segunda-feira",
+    minutes: 60,
+    met: 3.5,
     exercises: [
       {
         id: "leg-press",
@@ -139,6 +141,8 @@ const WORKOUTS = {
     short: "Treino B",
     warmup: "<strong>Aquecimento:</strong> 5 min de bicicleta. Nos três primeiros exercícios: 1 série a 50% × 6 e 1 a 70% × 3 (valores calculados em cada cartão).",
     day: "Sexta-feira",
+    minutes: 60,
+    met: 3.5,
     exercises: [
       {
         id: "supino-inclinado",
@@ -274,6 +278,8 @@ WORKOUTS.KA = {
   short: "Casa 1",
   day: "Segunda-feira",
   home: true,
+  minutes: 45,
+  met: 4,
   warmup: HOME_WARMUP,
   exercises: [
     {
@@ -335,6 +341,8 @@ WORKOUTS.KB = {
   short: "Casa 2",
   day: "Sexta-feira",
   home: true,
+  minutes: 45,
+  met: 4,
   warmup: HOME_WARMUP,
   exercises: [
     {
@@ -399,6 +407,78 @@ const HOME_REELS = [
   { url: "https://www.instagram.com/reel/De93Li6OvKe/", title: "Reel de kettlebell 2" },
   { url: "https://www.instagram.com/reel/DezeqK5OACR/", title: "Reel de kettlebell 3" },
 ];
+// ---------- Quarta: calistenia + kettlebell (uma kettlebell de cada vez: 6 ou 12 kg) ----------
+// Circuito: corpo e kettlebell alternados, 3 voltas. Mesmas regras: nada de swings,
+// peso morto, press de pé nem flexão da lombar com carga. "photo" reaproveita fotos de img/.
+WORKOUTS.W = {
+  name: "Quarta · Calistenia + kettlebell",
+  short: "Quarta",
+  day: "Quarta-feira",
+  home: true,
+  minutes: 35,
+  met: 4.5,
+  circuit: true,
+  warmup:
+    "<strong>Como fazer:</strong> 10 min de Animal Flow (vídeo no separador Semana) como aquecimento. Depois faz o circuito: 1 série de cada exercício seguida, com 20–30 s entre exercícios, e descansa 90 s no fim de cada volta. 3 voltas. Só precisas de uma kettlebell de cada vez.",
+  exercises: [
+    {
+      id: "w-goblet", photo: "kb-goblet", name: "Goblet squat para uma cadeira", compound: true, home: true,
+      vids: [{ id: "xxUok-bsgpQ", title: "Weighted Goblet Squats from a Chair" }],
+      load: "KB 12 kg", sets: sets3(10, 15),
+      cues: ["Kettlebell de 12 kg junto ao peito, agarrada pelos lados.", "Senta-te devagar (3 s) na cadeira e levanta sem balanço: anca e joelho a ~90°.", "Tronco direito, lombar neutra."],
+      next: "Pausa de 2 s sentado sem relaxar, ou descida em 4 s.",
+      photoNote: "Na foto desce mais fundo do que deves: usa a cadeira para parar a ~90°.",
+      video: "goblet box squat kettlebell",
+    },
+    {
+      id: "w-pushup", name: "Flexões inclinadas (mãos numa mesa ou bancada)", home: true,
+      load: "Peso do corpo", sets: sets3(8, 15),
+      cues: ["Mãos numa superfície firme à altura da anca, corpo em linha reta dos ombros aos calcanhares.", "Abdominal e glúteos contraídos: a lombar não cai.", "Pescoço neutro, olha para as mãos. Cotovelos a ~45° do corpo."],
+      next: "Usa uma superfície mais baixa (cadeira, depois degrau) até chegares às flexões no chão.",
+      photoNote: "Na foto numa barra; em casa usa uma mesa ou bancada.",
+      video: "incline push up technique",
+    },
+    {
+      id: "w-row", photo: "kb-row", name: "Remada unilateral apoiada", compound: true, home: true, perSide: true,
+      vids: [{ id: "eQLvFed1noc", title: "Single Arm Kettlebell Row Bench Supported" }],
+      load: "KB 12 kg", sets: sets3(10, 15, "reps por lado"),
+      cues: ["Mão e joelho numa cadeira ou sofá, coluna neutra e quieta.", "Puxa a kettlebell em direção à anca, sem rodar o tronco.", "Desce em 2–3 s."],
+      next: "Pausa de 2 s em cima e descida em 4 s.",
+      video: "supported one arm kettlebell row",
+    },
+    {
+      id: "w-bridge", photo: "kb-bridge", name: "Glute bridge a uma perna", home: true, perSide: true,
+      load: "Peso do corpo", sets: sets3(8, 12, "reps por lado"),
+      cues: ["Deitado, um pé no chão perto do glúteo, a outra perna esticada ou fletida no ar.", "Sobe empurrando com o calcanhar até a anca alinhar, sem arquear a lombar.", "Pausa de 2 s em cima."],
+      next: "Põe a kettlebell de 6 kg em cima da anca (com uma toalha).",
+      video: "single leg glute bridge",
+    },
+    {
+      id: "w-beast", photo: false, name: "Beast hold → beast crawl (Animal Flow)", home: true,
+      load: "Peso do corpo", sets: sets3(20, 40, "s"),
+      cues: ["De gatas, mãos por baixo dos ombros e joelhos por baixo da anca; levanta os joelhos 2–3 cm do chão.", "Costas planas como uma mesa, pescoço neutro. Regista os segundos nas reps.", "Quando chegares aos 40 s, passa a andar devagar: mão e pé opostos ao mesmo tempo."],
+      next: "Beast crawl: 4 passos para a frente e 4 para trás, sem a anca subir nem rodar.",
+      video: "animal flow beast hold beast crawl beginner",
+    },
+    {
+      id: "w-pullover", photo: "kb-pullover", name: "Pullover deitado no chão", home: true,
+      vids: [{ id: "hbiDlO7VBxs", title: "Kettlebell Floor Pullover" }],
+      load: "KB 6 kg", sets: sets3(12, 15),
+      cues: ["Deitado no chão, joelhos fletidos, lombar apoiada.", "Kettlebell de 6 kg agarrada pelos lados, braços quase esticados.", "Leva-a para trás só até onde a lombar não arqueia e volta até por cima do peito."],
+      next: "Descida em 4 s, ou passa à de 12 kg com 8–10 reps.",
+      photoNote: "Na foto num banco: no chão o movimento é mais curto e mais seguro.",
+      video: "floor kettlebell pullover",
+    },
+    {
+      id: "w-carry", photo: "kb-carry", name: "Suitcase carry (transporte com um braço)", home: true, perSide: true,
+      vids: [{ id: "cF_CrM2eC4U", title: "How To Suitcase Carry" }],
+      load: "KB 12 kg", sets: sets3(30, 45, "s por lado"),
+      cues: ["Kettlebell de 12 kg numa mão, de lado. Regista os segundos nas reps.", "Caminha devagar com o tronco direito: não deixes inclinar para o lado do peso.", "Ombros para baixo, abdominal ativo."],
+      next: "Mais tempo (60 s por lado) ou passos mais lentos com pausa de 2 s em cada passo.",
+      video: "suitcase carry kettlebell",
+    },
+  ],
+};
 
 // Programas: o plano da semana usa o treino do programa ativo em cada "slot".
 const PROGRAMS = {
@@ -408,6 +488,22 @@ const PROGRAMS = {
 
 // Semana: 0 = domingo … 6 = sábado (como Date.getDay()).
 const STEPS_GOAL = 11000;
+// Gasto estimado em exercício: MET × peso (kg) × horas. "met" e "minutes" de cada treino
+// estão em WORKOUTS; aqui os valores das outras atividades. Sem peso registado usa 80 kg.
+const BURN = {
+  defaultKg: 80,
+  kcalPerStepPerKg: 0.0005, // ≈0,04 kcal por passo a 80 kg
+  intervals: { minutes: 9, met: 9 }, // os 9 min a correr dos 3×3 (a parte a andar conta nos passos)
+  core: { minutes: 10, met: 3 },
+  flow: { minutes: 30, met: 4 },
+};
+// Manhã, todos os dias: caminhada (~6000 passos) e, em alguns dias, intervalos 3×3.
+// Sugere os 3×3 em dias sem treino de força (terça, quinta, sábado) para recuperar bem.
+const MORNING = {
+  steps: 6000,
+  intervals: "3 × (3 min a correr a 150–160 bpm + 3 min a andar)",
+  intervalDays: [2, 4, 6],
+};
 const FLOW_CHANNEL = "https://www.youtube.com/@strengthsidefollowalongs";
 const FLOW_START = "2026-10-26"; // primeira quarta-feira conta a partir desta semana
 
@@ -428,27 +524,187 @@ const FLOW_VIDEOS = [
 const WEEK = [
   { dow: 1, type: "workout", slot: 0 },
   { dow: 2, type: "steps", title: `${STEPS_GOAL.toLocaleString("pt-PT")} passos` },
-  { dow: 3, type: "flow", title: "Animal Flow" },
+  { dow: 3, type: "mixed", title: "Calistenia + kettlebell", workout: "W" },
   { dow: 4, type: "steps", title: `${STEPS_GOAL.toLocaleString("pt-PT")} passos` },
   { dow: 5, type: "workout", slot: 1 },
   { dow: 6, type: "rest", title: "Descanso" },
   { dow: 0, type: "rest", title: "Descanso" },
 ];
 
-// Proteína: atalhos com valores aproximados (g de proteína por porção).
+// Proteína: atalhos com valores aproximados (g de proteína e kcal por porção).
 const PROTEIN_FACTORS = [1.6, 1.8, 2.0, 2.2]; // g por kg de peso corporal
 const PROTEIN_FOODS = [
-  { name: "1 ovo", g: 6 },
-  { name: "1 clara de ovo", g: 4 },
-  { name: "Claras líquidas (100 ml)", g: 11 },
-  { name: "Iogurte proteico / skyr (150 g)", g: 15 },
-  { name: "Frango ou peru (100 g cozinhado)", g: 30 },
-  { name: "Peixe (150 g cozinhado)", g: 30 },
-  { name: "Carne vermelha (100 g cozinhada)", g: 26 },
-  { name: "Atum em lata (1 lata escorrida)", g: 20 },
-  { name: "Whey (1 dose, 30 g)", g: 23 },
-  { name: "Queijo fresco (1 unidade, 100 g)", g: 10 },
-  { name: "Requeijão (100 g)", g: 10 },
-  { name: "Leite (1 copo, 250 ml)", g: 8 },
-  { name: "Leguminosas (1 chávena cozida)", g: 15 },
+  { name: "1 ovo", g: 6, kcal: 70 },
+  { name: "1 clara de ovo", g: 4, kcal: 17 },
+  { name: "Claras líquidas (100 ml)", g: 11, kcal: 48 },
+  { name: "Iogurte proteico / skyr (150 g)", g: 15, kcal: 95 },
+  { name: "Frango ou peru (100 g cozinhado)", g: 30, kcal: 165 },
+  { name: "Peixe (150 g cozinhado)", g: 30, kcal: 190 },
+  { name: "Carne vermelha (100 g cozinhada)", g: 26, kcal: 250 },
+  { name: "Atum em lata (1 lata escorrida)", g: 20, kcal: 90 },
+  { name: "Whey (1 dose, 30 g)", g: 23, kcal: 120 },
+  { name: "Queijo fresco (1 unidade, 100 g)", g: 10, kcal: 150 },
+  { name: "Requeijão (100 g)", g: 10, kcal: 150 },
+  { name: "Leite (1 copo, 250 ml)", g: 8, kcal: 115 },
+  { name: "Leguminosas (1 chávena cozida)", g: 15, kcal: 200 },
+];
+
+// Lista de compras semanal: 2 adultos (comem peixe mas não carne, ~1600 kcal,
+// proteína alta, baixo índice glicémico) + 1 criança de 5 anos que também come carne.
+// Quantidades para 7 dias (as da ementa em MEAL_PLAN), numa só ida ao supermercado.
+// price = custo estimado em € dessa quantidade (preços médios em Portugal, marca própria).
+// Sobe SHOP_VERSION quando mudares a lista sugerida: as listas guardadas são atualizadas.
+const SHOP_VERSION = 6;
+const SHOP_CATEGORIES = [
+  { id: "protein", name: "Proteína (peixe, ovos, lácteos, vegetal)" },
+  { id: "veg", name: "Legumes e verduras" },
+  { id: "fruit", name: "Fruta" },
+  { id: "pantry", name: "Leguminosas, cereais e despensa" },
+  { id: "fats", name: "Gorduras boas e sementes" },
+  { id: "frozen", name: "Congelados (reserva para o fim da semana)" },
+  { id: "drinks", name: "Bebidas" },
+  { id: "out", name: "Fora de casa" },
+  { id: "kid", name: "Só para o filho" },
+  { id: "other", name: "Outros" },
+];
+const SHOP_DEFAULT = [
+  // proteína: base dos ~130 g/dia de cada adulto
+  { cat: "protein", name: "Peixe fresco: salmão (dia 1) e pescada (dia 2)", qty: "1 kg", price: 12 },
+  { cat: "protein", name: "Atum ao natural (lata)", qty: "6 latas", price: 6.6 },
+  { cat: "protein", name: "Sardinha ou cavala em azeite (lata)", qty: "4 latas", price: 5.2 },
+  { cat: "protein", name: "Ovos", qty: "5 dúzias", price: 14.5 },
+  { cat: "protein", name: "Claras de ovo líquidas", qty: "1 × 500 ml", price: 2.5 },
+  { cat: "protein", name: "Skyr ou iogurte grego natural 0%", qty: "14 unid.", price: 10.5 },
+  { cat: "protein", name: "Queijo cottage", qty: "8 × 200 g", price: 12 },
+  { cat: "protein", name: "Queijo fresco batido 0%", qty: "2 × 200 g", price: 3.2 },
+  { cat: "protein", name: "Requeijão (lanche de quarta e sábado)", qty: "2 × 200 g", price: 3.2 },
+  { cat: "protein", name: "Tofu firme", qty: "3 blocos", price: 6 },
+  { cat: "protein", name: "Tempeh", qty: "1 unid.", price: 3 },
+  { cat: "protein", name: "Seitan", qty: "1 unid.", price: 3 },
+  { cat: "protein", name: "Bebida de soja sem açúcar", qty: "1 L", price: 1.2 },
+  // legumes: os frágeis primeiro, os resistentes ficam para o fim da semana
+  { cat: "veg", name: "Espinafres / rúcula / alface (comer até 3.º dia)", qty: "4 sacos", price: 5.2 },
+  { cat: "veg", name: "Cogumelos (comer até 4.º dia)", qty: "750 g", price: 3.4 },
+  { cat: "veg", name: "Brócolos", qty: "1 kg", price: 2.5 },
+  { cat: "veg", name: "Couve-flor", qty: "2 unid.", price: 3.6 },
+  { cat: "veg", name: "Curgete", qty: "5 unid.", price: 3.4 },
+  { cat: "veg", name: "Pimentos", qty: "4 unid.", price: 2 },
+  { cat: "veg", name: "Tomate (e tomate cherry)", qty: "1,5 kg", price: 3 },
+  { cat: "veg", name: "Pepino", qty: "3 unid.", price: 1.8 },
+  { cat: "veg", name: "Beringela", qty: "2 unid.", price: 2 },
+  { cat: "veg", name: "Couve lombarda ou repolho (aguenta a semana)", qty: "1 unid.", price: 1.5 },
+  { cat: "veg", name: "Cenoura", qty: "1 kg", price: 0.9 },
+  { cat: "veg", name: "Abóbora", qty: "1 kg", price: 1.5 },
+  { cat: "veg", name: "Cebola", qty: "1 kg", price: 1.2 },
+  { cat: "veg", name: "Alho", qty: "1 cabeça", price: 0.5 },
+  { cat: "veg", name: "Limões", qty: "4 unid.", price: 1.2 },
+  { cat: "veg", name: "Ervas frescas (salsa, coentros)", qty: "2 molhos", price: 1.6 },
+  // fruta de índice glicémico baixo
+  { cat: "fruit", name: "Abacates", qty: "2 unid.", price: 2 },
+  // leguminosas e hidratos integrais, em porções controladas
+  { cat: "pantry", name: "Grão-de-bico cozido (frasco)", qty: "3 frascos", price: 2.7 },
+  { cat: "pantry", name: "Feijão preto ou vermelho cozido", qty: "2 frascos", price: 1.8 },
+  { cat: "pantry", name: "Lentilhas vermelhas secas", qty: "500 g", price: 1.5 },
+  { cat: "pantry", name: "Flocos de aveia (só para os hambúrgueres de feijão)", qty: "500 g (dura semanas)", price: 0.3 },
+  { cat: "pantry", name: "Tomate pelado / passata sem açúcar", qty: "3 unid.", price: 2.1 },
+  { cat: "pantry", name: "Caldo de legumes (sem açúcar)", qty: "1 emb.", price: 1.5 },
+  { cat: "pantry", name: "Especiarias (canela, cominhos, curcuma, paprika)", qty: "repor", price: 1 },
+  { cat: "pantry", name: "Vinagre e mostarda", qty: "repor", price: 0.8 },
+  // gorduras: pouca quantidade, muito valor
+  { cat: "fats", name: "Azeite virgem extra", qty: "repor (≈1 L/mês)", price: 1.75 },
+  { cat: "fats", name: "Nozes / amêndoas naturais", qty: "200 g", price: 3 },
+  { cat: "fats", name: "Sementes de chia ou linhaça", qty: "250 g", price: 2 },
+  { cat: "fats", name: "Manteiga de amendoim 100%", qty: "1 frasco", price: 3 },
+  // congelados: a reserva para quando o fresco acaba (fica longe de tudo)
+  { cat: "frozen", name: "Peixe congelado (bacalhau ou pescada)", qty: "≈600 g", price: 5 },
+  { cat: "frozen", name: "Camarão ou miolo de marisco", qty: "400 g", price: 4.5 },
+  { cat: "frozen", name: "Edamame", qty: "2 × 400 g", price: 5 },
+  { cat: "frozen", name: "Mistura de legumes / salteado", qty: "2 × 1 kg", price: 3.6 },
+  { cat: "frozen", name: "Espinafres em cubos", qty: "1 kg", price: 1.8 },
+  { cat: "frozen", name: "Frutos vermelhos (a única fruta dos adultos)", qty: "2 × 500 g", price: 6 },
+  // a refeição livre da semana, fora de casa (não é do supermercado, mas conta no custo)
+  { cat: "out", name: "Refeição livre: sushi all you can eat", qty: "2 pessoas", price: 40 },
+  // bebidas
+  { cat: "drinks", name: "Refrigerante zero (garrafa de 1,5 L)", qty: "4 garrafas", price: 5.6 },
+  // o filho come o mesmo que os pais, mais isto
+  { cat: "kid", name: "Sumos em pacotinho (200 ml; melhor se 100% fruta)", qty: "8 unid.", price: 3.2 },
+  { cat: "kid", name: "Peito de frango ou peru", qty: "600 g", price: 4.5 },
+  { cat: "kid", name: "Carne picada (vaca ou peru)", qty: "400 g", price: 3.5 },
+  { cat: "kid", name: "Fiambre de peru", qty: "1 emb.", price: 2 },
+  { cat: "kid", name: "Leite meio-gordo", qty: "4 L", price: 3.4 },
+  { cat: "kid", name: "Queijo flamengo", qty: "1 emb.", price: 2.2 },
+  { cat: "kid", name: "Bananas", qty: "1 kg", price: 1.2 },
+  { cat: "kid", name: "Fruta (maçã, pera, laranja)", qty: "1 kg", price: 1.8 },
+  { cat: "kid", name: "Pão", qty: "1 pão", price: 1.5 },
+  { cat: "kid", name: "Arroz", qty: "1 kg", price: 1.3 },
+  { cat: "kid", name: "Massa", qty: "500 g", price: 0.9 },
+  { cat: "kid", name: "Batatas", qty: "1,5 kg", price: 1.8 },
+];
+
+// Ementa de 7 dias para cada adulto (~1450 kcal, ~130 g de proteína, sem carne), feita com a
+// lista de compras: sem pão, massa, arroz nem quinoa; fruta só frutos vermelhos.
+// O peixe fresco e as folhas vêm primeiro.
+// Valores aproximados; "kid" = jantar e lanche de uma criança de 5 anos (doses dela).
+const MEAL_PLAN = [
+  { day: "Segunda", kid: "Jantar: salmão (80 g) com arroz (40 g cru) e brócolos. Lanche: 1 pacotinho de sumo e 1 pão com 1 fatia de fiambre.", meals: [
+    { meal: "Pequeno-almoço", food: "3 ovos (mexidos, cozidos ou em omelete) e manteiga de amendoim (10 g)", kcal: 270, p: 20 },
+    { meal: "Almoço", food: "Salada de folhas, tomate e pepino com atum (1 lata), grão (100 g), ½ abacate e limão", kcal: 355, p: 31 },
+    { meal: "Lanche", food: "Cottage (200 g) com frutos vermelhos (80 g)", kcal: 215, p: 22 },
+    { meal: "Jantar", food: "Salmão no forno (150 g), brócolos (250 g) e puré de couve-flor (200 g), 1 c. chá de azeite", kcal: 465, p: 39 },
+    { meal: "Ceia", food: "Iogurte grego 0% (120 g) e nozes (10 g)", kcal: 130, p: 14 },
+  ] },
+  { day: "Terça", kid: "Jantar: pescada (80 g) com batata cozida (150 g) e cenoura. Lanche: 1 banana e 1 copo de leite (200 ml).", meals: [
+    { meal: "Pequeno-almoço", food: "3 ovos (mexidos, cozidos ou em omelete) e manteiga de amendoim (10 g)", kcal: 270, p: 20 },
+    { meal: "Almoço", food: "Tofu salteado (200 g) com curgete e pimento (250 g), grão (80 g), 1 c. sopa de azeite", kcal: 505, p: 36 },
+    { meal: "Lanche", food: "Skyr (170 g) com frutos vermelhos (80 g) e chia (10 g)", kcal: 190, p: 21 },
+    { meal: "Jantar", food: "Pescada no forno (180 g) com cogumelos e couve-flor (300 g), feijão (80 g), 1 c. chá de azeite", kcal: 340, p: 42 },
+    { meal: "Ceia", food: "Iogurte grego 0% (120 g) e nozes (10 g)", kcal: 130, p: 14 },
+  ] },
+  { day: "Quarta", kid: "Jantar: frango aos cubos (70 g) com arroz (40 g cru), sem picante. Lanche: 1 pacotinho de sumo e 2 fatias de queijo flamengo.", meals: [
+    { meal: "Pequeno-almoço", food: "3 ovos (mexidos, cozidos ou em omelete) e manteiga de amendoim (10 g)", kcal: 270, p: 20 },
+    { meal: "Almoço", food: "Taça de edamame (100 g), grão (80 g), 2 ovos cozidos, cenoura ralada, pepino e folhas, 1 c. chá de azeite", kcal: 430, p: 30 },
+    { meal: "Lanche", food: "Requeijão (100 g) com tomate e pepino, orégãos e pimenta", kcal: 175, p: 11 },
+    { meal: "Jantar", food: "Caril de camarão (150 g) com couve-flor (200 g), espinafres e tomate pelado, 1 c. sopa de azeite", kcal: 320, p: 35 },
+    { meal: "Ceia", food: "Cottage (200 g)", kcal: 180, p: 22 },
+  ] },
+  { day: "Quinta", kid: "Jantar: frango salteado (70 g) com massa (50 g crua) e cenoura. Lanche: 1 iogurte e 1 peça de fruta.", meals: [
+    { meal: "Pequeno-almoço", food: "3 ovos (mexidos, cozidos ou em omelete) e manteiga de amendoim (10 g)", kcal: 270, p: 20 },
+    { meal: "Almoço", food: "Salada de lentilhas vermelhas (40 g secas) com sardinhas (1 lata), tomate, pepino, cebola e salsa", kcal: 370, p: 32 },
+    { meal: "Lanche", food: "Iogurte grego 0% (170 g), manteiga de amendoim (15 g) e frutos vermelhos (50 g)", kcal: 205, p: 21 },
+    { meal: "Jantar", food: "Tempeh salteado (100 g) com couve lombarda e cenoura (300 g), sementes (10 g), 1 c. sopa de azeite", kcal: 415, p: 27 },
+    { meal: "Ceia", food: "Queijo fresco batido 0% (200 g)", kcal: 95, p: 16 },
+  ] },
+  { day: "Sexta", kid: "Jantar: peixe (80 g) com batata (150 g) e abóbora assada. Lanche: 1 pacotinho de sumo e 1 pão com 1 fatia de queijo.", meals: [
+    { meal: "Pequeno-almoço", food: "3 ovos (mexidos, cozidos ou em omelete) e manteiga de amendoim (10 g)", kcal: 270, p: 20 },
+    { meal: "Almoço", food: "Esparguete de curgete com molho de tomate, atum (1 lata), grão (80 g) e edamame (100 g), 1 c. chá de azeite", kcal: 430, p: 40 },
+    { meal: "Lanche", food: "Cottage (200 g) com frutos vermelhos (80 g)", kcal: 215, p: 22 },
+    { meal: "Jantar", food: "Bacalhau ou pescada congelada (180 g) no forno com abóbora e beringela (300 g), 1 c. sopa de azeite", kcal: 325, p: 36 },
+    { meal: "Ceia", food: "Iogurte grego 0% (120 g) e nozes (10 g)", kcal: 130, p: 14 },
+  ] },
+  { day: "Sábado", kid: "Jantar: hambúrguer de carne picada (80 g) no pão com batata assada (150 g). Lanche: 1 banana e 1 copo de leite (200 ml).", meals: [
+    { meal: "Pequeno-almoço", food: "3 ovos (mexidos, cozidos ou em omelete) e manteiga de amendoim (10 g)", kcal: 270, p: 20 },
+    { meal: "Almoço", food: "Omelete de forno (3 ovos + 100 ml de claras) com cogumelos e espinafres, salada e ½ abacate", kcal: 435, p: 33 },
+    { meal: "Lanche", food: "Requeijão (100 g) com tomate cherry e frutos vermelhos (50 g)", kcal: 175, p: 11 },
+    { meal: "Jantar", food: "Hambúrguer caseiro de feijão preto (100 g), tofu (100 g) e aveia (15 g), salada e edamame (100 g)", kcal: 465, p: 33 },
+    { meal: "Ceia", food: "Cottage (200 g)", kcal: 180, p: 22 },
+  ] },
+  { day: "Domingo", kid: "Jantar: frango assado (70 g) com arroz (40 g cru) e a mesma sopa. Lanche: 1 pacotinho de sumo e 1 peça de fruta.", meals: [
+    { meal: "Pequeno-almoço", food: "3 ovos (mexidos, cozidos ou em omelete) e manteiga de amendoim (10 g)", kcal: 270, p: 20 },
+    { meal: "Almoço", food: "Seitan grelhado (120 g) com legumes salteados congelados (300 g), feijão (80 g), 1 c. sopa de azeite", kcal: 380, p: 39 },
+    { meal: "Lanche", food: "Skyr (170 g) com frutos vermelhos (80 g) e chia (10 g)", kcal: 190, p: 21 },
+    { meal: "Jantar", food: "Sopa de abóbora, cenoura e couve com cavala (1 lata) e sementes (10 g)", kcal: 305, p: 24 },
+    { meal: "Ceia", food: "Iogurte grego 0% (170 g) e manteiga de amendoim (15 g)", kcal: 185, p: 21 },
+  ] },
+];
+// Refeição livre semanal (ex.: sushi all you can eat). Substitui a refeição escolhida na Ementa.
+const FREE_MEAL = {
+  food: "Refeição livre: sushi all you can eat (ou outra). Começa por sopa miso, edamame e sashimi; menos tempura, molhos doces e peças com muito arroz.",
+  kcal: 1400,
+  p: 55,
+};
+const FREE_MEAL_SLOTS = [
+  { id: "Sábado:3", label: "Sábado ao jantar" },
+  { id: "Domingo:1", label: "Domingo ao almoço" },
+  { id: "Domingo:3", label: "Domingo ao jantar" },
+  { id: "", label: "Sem refeição livre" },
 ];
