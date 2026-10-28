@@ -633,3 +633,12 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
   .free-switch { width: 100%; }
   .free-switch button { padding: .6rem .5rem; font-size: .78rem; }
 }
+
+/* dia sem treino */
+.skip-btn { justify-self: start; color: var(--muted); font-size: .85rem; font-weight: 600; padding-left: 0; }
+.day.skipped .day-date { background: var(--tint-danger); color: var(--danger); }
+.day-status .skip { font-style: normal; font-weight: 700; color: var(--danger); }
+.skip-box { width: 100%; display: grid; gap: .6rem; background: var(--bg); border-radius: var(--r-md); padding: .9rem 1rem; }
+.skip-box > * { margin: 0; }
+.skip-box .select-field { max-width: 16rem; }
+.skip-box .link { justify-self: start; padding-left: 0; }

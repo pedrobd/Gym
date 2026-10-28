@@ -565,8 +565,11 @@
     });
   }
 
+  const SKIP_REASONS = ["Mudança de casa", "Trabalho", "Cansaço", "Dor", "Doença", "Família", "Outro"];
+
   function dayStatus(plan, date) {
     const d = days[date] || {};
+    if (d.skipped && plan.type !== "rest") return { done: false, skipped: true, label: `Não treinei${d.skipReason ? ` · ${d.skipReason}` : ""}` };
     if (plan.type === "workout") {
       const s = slotSession(plan.slot, date);
       return { done: !!s, label: s ? `Feito · ${Object.keys(s.entries).length} exercícios registados` : "" };
@@ -658,7 +661,27 @@
   const morningHint = (dow) => (dow === 1 || dow === 5 ? " (dia de treino de força)" : dow === 3 ? " (já há circuito)" : " (recuperação)");
 
   function dayBody(plan, date) {
-    return morningHtml(date, days[date] || {}) + dayPlanBody(plan, date);
+    const d = days[date] || {};
+    if (plan.type === "rest") return morningHtml(date, d) + dayPlanBody(plan, date);
+    if (d.skipped) return morningHtml(date, d) + skipHtml(date, d);
+    return morningHtml(date, d) + dayPlanBody(plan, date) +
+      `<button class="link skip-btn" data-skip="${date}">Não consegui treinar neste dia</button>`;
+  }
+
+  // Dia marcado como "não treinei": motivo e opção de desfazer.
+  function skipHtml(date, d) {
+    return `
+      <div class="skip-box">
+        <p class="day-desc"><strong>Marcado como não treinado.</strong> Não faz mal: não tentes compensar a dobrar no dia seguinte, continua no plano.</p>
+        <label class="select-field" for="skip-reason-${date}">Motivo (opcional)
+          <select id="skip-reason-${date}" data-day="${date}" data-field="skipReason">
+            <option value="">–</option>
+            ${SKIP_REASONS.map((r) => `<option ${d.skipReason === r ? "selected" : ""}>${r}</option>`).join("")}
+          </select>
+        </label>
+        ${d.skipReason === "Dor" ? `<p class="muted small">Se a dor irradiar para a perna ou o braço, ou tiveres formigueiro, dormência ou perda de força, fala com o teu médico ou fisioterapeuta antes de voltares a treinar.</p>` : ""}
+        <button class="link" data-unskip="${date}">Afinal treinei · desfazer</button>
+      </div>`;
   }
 
   function dayPlanBody(plan, date) {
@@ -720,7 +743,7 @@
     $("#week-range").textContent = `${fmt(dates[0])} – ${fmt(dates[6])}`;
     $("#week-today").disabled = weekOffset === 0;
 
-    let planned = 0, done = 0, stepsTotal = 0, stepsDays = 0, burnWeek = 0, balWeek = 0, balDays = 0;
+    let planned = 0, done = 0, skipped = 0, stepsTotal = 0, stepsDays = 0, burnWeek = 0, balWeek = 0, balDays = 0;
     const cards = dates.map((dt) => {
       const date = isoDate(dt);
       const plan = WEEK.find((w) => w.dow === dt.getDay());
@@ -728,6 +751,7 @@
       if (plan.type !== "rest") {
         planned++;
         if (st.done) done++;
+        if (st.skipped) skipped++;
       }
       const n = Number((days[date] || {}).steps) || 0;
       if (n) { stepsTotal += n; stepsDays++; }
@@ -738,12 +762,12 @@
       const bal = eaten && rest ? eaten - rest - burn.kcal : null;
       if (bal !== null) { balWeek += bal; balDays++; }
       return `
-        <article class="day ${date === todayIso ? "today" : ""} ${st.done ? "done" : ""}" data-tone="${tone}">
+        <article class="day ${date === todayIso ? "today" : ""} ${st.done ? "done" : ""} ${st.skipped ? "skipped" : ""}" data-tone="${tone}">
           <header class="day-head">
             <div class="day-date"><span>${DOW_NAMES[dt.getDay()]}</span><b>${dt.getDate()}</b></div>
             <div class="day-title">
               <h3>${escapeHtml(plan.type === "workout" ? WORKOUTS[slotWorkout(plan.slot)].name : plan.title)}</h3>
-              <span class="day-status">${date === todayIso ? `<em>Hoje</em>` : ""}${st.done ? `<i class="ok">✓ ${escapeHtml(st.label)}</i>` : st.label ? escapeHtml(st.label) : plan.type === "rest" ? "" : "Por fazer"}${burn.kcal ? `<span class="burn-tag" title="${escapeHtml(burn.parts.map((p) => `${p.label}: ${p.kcal} kcal`).join(" · "))}">🔥 ≈${burn.kcal} kcal</span>` : ""}${bal !== null ? `<span class="bal-tag ${bal < 0 ? "deficit" : "surplus"}" title="Comido ${eaten} − repouso ${rest} − exercício ${burn.kcal}">⚖ ${fmtSigned(bal)} kcal</span>` : ""}</span>
+              <span class="day-status">${date === todayIso ? `<em>Hoje</em>` : ""}${st.done ? `<i class="ok">✓ ${escapeHtml(st.label)}</i>` : st.skipped ? `<i class="skip">✕ ${escapeHtml(st.label)}</i>` : st.label ? escapeHtml(st.label) : plan.type === "rest" ? "" : "Por fazer"}${burn.kcal ? `<span class="burn-tag" title="${escapeHtml(burn.parts.map((p) => `${p.label}: ${p.kcal} kcal`).join(" · "))}">🔥 ≈${burn.kcal} kcal</span>` : ""}${bal !== null ? `<span class="bal-tag ${bal < 0 ? "deficit" : "surplus"}" title="Comido ${eaten} − repouso ${rest} − exercício ${burn.kcal}">⚖ ${fmtSigned(bal)} kcal</span>` : ""}</span>
             </div>
           </header>
           <div class="day-body">${dayBody(plan, date)}</div>
@@ -751,7 +775,7 @@
     });
     $("#week-days").innerHTML = cards.join("");
     $("#week-stats").innerHTML = `
-      <li><b>${done}/${planned}</b><span>dias cumpridos</span></li>
+      <li><b>${done}/${planned}</b><span>dias cumpridos${skipped ? ` · ${skipped} sem treinar` : ""}</span></li>
       <li><b>${stepsDays ? Math.round(stepsTotal / stepsDays).toLocaleString("pt-PT") : "–"}</b><span>média de passos</span></li>
       <li><b>${dates.filter((dt) => { const p = WEEK.find((w) => w.dow === dt.getDay()); return p.type === "workout" && slotSession(p.slot, isoDate(dt)); }).length}/2</b><span>treinos de força</span></li>
       <li><b>${dates.filter((dt) => (days[isoDate(dt)] || {}).hiitDone).length}/${MORNING.intervalDays.length}</b><span>3×3 de manhã</span></li>`;
@@ -1572,7 +1596,14 @@
   $("#week-prev").addEventListener("click", () => { weekOffset--; renderWeek(); });
   $("#week-next").addEventListener("click", () => { weekOffset++; renderWeek(); });
   $("#week-today").addEventListener("click", () => { weekOffset = 0; renderWeek(); });
-  $("#week-days").addEventListener("click", (e) => {
+  $("#week-days").addEventListener("click", async (e) => {
+    const sk = e.target.closest("[data-skip], [data-unskip]");
+    if (sk) {
+      const date = sk.dataset.skip || sk.dataset.unskip;
+      await saveDayField(date, "skipped", !!sk.dataset.skip);
+      renderWeek();
+      return;
+    }
     const b = e.target.closest("[data-open-workout]");
     if (!b) return;
     $("#session-date").value = b.dataset.date;
