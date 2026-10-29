@@ -655,7 +655,7 @@
 
   // Bloco da manhã, igual em todos os dias: caminhada e intervalos 3×3.
   function morningHtml(date, d) {
-    const dow = new Date(date + "T12:00:00").getDay();
+    const dow = planFor(date).dow;
     const good = MORNING.intervalDays.includes(dow);
     return `
       <div class="morning">
@@ -669,12 +669,64 @@
   }
   const morningHint = (dow) => (dow === 1 || dow === 5 ? " (dia de treino de força)" : dow === 3 ? " (já há circuito)" : " (recuperação)");
 
+  // Plano de um dia: o do dia da semana, ou o de outro dia se foram trocados (days[date].planDow).
+  function planFor(date) {
+    const d = days[date] || {};
+    const dow = Number.isInteger(d.planDow) ? d.planDow : new Date(date + "T12:00:00").getDay();
+    return WEEK.find((w) => w.dow === dow);
+  }
+  const planTitle = (plan) => (plan.type === "workout" ? WORKOUTS[slotWorkout(plan.slot)].name : plan.title);
+
   function dayBody(plan, date) {
     const d = days[date] || {};
-    if (plan.type === "rest") return morningHtml(date, d) + dayPlanBody(plan, date);
+    if (plan.type === "rest") return morningHtml(date, d) + dayPlanBody(plan, date) + swapHtml(date);
     if (d.skipped) return morningHtml(date, d) + skipHtml(date, d);
-    return morningHtml(date, d) + dayPlanBody(plan, date) +
+    return morningHtml(date, d) + dayPlanBody(plan, date) + swapHtml(date) +
       `<button class="link skip-btn" data-skip="${date}">Não consegui treinar neste dia</button>`;
+  }
+
+  // Trocar o plano deste dia com outro dia da mesma semana.
+  function swapHtml(date) {
+    const d = days[date] || {};
+    const monday = new Date(date + "T12:00:00");
+    monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+    const others = Array.from({ length: 7 }, (_, i) => {
+      const x = new Date(monday);
+      x.setDate(monday.getDate() + i);
+      return isoDate(x);
+    }).filter((x) => x !== date);
+    return `
+      <details class="swap">
+        <summary>Trocar com outro dia${d.swapWith ? "" : " da semana"}</summary>
+        <p class="muted small">Escolhe o dia com que queres trocar: os dois planos trocam de lugar (e o que registaste fica no dia em que o fizeste).</p>
+        <div class="swap-list">${others
+          .map((o) => {
+            const dt = new Date(o + "T12:00:00");
+            return `<button class="swap-opt" data-swap-a="${date}" data-swap-b="${o}"><b>${DOW_NAMES[dt.getDay()]} ${dt.getDate()}</b><span>${escapeHtml(planTitle(planFor(o)))}</span></button>`;
+          })
+          .join("")}</div>
+        ${d.swapWith ? `<button class="link" data-unswap="${date}">Desfazer a troca</button>` : ""}
+      </details>`;
+  }
+
+  async function patchDay(date, patch) {
+    const d = { ...(days[date] || {}), date, ...patch };
+    days[date] = d;
+    try {
+      await persistDay(d);
+    } catch {}
+  }
+  // Troca os planos de a e b. Um dia que volta ao seu plano natural perde a marcação.
+  async function swapDays(a, b) {
+    const pa = planFor(a).dow, pb = planFor(b).dow;
+    const natural = (x) => new Date(x + "T12:00:00").getDay();
+    await patchDay(a, pb === natural(a) ? { planDow: null, swapWith: null } : { planDow: pb, swapWith: b });
+    await patchDay(b, pa === natural(b) ? { planDow: null, swapWith: null } : { planDow: pa, swapWith: a });
+  }
+  async function unswap(date) {
+    const other = (days[date] || {}).swapWith;
+    await patchDay(date, { planDow: null, swapWith: null });
+    if (other && (days[other] || {}).swapWith === date) await patchDay(other, { planDow: null, swapWith: null });
   }
 
   // Dia marcado como "não treinei": motivo e opção de desfazer.
@@ -755,8 +807,9 @@
     let planned = 0, done = 0, skipped = 0, stepsTotal = 0, stepsDays = 0, burnWeek = 0, balWeek = 0, balDays = 0;
     const cards = dates.map((dt) => {
       const date = isoDate(dt);
-      const plan = WEEK.find((w) => w.dow === dt.getDay());
+      const plan = planFor(date);
       const st = dayStatus(plan, date);
+      const sw = (days[date] || {}).swapWith;
       if (plan.type !== "rest") {
         planned++;
         if (st.done) done++;
@@ -775,8 +828,8 @@
           <header class="day-head">
             <div class="day-date"><span>${DOW_NAMES[dt.getDay()]}</span><b>${dt.getDate()}</b></div>
             <div class="day-title">
-              <h3>${escapeHtml(plan.type === "workout" ? WORKOUTS[slotWorkout(plan.slot)].name : plan.title)}</h3>
-              <span class="day-status">${date === todayIso ? `<em>Hoje</em>` : ""}${st.done ? `<i class="ok">✓ ${escapeHtml(st.label)}</i>` : st.skipped ? `<i class="skip">✕ ${escapeHtml(st.label)}</i>` : st.label ? escapeHtml(st.label) : plan.type === "rest" ? "" : "Por fazer"}${burn.kcal ? `<span class="burn-tag" title="${escapeHtml(burn.parts.map((p) => `${p.label}: ${p.kcal} kcal`).join(" · "))}">🔥 ≈${burn.kcal} kcal</span>` : ""}${bal !== null ? `<span class="bal-tag ${bal < 0 ? "deficit" : "surplus"}" title="Comido ${eaten} − repouso ${rest} − exercício ${burn.kcal}">⚖ ${fmtSigned(bal)} kcal</span>` : ""}</span>
+              <h3>${escapeHtml(planTitle(plan))}</h3>
+              <span class="day-status">${date === todayIso ? `<em>Hoje</em>` : ""}${sw ? `<span class="swap-tag">↔ trocado com ${DOW_NAMES[new Date(sw + "T12:00:00").getDay()].toLowerCase()}</span>` : ""}${st.done ? `<i class="ok">✓ ${escapeHtml(st.label)}</i>` : st.skipped ? `<i class="skip">✕ ${escapeHtml(st.label)}</i>` : st.label ? escapeHtml(st.label) : plan.type === "rest" ? "" : "Por fazer"}${burn.kcal ? `<span class="burn-tag" title="${escapeHtml(burn.parts.map((p) => `${p.label}: ${p.kcal} kcal`).join(" · "))}">🔥 ≈${burn.kcal} kcal</span>` : ""}${bal !== null ? `<span class="bal-tag ${bal < 0 ? "deficit" : "surplus"}" title="Comido ${eaten} − repouso ${rest} − exercício ${burn.kcal}">⚖ ${fmtSigned(bal)} kcal</span>` : ""}</span>
             </div>
           </header>
           <div class="day-body">${dayBody(plan, date)}</div>
@@ -786,7 +839,7 @@
     $("#week-stats").innerHTML = `
       <li><b>${done}/${planned}</b><span>dias cumpridos${skipped ? ` · ${skipped} sem treinar` : ""}</span></li>
       <li><b>${stepsDays ? Math.round(stepsTotal / stepsDays).toLocaleString("pt-PT") : "–"}</b><span>média de passos</span></li>
-      <li><b>${dates.filter((dt) => { const p = WEEK.find((w) => w.dow === dt.getDay()); return p.type === "workout" && slotSession(p.slot, isoDate(dt)); }).length}/2</b><span>treinos de força</span></li>
+      <li><b>${dates.filter((dt) => { const p = planFor(isoDate(dt)); return p.type === "workout" && slotSession(p.slot, isoDate(dt)); }).length}/2</b><span>treinos de força</span></li>
       <li><b>${dates.filter((dt) => (days[isoDate(dt)] || {}).hiitDone).length}/${MORNING.intervalDays.length}</b><span>3×3 de manhã</span></li>`;
     $("#week-burn").innerHTML = [
       burnWeek ? `Gasto estimado em exercício esta semana: ≈${burnWeek.toLocaleString("pt-PT")} kcal (média ≈${Math.round(burnWeek / 7)} por dia).` : "",
@@ -1606,6 +1659,13 @@
   $("#week-next").addEventListener("click", () => { weekOffset++; renderWeek(); });
   $("#week-today").addEventListener("click", () => { weekOffset = 0; renderWeek(); });
   $("#week-days").addEventListener("click", async (e) => {
+    const swb = e.target.closest("[data-swap-a], [data-unswap]");
+    if (swb) {
+      if (swb.dataset.unswap) await unswap(swb.dataset.unswap);
+      else await swapDays(swb.dataset.swapA, swb.dataset.swapB);
+      renderWeek();
+      return;
+    }
     const sk = e.target.closest("[data-skip], [data-unskip]");
     if (sk) {
       const date = sk.dataset.skip || sk.dataset.unskip;

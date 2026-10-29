@@ -646,3 +646,19 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
 #workout-skip .skip-box { background: var(--tint-danger); }
 #tab-workout.is-skipped #exercise-list { opacity: .45; }
 .actions .skip-btn { border: 0; background: none; padding: .5rem 0; }
+
+/* trocar dias */
+.swap { width: 100%; }
+.swap summary { cursor: pointer; font-size: .85rem; font-weight: 700; color: var(--ink); }
+.swap[open] { background: var(--bg); border-radius: var(--r-md); padding: .85rem 1rem; display: grid; gap: .6rem; }
+.swap[open] > p { margin: 0; }
+.swap-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); gap: .4rem; }
+.swap-opt {
+  display: flex; flex-direction: column; align-items: flex-start; gap: .15rem; text-align: left;
+  background: var(--surface); color: var(--ink); border: 1.5px solid transparent; border-radius: var(--r-sm);
+  padding: .55rem .7rem; cursor: pointer; font: 500 .8rem/1.25 var(--font-body);
+}
+.swap-opt:hover { border-color: var(--ink); }
+.swap-opt b { font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; }
+.swap .link { justify-self: start; padding-left: 0; }
+.swap-tag { font-weight: 700; font-size: .78rem; color: var(--ink); background: var(--tint-warm); border-radius: 999px; padding: .2rem .55rem; }
