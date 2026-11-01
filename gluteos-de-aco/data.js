@@ -14,6 +14,7 @@ const INSPIRATION = {
     'https://www.instagram.com/p/DbdpSE1iNMF/',
     'https://www.instagram.com/p/DZSFut0mMs_/',
     'https://www.instagram.com/reel/DDoxJoqhsGZ/',
+    'https://www.instagram.com/p/DfHtkg5kYlt/',
   ],
 };
 
