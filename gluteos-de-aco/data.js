@@ -640,6 +640,31 @@ const WORKOUTS = [
       },
     ],
   },
+  {
+    id: 'tina-mobilidade',
+    name: 'Tina · Mobilidade Primeiro',
+    emoji: '🎬',
+    color: '#0891b2',
+    focus: 'Kettlebell · Mobilidade, coordenação e força',
+    minutes: 35,
+    kit: ['KB 12 kg', 'KB 6 kg', 'Tapete'],
+    by: 'tina',
+    intro: 'Treino da @tinalovefitness, tal como está na publicação: "mobilidade primeiro, ganhos depois". Músculos fortes não servem de nada se o corpo não se mexer bem. Circuito de 2–3 voltas, descanso o que precisares — sem pressa, a qualidade do movimento vale mais do que a velocidade. A Tina usa uma KB de 12 kg, igual à vossa.',
+    video: 'https://www.instagram.com/p/DZSFut0mMs_/',
+    blocks: [
+      {
+        title: 'Circuito', info: '2–3 voltas · faz os 6 exercícios seguidos · descanso o necessário entre voltas', rounds: 3, rest: 0, load: true,
+        ex: [
+          { n: 'Halo alternado + bottoms-up Z press', d: '10 reps (alternadas)', l: 'KB 6 kg para começar · KB 12 kg como a Tina', tip: 'Sentada no chão com as pernas esticadas (Z press). Halo à volta da cabeça e depois press com a KB de pernas para o ar (fundo para cima), alternando os braços. Pulso direito e aperta bem a pega.', q: 'kettlebell halo bottoms up z press' },
+          { n: 'Afundo estático alternado + press', d: '10 reps (alternadas)', l: 'KB 6 kg ou KB 12 kg', tip: 'Exercício de coordenação "super desafiante", diz a Tina. Em posição de afundo, desce e sobe e faz o press por cima da cabeça, trocando de lado. Devagar e controlado.', q: 'kettlebell static lunge press' },
+          { n: 'Crab reach alternado', d: '10 reps (alternadas)', l: 'Peso do corpo', tip: 'Sentada, mãos atrás e pés no chão. Sobe a anca e leva um braço por cima da cabeça para o lado oposto, a abrir o peito e o ombro. Alterna.', q: 'crab reach exercise' },
+          { n: 'Cossack profundo com KB por cima da cabeça', d: '10 reps (alternadas)', l: 'KB 6 kg (ou peso do corpo para começar)', tip: 'Agachamento cossaco fundo com a KB esticada por cima da cabeça — é o mais difícil 💀. Desce só até onde mantiveres o calcanhar no chão e o braço esticado.', q: 'overhead cossack squat kettlebell' },
+          { n: 'Flexões pike fechadas', d: '5–8 reps', l: 'Peso do corpo', tip: 'Anca bem alta (V invertido), mãos juntas. Desce a cabeça em direção ao chão entre as mãos e empurra. Trabalha ombros e tríceps. A Tina também está a praticar.', q: 'narrow pike push up' },
+          { n: 'Windmill de pé', d: '6 × 6 (6 de cada lado)', l: 'KB 6 kg (por cima da cabeça)', tip: 'KB esticada por cima da cabeça, pés virados para o lado oposto. Inclina o tronco até a mão livre descer pela perna, sempre a olhar para a KB. Braço de cima trancado.', q: 'standing kettlebell windmill' },
+        ],
+      },
+    ],
+  },
 ];
 
 // Opções extra para escolher num dia
@@ -651,7 +676,7 @@ const EXTRAS = [
 ];
 
 // Plano base: Segunda → Domingo
-const DEFAULT_PLAN = ['tina-pernas', 'tina-bracos', 'corrida-turbo', 'tina-anca', 'tina-pernas-solidas', 'corrida-zen', 'domingo-leve'];
+const DEFAULT_PLAN = ['tina-pernas', 'tina-bracos', 'corrida-turbo', 'tina-anca', 'tina-pernas-solidas', 'corrida-zen', 'tina-mobilidade'];
 
 const DAY_NAMES = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 const DAY_SHORT = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
