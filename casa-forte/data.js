@@ -340,5 +340,6 @@ const INSPIRATION = {
     'https://www.instagram.com/p/Dbv23UACAI4/',
     'https://www.instagram.com/p/DbdpSE1iNMF/',
     'https://www.instagram.com/p/DZSFut0mMs_/',
+    'https://www.instagram.com/reel/DDoxJoqhsGZ/',
   ],
 };
