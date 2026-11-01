@@ -21,6 +21,8 @@
   }
   // terça-feira passa a ser o treino de braços da Tina
   if (!S.v4) { if (S.template[1] === 'bracos-rainha') S.template[1] = 'tina-bracos'; S.v4 = 1; }
+  // segunda-feira passa a ser o treino de pernas da Tina
+  if (!S.v5) { if (S.template[0] === 'gluteos-aco') S.template[0] = 'tina-pernas'; S.v5 = 1; }
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* sem storage */ } };
 
   // ---------- datas ----------

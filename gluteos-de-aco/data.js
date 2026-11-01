@@ -433,6 +433,56 @@ const WORKOUTS = [
       },
     ],
   },
+  {
+    id: 'tina-pernas',
+    name: 'Tina · Legendary Legday',
+    emoji: '🎬',
+    color: '#e8505b',
+    focus: 'Kettlebell · Pernas e glúteos',
+    minutes: 40,
+    kit: ['KB 12 kg', 'Halteres 9 kg'],
+    by: 'tina',
+    intro: 'Treino da @tinalovefitness, tal como está na publicação: pernas com uma só kettlebell pesada, simples e eficaz, para quem tem pouco tempo. 4 séries de cada exercício, descanso o que precisares. Foco na forma e na execução. A Tina usa uma KB de 32 kg; aqui usas a de 12 kg com descida lenta.',
+    video: 'https://www.instagram.com/p/DdRnHK2DWlz/',
+    blocks: [
+      {
+        title: 'Agachamento com KB à frente', info: 'Front Suitcase Rack Squats · 4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Agachamento com KB à frente', d: '10 reps', l: 'KB 12 kg', tip: 'KB segura à frente do peito. Desce em 3 s, peito aberto, joelhos na direção dos pés, e sobe a empurrar o chão.', q: 'kettlebell front rack squat' },
+        ],
+      },
+      {
+        title: 'Peso morto escalonado', info: 'Staggered Stance Deadlift · 4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Peso morto escalonado', d: '8 × 8 (8 de cada lado)', l: 'KB 12 kg', tip: 'Um pé ligeiramente atrás (só o calcanhar levantado), quase todo o peso na perna da frente. Anca para trás, costas direitas, sobe a apertar o glúteo.', q: 'kettlebell staggered stance deadlift' },
+        ],
+      },
+      {
+        title: 'Afundo atrás alternado com KB à frente', info: 'Alternate Front Rack Reverse Lunges · 4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Afundo atrás alternado com KB à frente', d: '10 reps (alternadas)', l: 'KB 12 kg à frente do peito', tip: 'Passo grande para trás, joelho de trás quase a tocar no chão, peso no calcanhar da frente. Tronco direito.', q: 'kettlebell front rack reverse lunge' },
+        ],
+      },
+      {
+        title: 'Sumo high pull', info: 'Sumo High Pull · 4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Sumo high pull', d: '10 reps', l: 'KB 12 kg', tip: 'Pés afastados como no sumo, KB entre os pés. Estica as pernas com força e puxa a KB até ao peito com os cotovelos altos. A força vem das pernas e da anca.', q: 'kettlebell sumo high pull' },
+        ],
+      },
+      {
+        title: 'Peso morto', info: 'Deadlifts · 4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Peso morto', d: '10 reps', l: 'KB 12 kg (ou 2 halteres de 9 kg para mais peso)', tip: 'Anca para trás, costas direitas, KB entre os pés. Se for fácil, desce em 3–4 s ou usa os dois halteres de 9 kg.', q: 'kettlebell deadlift form' },
+        ],
+      },
+      {
+        title: 'Kettlebell swing', info: 'Swing · 4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Kettlebell swing', d: '10 reps', l: 'KB 12 kg', tip: 'Anca para trás como a fechar uma porta com o rabo, depois estala a anca. A KB flutua até à altura do peito — os braços só guiam.', q: 'russian kettlebell swing form' },
+        ],
+      },
+    ],
+  },
 ];
 
 // Opções extra para escolher num dia
@@ -444,7 +494,7 @@ const EXTRAS = [
 ];
 
 // Plano base: Segunda → Domingo
-const DEFAULT_PLAN = ['gluteos-aco', 'tina-bracos', 'corrida-turbo', 'tina-anca', 'bumbum-tonificado', 'corrida-zen', 'domingo-leve'];
+const DEFAULT_PLAN = ['tina-pernas', 'tina-bracos', 'corrida-turbo', 'tina-anca', 'bumbum-tonificado', 'corrida-zen', 'domingo-leve'];
 
 const DAY_NAMES = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 const DAY_SHORT = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
