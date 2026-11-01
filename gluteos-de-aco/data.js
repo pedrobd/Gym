@@ -533,6 +533,63 @@ const WORKOUTS = [
       },
     ],
   },
+  {
+    id: 'tina-core',
+    name: 'Tina · Core de Kettlebell',
+    emoji: '🎬',
+    color: '#0d9488',
+    focus: 'Kettlebell · Corpo inteiro e core',
+    minutes: 40,
+    kit: ['KB 12 kg', 'KB 6 kg', 'Tapete'],
+    by: 'tina',
+    intro: 'Treino da @tinalovefitness, tal como está na publicação: corpo inteiro com o core a trabalhar em todos os movimentos. A Tina usa uma KB de 12 kg — igual à vossa — e avisa que "esta pequena KB de 12 kg vai deixar-te humilde". 3–4 séries de cada exercício, descanso o que precisares. Movimentos técnicos: aprende-os primeiro com a KB de 6 kg.',
+    video: 'https://www.instagram.com/p/Dbv23UACAI4/',
+    blocks: [
+      {
+        title: 'Snatch com um braço + afundo atrás alternado', info: 'Single Arm KB Snatch into Alt Reverse Lunge · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Snatch com um braço + afundo atrás', d: '10 reps (cada snatch conta 1)', l: 'KB 12 kg como a Tina · KB 6 kg para aprender', tip: 'Snatch: a KB sobe numa só ação desde entre as pernas até ao braço esticado por cima da cabeça, sem bater no antebraço. Com a KB lá em cima, faz um afundo atrás e alterna a perna. Cotovelo trancado e olhar para a frente.', q: 'kettlebell snatch to reverse lunge' },
+        ],
+      },
+      {
+        title: 'Around the world', info: 'KB Around the World · estabilidade do core · 3–4 séries', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Around the world com KB', d: '10 × 10 (10 para cada lado)', l: 'KB 12 kg ou KB 6 kg', tip: 'De pé, passa a KB de uma mão para a outra à volta da cintura. Anca e ombros parados, barriga firme — é o core que trabalha.', q: 'kettlebell around the world' },
+        ],
+      },
+      {
+        title: 'Swing horizontal por cima da cabeça', info: 'Horizontal Overhead Swing · o mais difícil do dia · 3–4 séries', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Swing horizontal por cima da cabeça', d: '10 reps', l: 'KB 6 kg para começar · KB 12 kg como a Tina', tip: 'É o movimento mais desafiante do dia, segundo a Tina — vê o vídeo com atenção antes de tentar. Começa leve, com espaço livre à tua volta e a pega bem segura.', q: 'kettlebell overhead swing' },
+        ],
+      },
+      {
+        title: 'Half iron cross + swing com rotação', info: 'Half Iron Cross into Rotational Swing · 3–4 séries', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Half iron cross + swing com rotação', d: '10 reps', l: 'KB 6 kg para começar · KB 12 kg como a Tina', tip: 'Movimento técnico — até a Tina diz que precisa de praticar. Segue o vídeo, começa devagar e com pouco peso. A força vem da anca, não dos braços.', q: 'kettlebell half iron cross' },
+        ],
+      },
+      {
+        title: 'Windmill ajoelhada', info: 'Half Kneeling Windmill · 3–4 séries', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Windmill ajoelhada', d: '8 × 8 (8 de cada lado)', l: 'KB 6 kg (por cima da cabeça)', tip: 'Meio ajoelhada, KB esticada por cima da cabeça. Inclina o tronco para o lado até a mão livre tocar no chão, sempre a olhar para a KB. Braço de cima trancado.', q: 'half kneeling kettlebell windmill' },
+        ],
+      },
+      {
+        title: 'Extensão por cima da cabeça + halo', info: 'Overhead Extension into Halo · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Extensão por cima da cabeça + halo', d: '10 reps', l: 'KB 6 kg ou KB 12 kg', tip: 'Segura a KB pelas "orelhas": extensão de tríceps atrás da cabeça e depois uma volta completa à volta da cabeça (halo). Barriga firme, sem arquear a lombar.', q: 'kettlebell overhead extension halo' },
+        ],
+      },
+      {
+        title: 'Antes deste treino, a Tina fez (opcional)', info: '3 × 10 · elevações de pernas e agachamento à frente pesado', rounds: 3, rest: 0, load: true,
+        ex: [
+          { n: 'Elevação de pernas deitada', d: '10 reps', l: 'Peso do corpo', tip: 'A Tina faz pendurada numa barra. Sem barra em casa, faz deitada: lombar colada ao chão, sobe as pernas esticadas e desce devagar.', q: 'lying leg raise' },
+          { n: 'Agachamento à frente', d: '10 reps', l: 'KB 12 kg', tip: 'O exercício favorito da Tina. KB ao peito, desce devagar e sobe com força.', q: 'kettlebell front squat' },
+        ],
+      },
+    ],
+  },
 ];
 
 // Opções extra para escolher num dia
