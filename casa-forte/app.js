@@ -237,6 +237,13 @@
       <section class="hello"><h2>Biblioteca de treinos</h2>
       <p class="muted">7 treinos para rodar durante a semana. Abre qualquer um para o fazer hoje.</p>
       <p class="small">📸 Vídeos e ideias: ${igLink} — cola o link de um reel em qualquer exercício.</p></section>
+      <section class="card">
+        <h4>🎬 Vídeos da Tina</h4>
+        <p class="muted small">Toca para ver. Para ligar um vídeo a um exercício: abre o treino → "Como fazer" → "Escolher um vídeo da Tina".</p>
+        <div class="gallery">
+          ${INSPIRATION.videos.map((v, i) => `<div class="video" data-video="${v}"><button class="btn sm accent" data-play>▶ Vídeo ${i + 1}</button></div>`).join('')}
+        </div>
+      </section>
       <div class="lib">
         ${WORKOUTS.map(w => `
           <article class="lib-card" data-open="${w.id}" data-date="${todayKey()}" role="button" tabindex="0" style="--c:${w.color}">
@@ -249,6 +256,7 @@
           </article>`).join('')}
       </div>`;
     bindCommon();
+    bindPlay(view);
     view.querySelectorAll('.lib-card').forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') el.click(); }));
   }
 
@@ -458,7 +466,9 @@
                   <details><summary>Como fazer</summary>
                     ${e.tip ? `<p class="small">${esc(e.tip)}</p>` : ''}
                     ${e.q ? `<a class="small" href="${yt(e.q)}" target="_blank" rel="noopener">▶ Ver vídeos de demonstração</a>` : ''}
-                    <label class="vid-in"><span>Vídeo deste exercício (link do Instagram ou YouTube) · ideias em ${igLink}</span>
+                    <label class="vid-in"><span>Escolher um vídeo da Tina</span>
+                      <select data-pick="${esc(e.n)}"><option value="">—</option>${INSPIRATION.videos.map((v, i) => `<option value="${v}" ${videoOf(e) === v ? 'selected' : ''}>Vídeo ${i + 1}</option>`).join('')}</select></label>
+                    <label class="vid-in"><span>…ou cola outro link: vídeo deste exercício (link do Instagram ou YouTube) · ideias em ${igLink}</span>
                       <input type="url" placeholder="https://www.instagram.com/reel/..." value="${esc(S.videos[e.n] || '')}" data-vid="${esc(e.n)}"></label>
                   </details>
                   ${b.rest ? `<label class="load-in"><span>Carga que usei</span>
@@ -493,11 +503,10 @@
       </footer>`;
 
     $('#back', panel).addEventListener('click', () => closePanel());
-    panel.querySelectorAll('[data-play]').forEach(btn => btn.addEventListener('click', () => {
-      const box = btn.parentElement, v = embedUrl(box.dataset.video);
-      if (!v) return;
-      box.innerHTML = `<iframe class="${v.kind}" src="${v.src}" loading="lazy" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture" title="Vídeo do exercício"></iframe>
-        <a class="small" href="${v.href}" target="_blank" rel="noopener">Abrir na app ↗</a>`;
+    bindPlay(panel);
+    panel.querySelectorAll('[data-pick]').forEach(sel => sel.addEventListener('change', () => {
+      const inp = panel.querySelector(`[data-vid="${CSS.escape(sel.dataset.pick)}"]`);
+      inp.value = sel.value; inp.dispatchEvent(new Event('change'));
     }));
     panel.querySelectorAll('[data-vid]').forEach(inp => inp.addEventListener('change', () => {
       const val = inp.value.trim();
@@ -545,6 +554,16 @@
 
     // se a sessão foi retomada, atualiza o botão/relógio
     if (session.start) tickSession();
+  }
+
+  function bindPlay(root) {
+    root.querySelectorAll('[data-play]').forEach(btn => btn.addEventListener('click', () => {
+      const box = btn.parentElement, v = embedUrl(box.dataset.video);
+      if (!v) return;
+      box.classList.add('open');
+      box.innerHTML = `<iframe class="${v.kind}" src="${v.src}" loading="lazy" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture" title="Vídeo do exercício"></iframe>
+        <a class="small" href="${v.href}" target="_blank" rel="noopener">Abrir na app ↗</a>`;
+    }));
   }
 
   function pruneTicks() {

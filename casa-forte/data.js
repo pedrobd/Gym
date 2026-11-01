@@ -330,4 +330,15 @@ const PROFILE = { born: 1983, weightKg: 68, crossfitPerWeek: 2 };
 
 // Conta de inspiração. Para fixar um vídeo a um exercício para toda a gente,
 // acrescenta ao exercício:  ig: 'https://www.instagram.com/reel/XXXXXXXX/'
-const INSPIRATION = { name: 'Tina Love Fitness', handle: 'tinalovefitness', url: 'https://www.instagram.com/tinalovefitness/' };
+const INSPIRATION = {
+  name: 'Tina Love Fitness', handle: 'tinalovefitness', url: 'https://www.instagram.com/tinalovefitness/',
+  videos: [
+    'https://www.instagram.com/p/DeO86U8nxGB/',
+    'https://www.instagram.com/p/DeEg3Dtnx1f/',
+    'https://www.instagram.com/p/DdRnHK2DWlz/',
+    'https://www.instagram.com/p/Db00kIfiEXB/',
+    'https://www.instagram.com/p/Dbv23UACAI4/',
+    'https://www.instagram.com/p/DbdpSE1iNMF/',
+    'https://www.instagram.com/p/DZSFut0mMs_/',
+  ],
+};
