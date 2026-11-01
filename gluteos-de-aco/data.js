@@ -483,6 +483,56 @@ const WORKOUTS = [
       },
     ],
   },
+  {
+    id: 'tina-pernas-solidas',
+    name: 'Tina · Pernas Sólidas',
+    emoji: '🎬',
+    color: '#f97316',
+    focus: 'Kettlebell · Pernas, glúteos e core',
+    minutes: 40,
+    kit: ['KB 12 kg', 'Halteres 9 kg', 'Parede ou cadeira'],
+    by: 'tina',
+    intro: 'Treino da @tinalovefitness, tal como está na publicação: trabalho sólido de pernas com uma só kettlebell. Escolhe um peso desafiante e só repetições de qualidade. 3–4 séries de cada exercício, descanso o que precisares. A Tina usa uma KB de 24 kg; aqui usas a de 12 kg com descida lenta.',
+    video: 'https://www.instagram.com/p/Db00kIfiEXB/',
+    blocks: [
+      {
+        title: 'Agachamento escalonado com KB num ombro', info: 'Single KB Rack Staggered Squat · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Agachamento escalonado com KB num ombro', d: '8 × 8 (8 de cada lado)', l: 'KB 12 kg num ombro (rack)', tip: 'Um pé ligeiramente atrás (calcanhar levantado), KB apoiada no ombro do mesmo lado do pé da frente. A Tina diz: pernas e core a arder! Não deixes o tronco inclinar para o lado da KB.', q: 'kettlebell single rack staggered squat' },
+        ],
+      },
+      {
+        title: 'Agachamento + curtsy alternado', info: 'Squats + Alternate Curtsy Squat · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Agachamento + curtsy alternado', d: '10 reps (cada agachamento conta 1)', l: 'KB 12 kg ao peito', tip: 'Agachamento normal, depois um curtsy (perna de trás cruza na diagonal), alternando os lados. Como diz a Tina: cada agachamento conta como 1 repetição.', q: 'squat to curtsy lunge kettlebell' },
+        ],
+      },
+      {
+        title: 'Agachamento sumo com KB à frente', info: 'Front Suitcase Sumo Squats · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Agachamento sumo com KB à frente', d: '10 reps', l: 'KB 12 kg', tip: 'KB segura pela pega, à frente do corpo. Pés afastados e virados para fora, desce devagar com o peito aberto e joelhos para fora.', q: 'kettlebell sumo squat' },
+        ],
+      },
+      {
+        title: 'Peso morto romeno', info: 'Romanian Deadlifts · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Peso morto romeno com KB', d: '10 reps', l: 'KB 12 kg (ou 2 halteres de 9 kg para mais peso)', tip: 'Joelhos ligeiramente fletidos, anca para trás, KB junto às pernas. Sente o alongamento atrás da coxa e sobe a apertar os glúteos.', q: 'kettlebell romanian deadlift' },
+        ],
+      },
+      {
+        title: 'Shrimp squat', info: 'Shrimp Squat · movimento do dia · 3–4 séries · descanso o necessário', rounds: 4, rest: 0,
+        ex: [
+          { n: 'Shrimp squat', d: '5 × 5 (5 com cada perna)', l: 'Peso do corpo · mão na parede ou numa cadeira', tip: 'Numa perna, agarra o pé da outra perna atrás e desce devagar até o joelho de trás tocar no chão (põe uma almofada). Desafia equilíbrio, mobilidade e força — a Tina também está a praticar. Mais fácil: desce só até meio, com apoio.', q: 'shrimp squat beginner progression' },
+        ],
+      },
+      {
+        title: 'Swing com paragem', info: 'Dead Stop Swing · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Swing com paragem', d: '10 reps', l: 'KB 12 kg', tip: 'Cada swing começa com a KB parada no chão à tua frente. Puxa-a para trás entre as pernas, estala a anca, e volta a pousá-la no chão. Recomeça do zero em cada repetição.', q: 'dead stop kettlebell swing' },
+        ],
+      },
+    ],
+  },
 ];
 
 // Opções extra para escolher num dia
@@ -494,7 +544,7 @@ const EXTRAS = [
 ];
 
 // Plano base: Segunda → Domingo
-const DEFAULT_PLAN = ['tina-pernas', 'tina-bracos', 'corrida-turbo', 'tina-anca', 'bumbum-tonificado', 'corrida-zen', 'domingo-leve'];
+const DEFAULT_PLAN = ['tina-pernas', 'tina-bracos', 'corrida-turbo', 'tina-anca', 'tina-pernas-solidas', 'corrida-zen', 'domingo-leve'];
 
 const DAY_NAMES = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 const DAY_SHORT = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
