@@ -12,6 +12,13 @@
   try { S = Object.assign(fresh(), JSON.parse(localStorage.getItem(KEY) || '{}')); } catch { S = fresh(); }
   // quinta-feira passou a ser 'KB com a Tina' no plano sugerido
   if (!S.v2) { if (S.template[3] === 'kettlebell-fire') S.template[3] = 'kb-tina'; S.v2 = 1; }
+  // 'KB com a Tina' (genérico) foi substituído pelo treino real da publicação
+  if (!S.v3) {
+    S.template = S.template.map(id => id === 'kb-tina' ? 'tina-anca' : id);
+    for (const k in S.overrides) if (S.overrides[k] === 'kb-tina') S.overrides[k] = 'tina-anca';
+    for (const k in S.done) if (S.done[k].w === 'kb-tina') S.done[k].w = 'tina-anca';
+    S.v3 = 1;
+  }
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* sem storage */ } };
 
   // ---------- datas ----------
@@ -447,6 +454,7 @@
         </div>
         <div class="kit">${w.kit.map(x => `<span>${esc(x)}</span>`).join('')}</div>
         <p>${esc(w.intro)}</p>
+        ${w.video ? `<div class="video tina" data-video="${w.video}"><button class="btn sm accent" data-play>▶ Ver o vídeo da Tina</button></div>` : ''}
         ${done ? `<p class="done-badge dark">✅ Feito${done.min ? ` em ${done.min} min` : ''}</p>` : ''}
 
         ${w.blocks.map((b, bi) => `
@@ -474,7 +482,7 @@
                     <label class="vid-in"><span>…ou cola outro link: vídeo deste exercício (link do Instagram ou YouTube) · ideias em ${igLink}</span>
                       <input type="url" placeholder="https://www.instagram.com/reel/..." value="${esc(S.videos[e.n] || '')}" data-vid="${esc(e.n)}"></label>
                   </details>
-                  ${b.rest ? `<label class="load-in"><span>Carga que usei</span>
+                  ${b.rest || b.load ? `<label class="load-in"><span>Carga que usei</span>
                     <input type="text" inputmode="text" placeholder="ex.: 12 kg" value="${esc(S.loads[e.n] || '')}" data-load="${esc(e.n)}"></label>` : ''}
                 </li>`).join('')}
             </ol>

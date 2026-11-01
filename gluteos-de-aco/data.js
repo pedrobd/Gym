@@ -328,36 +328,51 @@ const WORKOUTS = [
     ],
   },
   {
-    id: 'kb-tina',
-    name: 'KB com a Tina',
+    id: 'tina-anca',
+    name: 'Tina · Anca & Adutores',
     emoji: '🎬',
     color: '#d9467a',
-    focus: 'Kettlebell · Segue o vídeo',
+    focus: 'Kettlebell · Força e mobilidade da anca',
     minutes: 40,
-    kit: ['KB 12 kg', 'KB 6 kg'],
-    intro: 'Treino de kettlebell a acompanhar os vídeos da @tinalovefitness. Cada semana há um vídeo sugerido (podes escolher outro). Faz o circuito do vídeo 3–4 vezes.',
+    kit: ['KB 12 kg', 'Caixa, banco ou sofá'],
+    by: 'tina',
+    intro: 'Treino da @tinalovefitness, tal como está na publicação: força da anca e dos adutores, mobilidade e controlo do movimento. Só precisas de uma kettlebell. 3–4 séries de cada exercício, descanso o que precisares. Foco no controlo, na amplitude e na qualidade.',
+    video: 'https://www.instagram.com/p/DfHtkg5kYlt/',
     blocks: [
       {
-        title: 'Aquecimento', info: '2 voltas · 5 min', rounds: 2, rest: 0,
+        title: 'Agachamento sumo com KB à frente', info: 'Suitcase Front-Hold Sumo Squats · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
         ex: [
-          { n: 'Halo com kettlebell', d: '6 para cada lado', l: 'KB 6 kg', tip: 'Roda a KB à volta da cabeça, barriga firme.', q: 'kettlebell halo' },
-          { n: 'Agachamento goblet leve', d: '10 reps', l: 'KB 6 kg', tip: '', q: 'goblet squat' },
-          { n: 'Swing leve', d: '10 reps', l: 'KB 6 kg', tip: 'Movimento de anca, não de braços.', q: 'kettlebell swing form' },
+          { n: 'Agachamento sumo com KB à frente', d: '8 reps', l: 'KB 12 kg (a Tina usa 16 kg)', tip: 'KB segura pela pega, à frente do corpo. Pés afastados e virados para fora, desce devagar com o peito aberto e joelhos para fora.', q: 'kettlebell sumo squat' },
         ],
       },
       {
-        title: 'Treino da Tina', info: 'Vê o vídeo uma vez, depois faz o circuito 3–4 voltas · descanso 60–90 s entre voltas', rounds: 4, rest: 75,
-        videos: true,
+        title: 'Agachamento cossaco com apoio', info: 'Box-Assisted Cossack Squats · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
         ex: [
-          { n: 'Exercícios do vídeo', d: 'Repetições ou tempo do vídeo', l: 'KB 12 kg para pernas, swings e peso morto · KB 6 kg para braços, ombros e por cima da cabeça', tip: 'Se a técnica se perder no fim da volta, passa para a KB de 6 kg ou faz menos repetições. Qualidade primeiro.', q: '' },
+          { n: 'Agachamento cossaco com apoio', d: '6 × 6 (6 de cada lado)', l: 'Apoio numa caixa, banco ou sofá · peso do corpo ou KB 6 kg', tip: 'Pernas bem afastadas, desce para um lado com a outra perna esticada e o pé a apontar para cima. Usa o apoio para controlar a descida e ir mais fundo.', q: 'box assisted cossack squat' },
         ],
       },
       {
-        title: 'Retorno à calma', info: '4 min', rounds: 1, rest: 0,
+        title: 'Peso morto escalonado + rotação', info: 'Staggered Deadlift + Rotation · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
         ex: [
-          { n: 'Postura do pombo', d: '40 s por lado', l: '', tip: '', q: 'pigeon pose stretch' },
-          { n: 'Alongamento de peito na porta', d: '30 s por lado', l: '', tip: '', q: 'doorway chest stretch' },
-          { n: 'Postura da criança', d: '1 min', l: '', tip: 'Respiração lenta pelo nariz.', q: 'child pose' },
+          { n: 'Peso morto escalonado + rotação', d: '6 × 6 (6 de cada lado)', l: 'KB 12 kg', tip: 'Um pé ligeiramente atrás (só o calcanhar levantado). Anca para trás com a KB junto à perna da frente, e ao subir roda o tronco com controlo.', q: 'kettlebell staggered stance deadlift rotation' },
+        ],
+      },
+      {
+        title: 'World\'s greatest stretch com apoio', info: 'Box-Assisted Greatest Hip Stretch · 3–4 séries', rounds: 4, rest: 0,
+        ex: [
+          { n: 'World\'s greatest stretch com apoio', d: '6 × 6 (6 de cada lado)', l: 'Mãos numa caixa, banco ou sofá', tip: 'Afundo grande, mãos no apoio, desce a anca e roda o tronco abrindo o braço para o teto. Movimento lento.', q: 'box assisted worlds greatest stretch' },
+        ],
+      },
+      {
+        title: 'Hip airplane com rotação', info: 'Hip Airplane Rotations · 3–4 séries', rounds: 4, rest: 0,
+        ex: [
+          { n: 'Hip airplane com rotação', d: '4–5 por perna (sugestão: a legenda não diz)', l: 'Peso do corpo · apoio na parede se for preciso', tip: 'Em equilíbrio numa perna, tronco inclinado à frente, abre e fecha a anca rodando o tronco. É difícil — até a Tina diz que precisa de praticar.', q: 'hip airplane exercise' },
+        ],
+      },
+      {
+        title: 'Final: animal flow', info: 'Para acabar · 3–5 min (sugestão: a legenda não diz quanto)', rounds: 1, rest: 0,
+        ex: [
+          { n: 'Animal flow', d: '3–5 min a fluir', l: 'Peso do corpo', tip: 'Movimentos no chão: beast (4 apoios com joelhos no ar), crab reach, rastejar. Calma e controlo, como no vídeo.', q: 'animal flow beginner' },
         ],
       },
     ],
@@ -373,7 +388,7 @@ const EXTRAS = [
 ];
 
 // Plano base: Segunda → Domingo
-const DEFAULT_PLAN = ['gluteos-aco', 'bracos-rainha', 'corrida-turbo', 'kb-tina', 'bumbum-tonificado', 'corrida-zen', 'domingo-leve'];
+const DEFAULT_PLAN = ['gluteos-aco', 'bracos-rainha', 'corrida-turbo', 'tina-anca', 'bumbum-tonificado', 'corrida-zen', 'domingo-leve'];
 
 const DAY_NAMES = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 const DAY_SHORT = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
