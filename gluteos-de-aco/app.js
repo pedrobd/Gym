@@ -19,6 +19,8 @@
     for (const k in S.done) if (S.done[k].w === 'kb-tina') S.done[k].w = 'tina-anca';
     S.v3 = 1;
   }
+  // terça-feira passa a ser o treino de braços da Tina
+  if (!S.v4) { if (S.template[1] === 'bracos-rainha') S.template[1] = 'tina-bracos'; S.v4 = 1; }
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* sem storage */ } };
 
   // ---------- datas ----------

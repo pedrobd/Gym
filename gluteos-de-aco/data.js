@@ -377,6 +377,62 @@ const WORKOUTS = [
       },
     ],
   },
+  {
+    id: 'tina-bracos',
+    name: 'Tina · Braços & Core',
+    emoji: '🎬',
+    color: '#9d4edd',
+    focus: 'Kettlebell · Braços, ombros e core',
+    minutes: 40,
+    kit: ['KB 12 kg', 'KB 6 kg', 'Halteres 9 kg', 'Halteres 5 kg', 'Sofá ou banco'],
+    by: 'tina',
+    intro: 'Treino da @tinalovefitness, tal como está na publicação: tronco superior e core, com foco no controlo e na qualidade do movimento. 3–4 séries de cada exercício, descanso o que precisares. A Tina usa 2 KB de 12 kg — onde ela usa duas KB, aqui usas um par de halteres.',
+    video: 'https://www.instagram.com/p/DeEg3Dtnx1f/',
+    blocks: [
+      {
+        title: 'Curl de bíceps ajoelhada com uma KB', info: 'One KB Kneeling Biceps Curl · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Curl de bíceps ajoelhada com uma KB', d: '10 reps', l: 'KB 6 kg (ou KB 12 kg segura com as duas mãos, se conseguires)', tip: 'Ajoelhada, glúteos apertados e tronco direito, para não balançar. Cotovelos colados ao corpo, desce devagar.', q: 'kneeling kettlebell biceps curl' },
+        ],
+      },
+      {
+        title: 'Flexões declinadas numa perna, mãos nos pesos', info: 'Dual KB Decline Single Leg Push-ups · 3–4 séries · descanso o necessário', rounds: 4, rest: 0,
+        ex: [
+          { n: 'Flexões declinadas numa perna', d: '5 × 5 (5 com cada perna no ar)', l: 'Mãos nos halteres de 9 kg (ou no chão) · pés no sofá', tip: 'É o exercício mais difícil 🔥. Pés em cima do sofá, uma perna no ar, corpo em prancha. Para facilitar: pés no chão, ou joelhos no chão, e vai subindo de nível.', q: 'decline single leg push up kettlebell' },
+        ],
+      },
+      {
+        title: 'Arnold press', info: 'Dual KB Arnold Press · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Arnold press', d: '8–10 reps', l: '2 halteres de 5 kg', tip: 'Começa com os pesos à frente do peito e as palmas viradas para ti. Ao subir, roda as palmas para a frente. Barriga firme, sem arquear as costas.', q: 'arnold press form' },
+        ],
+      },
+      {
+        title: 'Prancha Copenhagen', info: 'KB Copenhagen Plank · 3–4 séries', rounds: 4, rest: 0,
+        ex: [
+          { n: 'Prancha Copenhagen', d: '15–20 s por lado (sugestão: a legenda não diz)', l: 'Pé de cima no sofá ou banco · a Tina usa uma KB, vê no vídeo como', tip: 'Prancha lateral com a perna de cima apoiada no sofá e a de baixo no ar — trabalha os adutores e o core. Mais fácil: apoia o joelho em vez do pé.', q: 'copenhagen plank beginner' },
+        ],
+      },
+      {
+        title: 'Ponte de glúteos com press', info: 'Dual KB Glute Bridge Press · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Ponte de glúteos com press', d: '10 reps', l: '2 halteres de 5 kg (ou 9 kg)', tip: 'Fica em ponte com a anca alta e os glúteos apertados, e faz o press com os pesos acima do peito sem deixar a anca descer.', q: 'glute bridge dumbbell floor press' },
+        ],
+      },
+      {
+        title: 'Remada em avião com uma KB', info: 'Airplane Single KB Row · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Remada em avião com uma KB', d: '6 × 6 (6 de cada lado)', l: 'KB 6 kg para começar · KB 12 kg como a Tina', tip: 'Em equilíbrio numa perna, tronco à frente e a outra perna esticada atrás (como um avião). Puxa a KB para a anca. Mão livre na parede se for preciso.', q: 'single leg kettlebell row airplane' },
+        ],
+      },
+      {
+        title: 'Extra da Tina (opcional)', info: 'Ela acabou com peso morto e elevações na barra', rounds: 3, rest: 0, load: true,
+        ex: [
+          { n: 'Peso morto com KB', d: '8–10 reps (sugestão)', l: 'KB 12 kg', tip: 'Anca para trás, costas direitas, KB entre os pés. As elevações na barra ficam de fora porque não há barra em casa.', q: 'kettlebell deadlift form' },
+        ],
+      },
+    ],
+  },
 ];
 
 // Opções extra para escolher num dia
@@ -388,7 +444,7 @@ const EXTRAS = [
 ];
 
 // Plano base: Segunda → Domingo
-const DEFAULT_PLAN = ['gluteos-aco', 'bracos-rainha', 'corrida-turbo', 'tina-anca', 'bumbum-tonificado', 'corrida-zen', 'domingo-leve'];
+const DEFAULT_PLAN = ['gluteos-aco', 'tina-bracos', 'corrida-turbo', 'tina-anca', 'bumbum-tonificado', 'corrida-zen', 'domingo-leve'];
 
 const DAY_NAMES = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 const DAY_SHORT = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
