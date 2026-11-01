@@ -7,7 +7,7 @@
   const ALL = [...WORKOUTS, ...EXTRAS];
   const byId = id => ALL.find(w => w.id === id) || ALL.find(w => w.id === 'descanso');
 
-  const fresh = () => ({ template: DEFAULT_PLAN.slice(), overrides: {}, done: {}, loads: {}, ticks: {} });
+  const fresh = () => ({ template: DEFAULT_PLAN.slice(), overrides: {}, done: {}, loads: {}, ticks: {}, videos: {} });
   let S;
   try { S = Object.assign(fresh(), JSON.parse(localStorage.getItem(KEY) || '{}')); } catch { S = fresh(); }
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* sem storage */ } };
@@ -27,6 +27,18 @@
 
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const yt = q => 'https://www.youtube.com/results?search_query=' + encodeURIComponent(q);
+
+  // Link de vídeo -> URL de embed (Instagram reels/posts e YouTube)
+  function embedUrl(url) {
+    const u = String(url || '').trim();
+    let m = u.match(/instagram\.com\/(?:[\w.]+\/)?(p|reels?|tv)\/([A-Za-z0-9_-]+)/);
+    if (m) return { kind: 'ig', src: `https://www.instagram.com/${m[1] === 'reels' ? 'reel' : m[1]}/${m[2]}/embed/`, href: `https://www.instagram.com/${m[1] === 'reels' ? 'reel' : m[1]}/${m[2]}/` };
+    m = u.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
+    if (m) return { kind: 'yt', src: `https://www.youtube-nocookie.com/embed/${m[1]}`, href: `https://youtu.be/${m[1]}` };
+    return null;
+  }
+  const videoOf = e => S.videos[e.n] || e.ig || '';
+  const igLink = `<a href="${INSPIRATION.url}" target="_blank" rel="noopener">@${INSPIRATION.handle}</a>`;
 
   // ---------- plano ----------
   const planned = k => S.overrides[k] || S.template[wd(fromKey(k))];
@@ -223,7 +235,8 @@
   function renderTreinos() {
     view.innerHTML = `
       <section class="hello"><h2>Biblioteca de treinos</h2>
-      <p class="muted">7 treinos para rodar durante a semana. Abre qualquer um para o fazer hoje.</p></section>
+      <p class="muted">7 treinos para rodar durante a semana. Abre qualquer um para o fazer hoje.</p>
+      <p class="small">📸 Vídeos e ideias: ${igLink} — cola o link de um reel em qualquer exercício.</p></section>
       <div class="lib">
         ${WORKOUTS.map(w => `
           <article class="lib-card" data-open="${w.id}" data-date="${todayKey()}" role="button" tabindex="0" style="--c:${w.color}">
@@ -362,6 +375,11 @@
         </ul>
       </section>
 
+      <section class="card tips insp">
+        <h4>📸 Inspiração: ${esc(INSPIRATION.name)}</h4>
+        <p class="small">Ideias de exercícios e vídeos em ${igLink}. Para pôr um vídeo num exercício: no Instagram toca em <b>⋯ → Copiar link</b> no reel, abre o exercício aqui, "Como fazer", e cola o link. Fica a aparecer o botão <b>▶ Ver vídeo</b>.</p>
+      </section>
+
       <section class="card tips">
         <h4>🧰 Material</h4>
         <ul>
@@ -435,10 +453,14 @@
                     <span class="dose">${esc(e.d)}</span>
                   </div>
                   ${e.l ? `<p class="load">🏋️ ${esc(e.l)}</p>` : ''}
-                  ${e.tip || e.q ? `<details><summary>Como fazer</summary>
+                  ${videoOf(e) && embedUrl(videoOf(e)) ? `<div class="video" data-video="${esc(videoOf(e))}">
+                    <button class="btn sm accent" data-play>▶ Ver vídeo${embedUrl(videoOf(e)).kind === 'ig' ? ' (Instagram)' : ''}</button></div>` : ''}
+                  <details><summary>Como fazer</summary>
                     ${e.tip ? `<p class="small">${esc(e.tip)}</p>` : ''}
                     ${e.q ? `<a class="small" href="${yt(e.q)}" target="_blank" rel="noopener">▶ Ver vídeos de demonstração</a>` : ''}
-                  </details>` : ''}
+                    <label class="vid-in"><span>Vídeo deste exercício (link do Instagram ou YouTube) · ideias em ${igLink}</span>
+                      <input type="url" placeholder="https://www.instagram.com/reel/..." value="${esc(S.videos[e.n] || '')}" data-vid="${esc(e.n)}"></label>
+                  </details>
                   ${b.rest ? `<label class="load-in"><span>Carga que usei</span>
                     <input type="text" inputmode="text" placeholder="ex.: 12 kg" value="${esc(S.loads[e.n] || '')}" data-load="${esc(e.n)}"></label>` : ''}
                 </li>`).join('')}
@@ -471,6 +493,19 @@
       </footer>`;
 
     $('#back', panel).addEventListener('click', () => closePanel());
+    panel.querySelectorAll('[data-play]').forEach(btn => btn.addEventListener('click', () => {
+      const box = btn.parentElement, v = embedUrl(box.dataset.video);
+      if (!v) return;
+      box.innerHTML = `<iframe class="${v.kind}" src="${v.src}" loading="lazy" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture" title="Vídeo do exercício"></iframe>
+        <a class="small" href="${v.href}" target="_blank" rel="noopener">Abrir na app ↗</a>`;
+    }));
+    panel.querySelectorAll('[data-vid]').forEach(inp => inp.addEventListener('change', () => {
+      const val = inp.value.trim();
+      if (val && !embedUrl(val)) { toast('Link não reconhecido — usa um link de reel/post do Instagram ou do YouTube'); return; }
+      if (val) S.videos[inp.dataset.vid] = val; else delete S.videos[inp.dataset.vid];
+      save(); toast(val ? 'Vídeo guardado 🎬' : 'Vídeo removido');
+      const y = panel.scrollTop; renderPanel(); panel.scrollTop = y;
+    }));
     panel.querySelectorAll('[data-load]').forEach(inp => inp.addEventListener('change', () => {
       S.loads[inp.dataset.load] = inp.value.trim(); save();
     }));

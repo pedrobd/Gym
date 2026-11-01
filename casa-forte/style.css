@@ -294,3 +294,11 @@ summary { cursor: pointer; }
   opacity: 0; pointer-events: none; transition: .25s; max-width: calc(100% - 32px); text-align: center;
 }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* vídeos */
+.video { margin: .4rem 0; }
+.video iframe { display: block; width: 100%; max-width: 400px; border: 0; border-radius: 14px; background: #000; margin-bottom: .3rem; }
+.video iframe.ig { height: 640px; background: #fff; }
+.video iframe.yt { aspect-ratio: 9 / 16; max-height: 640px; }
+.vid-in { display: flex; flex-direction: column; gap: 4px; margin-top: .6rem; font-size: .8rem; color: var(--muted); }
+.vid-in input { border: 1.5px solid var(--line); background: var(--bg); border-radius: 10px; padding: .45em .6em; color: var(--ink); width: 100%; }

@@ -327,3 +327,7 @@ const DAY_NAMES = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 
 const DAY_SHORT = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 
 const PROFILE = { born: 1983, weightKg: 68, crossfitPerWeek: 2 };
+
+// Conta de inspiração. Para fixar um vídeo a um exercício para toda a gente,
+// acrescenta ao exercício:  ig: 'https://www.instagram.com/reel/XXXXXXXX/'
+const INSPIRATION = { name: 'Tina Love Fitness', handle: 'tinalovefitness', url: 'https://www.instagram.com/tinalovefitness/' };
