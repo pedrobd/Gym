@@ -590,6 +590,56 @@ const WORKOUTS = [
       },
     ],
   },
+  {
+    id: 'tina-kb-legday',
+    name: 'Tina · KB Legday',
+    emoji: '🎬',
+    color: '#dc2626',
+    focus: 'Kettlebell · Pernas e glúteos',
+    minutes: 40,
+    kit: ['KB 12 kg', 'KB 6 kg'],
+    by: 'tina',
+    intro: 'Treino da @tinalovefitness, tal como está na publicação: "Legendary KB Legday", pernas com uma só kettlebell pesada. 3–4 séries de cada exercício, descanso o que precisares. Foco na forma e na execução. A Tina usa uma KB de 32 kg; aqui usas a de 12 kg com descida lenta. Bom para alternar com os outros dias de pernas.',
+    video: 'https://www.instagram.com/p/DbdpSE1iNMF/',
+    blocks: [
+      {
+        title: 'Agachamento sumo com KB à frente', info: 'Front Suitcase Hold Sumo Squats · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Agachamento sumo com KB à frente', d: '10 reps', l: 'KB 12 kg', tip: 'KB segura pela pega, à frente do corpo. Pés afastados e virados para fora, desce devagar com o peito aberto e joelhos para fora.', q: 'kettlebell sumo squat' },
+        ],
+      },
+      {
+        title: 'Agachamento com KB num ombro', info: 'Single Arm Front Rack Squats · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Agachamento com KB num ombro', d: '8 × 8 (8 de cada lado)', l: 'KB 12 kg num ombro (rack)', tip: 'KB apoiada num ombro, cotovelo junto ao corpo. Desce a direito sem deixar o tronco inclinar para o lado da KB — o core trabalha muito.', q: 'single arm kettlebell front rack squat' },
+        ],
+      },
+      {
+        title: 'Peso morto escalonado', info: 'Staggered Deadlift · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Peso morto escalonado', d: '8 × 8 (8 de cada lado)', l: 'KB 12 kg', tip: 'Um pé ligeiramente atrás (só o calcanhar levantado), quase todo o peso na perna da frente. Anca para trás, costas direitas, sobe a apertar o glúteo.', q: 'kettlebell staggered stance deadlift' },
+        ],
+      },
+      {
+        title: 'Agachamento cossaco alternado', info: 'Alt Lateral Cossack Squat · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Agachamento cossaco alternado', d: '10 reps (alternadas)', l: 'KB 6 kg ao peito, ou peso do corpo para começar', tip: 'Pernas bem afastadas, desce para um lado com a outra perna esticada e o pé a apontar para cima, e passa para o outro lado. Desce só até onde mantiveres o calcanhar no chão.', q: 'kettlebell cossack squat' },
+        ],
+      },
+      {
+        title: 'Afundo atrás', info: 'Reverse Lunges · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Afundo atrás com KB', d: '8 × 8 (8 com cada perna)', l: 'KB 12 kg ao peito', tip: 'Passo grande para trás, joelho de trás quase a tocar no chão, peso no calcanhar da frente. Tronco direito.', q: 'kettlebell reverse lunge' },
+        ],
+      },
+      {
+        title: 'Kettlebell swing', info: 'Swing · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Kettlebell swing', d: '10 reps', l: 'KB 12 kg', tip: 'Anca para trás como a fechar uma porta com o rabo, depois estala a anca. A KB flutua até à altura do peito — os braços só guiam.', q: 'russian kettlebell swing form' },
+        ],
+      },
+    ],
+  },
 ];
 
 // Opções extra para escolher num dia
