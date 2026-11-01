@@ -16,6 +16,7 @@ const INSPIRATION = {
     'https://www.instagram.com/reel/DDoxJoqhsGZ/',
     'https://www.instagram.com/p/DfHtkg5kYlt/',
     'https://www.instagram.com/p/DZkZVB2j1v9/',
+    'https://www.instagram.com/p/DYcAmk4mKjy/',
   ],
 };
 
@@ -756,6 +757,31 @@ const WORKOUTS = [
         title: 'Shrimp squat', info: 'Shrimp Squat · 3–4 séries · descanso o necessário', rounds: 4, rest: 0,
         ex: [
           { n: 'Shrimp squat', d: '3–5 por perna', l: 'Peso do corpo · mão na parede ou numa cadeira', tip: 'Numa perna, agarra o pé da outra atrás e desce devagar até o joelho de trás tocar no chão (põe uma almofada). A Tina também está a praticar. Mais fácil: desce só até meio, com apoio.', q: 'shrimp squat beginner progression' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'tina-core-circuito',
+    name: 'Tina · Circuito de Core',
+    emoji: '🎬',
+    color: '#7c3aed',
+    focus: 'Kettlebell · Core e corpo inteiro',
+    minutes: 35,
+    kit: ['Halteres 5 kg', 'Halteres 9 kg', 'KB 6 kg', 'Tapete'],
+    by: 'tina',
+    intro: 'Treino da @tinalovefitness, tal como está na publicação: core a sério, sem abdominais nem crunches — força funcional e de corpo inteiro. 3 voltas, sem descanso entre exercícios; descansa entre voltas o que precisares. A Tina usa duas KB de 12 kg; aqui usas os pares de halteres. Antes do treino ela correu 6 km — se quiseres, junta uma corrida curta.',
+    video: 'https://www.instagram.com/p/DYcAmk4mKjy/',
+    blocks: [
+      {
+        title: 'Circuito', info: '3 voltas · sem descanso entre exercícios · descanso o necessário entre voltas', rounds: 3, rest: 0, load: true,
+        ex: [
+          { n: 'Thrusters', d: '12 reps', l: '2 halteres de 5 kg', tip: 'Agachamento com os pesos nos ombros e, ao subir, empurra-os por cima da cabeça num só movimento. Usa a força das pernas.', q: 'dumbbell thruster form' },
+          { n: 'Prancha lateral com press', d: '8 × 8 (8 de cada lado)', l: 'KB 6 kg', tip: 'Em prancha lateral apoiada no antebraço, faz o press com a KB para o teto com o braço de cima. Anca alta o tempo todo 🔥. Mais fácil: joelho de baixo no chão.', q: 'side plank kettlebell press' },
+          { n: 'Clean + afundo atrás alternado', d: '10 reps', l: '2 halteres de 5 kg', tip: 'Traz os pesos do chão aos ombros (clean) e faz um afundo atrás, alternando as pernas. Tronco direito.', q: 'dumbbell clean reverse lunge' },
+          { n: 'Press alternado com rotação', d: '12 reps (alternadas)', l: '2 halteres de 5 kg', tip: 'Pesos nos ombros. Empurra um para cima enquanto rodas o tronco e o pé para o lado oposto, e alterna. A rotação vem da anca.', q: 'alternating rotational press dumbbell' },
+          { n: 'Flexão + remada alternada', d: '10 reps', l: 'Mãos nos halteres de 9 kg (ou 5 kg)', tip: 'Flexão com as mãos nos halteres, depois remada com um braço e depois com o outro. Pés bem afastados para a anca não rodar. Joelhos no chão se for preciso.', q: 'push up to renegade row' },
+          { n: 'Flexões dive bomber', d: '5–8 reps', l: 'Peso do corpo', tip: 'Começa em V invertido (anca alta), "mergulha" a passar o peito rente ao chão e acaba com o peito para cima. A Tina ainda está a praticar 💀. Mais fácil: flexões pike.', q: 'dive bomber push up beginner' },
         ],
       },
     ],
