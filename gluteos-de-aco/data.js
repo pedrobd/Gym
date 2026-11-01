@@ -665,6 +665,50 @@ const WORKOUTS = [
       },
     ],
   },
+  {
+    id: 'tina-full-body',
+    name: 'Tina · Full Body KB',
+    emoji: '🎬',
+    color: '#ca8a04',
+    focus: 'Kettlebell · Corpo inteiro',
+    minutes: 35,
+    kit: ['KB 12 kg', 'KB 6 kg'],
+    by: 'tina',
+    intro: 'Treino da @tinalovefitness, tal como está na publicação: "Monday grind", corpo inteiro com uma só kettlebell. 3–4 séries de cada exercício. A legenda não fala de descanso: descansa o que precisares. A Tina usa uma KB de 16 kg; aqui usas a de 12 kg.',
+    video: 'https://www.instagram.com/reel/DDoxJoqhsGZ/',
+    blocks: [
+      {
+        title: 'Swing lateral + swing com paragem', info: 'Alt Lateral to Dead Stop Swing · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Swing lateral alternado + swing com paragem', d: '10 reps (cada paragem conta 1)', l: 'KB 12 kg', tip: 'Alterna swings para um lado e para o outro, e termina com um swing que volta a pousar a KB no chão (paragem). Cada paragem conta como 1 repetição. Força da anca, braços só guiam.', q: 'kettlebell lateral swing dead stop swing' },
+        ],
+      },
+      {
+        title: 'Agachamento sumo + clean sumo', info: 'Sumo Squat into Sumo Clean · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Agachamento sumo + clean sumo', d: '12 reps', l: 'KB 12 kg', tip: 'Pés afastados e virados para fora. Agachamento sumo com a KB pela pega, e ao subir puxa-a até ao peito (clean), com os cotovelos para baixo. Desce-a com controlo.', q: 'kettlebell sumo squat to clean' },
+        ],
+      },
+      {
+        title: 'Swing lateral + clean com rotação', info: 'Lateral Swing into Rotational Clean · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Swing lateral + clean com rotação', d: '10 reps', l: 'KB 6 kg para aprender · KB 12 kg', tip: 'Swing para o lado e, a rodar o tronco e os pés, traz a KB ao ombro (clean). Movimento técnico: segue o vídeo e começa com a KB de 6 kg.', q: 'kettlebell rotational clean' },
+        ],
+      },
+      {
+        title: 'Afundo atrás alternado com KB por cima da cabeça', info: 'OH Alt Reverse Lunges · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Afundo atrás com KB por cima da cabeça', d: '10 reps (alternadas)', l: 'KB 6 kg (por cima da cabeça)', tip: 'KB esticada por cima da cabeça, braço trancado e barriga firme. Passo grande para trás e alterna as pernas. A Tina põe 🔥😮‍💨 — é duro.', q: 'overhead kettlebell reverse lunge' },
+        ],
+      },
+      {
+        title: 'Swing agachado com um braço + swing russo', info: 'SA Squat Swing into Russian Swing · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Swing agachado com um braço + swing russo', d: '10 reps', l: 'KB 12 kg', tip: 'Swing com um braço a partir de uma posição mais agachada, seguido de um swing russo (KB até à altura do peito). Troca de braço a meio ou na série seguinte. Costas direitas sempre.', q: 'single arm squat swing russian swing kettlebell' },
+        ],
+      },
+    ],
+  },
 ];
 
 // Opções extra para escolher num dia
