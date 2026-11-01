@@ -1,6 +1,22 @@
 // Casa Forte — biblioteca de treinos
 // Material: kettlebells 12 kg e 6 kg · halteres 2×9 kg, 2×5 kg, 2×1 kg · perneiras 1 kg · elásticos
 
+// Conta de inspiração. Para fixar um vídeo a um exercício para toda a gente,
+// acrescenta ao exercício:  ig: 'https://www.instagram.com/reel/XXXXXXXX/'
+const INSPIRATION = {
+  name: 'Tina Love Fitness', handle: 'tinalovefitness', url: 'https://www.instagram.com/tinalovefitness/',
+  videos: [
+    'https://www.instagram.com/p/DeO86U8nxGB/',
+    'https://www.instagram.com/p/DeEg3Dtnx1f/',
+    'https://www.instagram.com/p/DdRnHK2DWlz/',
+    'https://www.instagram.com/p/Db00kIfiEXB/',
+    'https://www.instagram.com/p/Dbv23UACAI4/',
+    'https://www.instagram.com/p/DbdpSE1iNMF/',
+    'https://www.instagram.com/p/DZSFut0mMs_/',
+    'https://www.instagram.com/reel/DDoxJoqhsGZ/',
+  ],
+};
+
 const WORKOUTS = [
   {
     id: 'gluteos-aco',
@@ -310,6 +326,41 @@ const WORKOUTS = [
       },
     ],
   },
+  {
+    id: 'kb-tina',
+    name: 'KB com a Tina',
+    emoji: '🎬',
+    color: '#d9467a',
+    focus: 'Kettlebell · Segue o vídeo',
+    minutes: 40,
+    kit: ['KB 12 kg', 'KB 6 kg'],
+    intro: 'Treino de kettlebell a acompanhar os vídeos da @tinalovefitness. Cada semana há um vídeo sugerido (podes escolher outro). Faz o circuito do vídeo 3–4 vezes.',
+    blocks: [
+      {
+        title: 'Aquecimento', info: '2 voltas · 5 min', rounds: 2, rest: 0,
+        ex: [
+          { n: 'Halo com kettlebell', d: '6 para cada lado', l: 'KB 6 kg', tip: 'Roda a KB à volta da cabeça, barriga firme.', q: 'kettlebell halo' },
+          { n: 'Agachamento goblet leve', d: '10 reps', l: 'KB 6 kg', tip: '', q: 'goblet squat' },
+          { n: 'Swing leve', d: '10 reps', l: 'KB 6 kg', tip: 'Movimento de anca, não de braços.', q: 'kettlebell swing form' },
+        ],
+      },
+      {
+        title: 'Treino da Tina', info: 'Vê o vídeo uma vez, depois faz o circuito 3–4 voltas · descanso 60–90 s entre voltas', rounds: 4, rest: 75,
+        videos: true,
+        ex: [
+          { n: 'Exercícios do vídeo', d: 'Repetições ou tempo do vídeo', l: 'KB 12 kg para pernas, swings e peso morto · KB 6 kg para braços, ombros e por cima da cabeça', tip: 'Se a técnica se perder no fim da volta, passa para a KB de 6 kg ou faz menos repetições. Qualidade primeiro.', q: '' },
+        ],
+      },
+      {
+        title: 'Retorno à calma', info: '4 min', rounds: 1, rest: 0,
+        ex: [
+          { n: 'Postura do pombo', d: '40 s por lado', l: '', tip: '', q: 'pigeon pose stretch' },
+          { n: 'Alongamento de peito na porta', d: '30 s por lado', l: '', tip: '', q: 'doorway chest stretch' },
+          { n: 'Postura da criança', d: '1 min', l: '', tip: 'Respiração lenta pelo nariz.', q: 'child pose' },
+        ],
+      },
+    ],
+  },
 ];
 
 // Opções extra para escolher num dia
@@ -321,25 +372,9 @@ const EXTRAS = [
 ];
 
 // Plano base: Segunda → Domingo
-const DEFAULT_PLAN = ['gluteos-aco', 'bracos-rainha', 'corrida-turbo', 'kettlebell-fire', 'bumbum-tonificado', 'corrida-zen', 'domingo-leve'];
+const DEFAULT_PLAN = ['gluteos-aco', 'bracos-rainha', 'corrida-turbo', 'kb-tina', 'bumbum-tonificado', 'corrida-zen', 'domingo-leve'];
 
 const DAY_NAMES = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 const DAY_SHORT = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 
 const PROFILE = { born: 1983, weightKg: 68, crossfitPerWeek: 2 };
-
-// Conta de inspiração. Para fixar um vídeo a um exercício para toda a gente,
-// acrescenta ao exercício:  ig: 'https://www.instagram.com/reel/XXXXXXXX/'
-const INSPIRATION = {
-  name: 'Tina Love Fitness', handle: 'tinalovefitness', url: 'https://www.instagram.com/tinalovefitness/',
-  videos: [
-    'https://www.instagram.com/p/DeO86U8nxGB/',
-    'https://www.instagram.com/p/DeEg3Dtnx1f/',
-    'https://www.instagram.com/p/DdRnHK2DWlz/',
-    'https://www.instagram.com/p/Db00kIfiEXB/',
-    'https://www.instagram.com/p/Dbv23UACAI4/',
-    'https://www.instagram.com/p/DbdpSE1iNMF/',
-    'https://www.instagram.com/p/DZSFut0mMs_/',
-    'https://www.instagram.com/reel/DDoxJoqhsGZ/',
-  ],
-};

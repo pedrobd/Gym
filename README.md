@@ -26,6 +26,7 @@ Abre `index.html` no browser, ou publica com GitHub Pages (Settings → Pages �
 Site novo em [`casa-forte/`](casa-forte/): 7 treinos em casa (máx. 45 min) para fortalecer braços e glúteos e tonificar, com kettlebells 12/6 kg, halteres 9/5/1 kg, perneiras de 1 kg e elásticos.
 
 - Plano semanal (Seg → Dom) com troca de dias: escolher o treino de quinta na terça troca os dois automaticamente; opção "CrossFit na box" e "Descanso".
+- Treino "KB com a Tina" (quinta): kettlebell a acompanhar os reels da @tinalovefitness, com um vídeo sugerido por semana.
 - Cada treino com séries, repetições, carga sugerida, dicas e vídeos de demonstração.
 - Cronómetro de treino, descanso automático e cronómetro de intervalos com som e voz (corridas, EMOM, AMRAP).
 - Registo de treinos feitos, cargas usadas e progresso das últimas 8 semanas.

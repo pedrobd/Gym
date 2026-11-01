@@ -10,6 +10,8 @@
   const fresh = () => ({ template: DEFAULT_PLAN.slice(), overrides: {}, done: {}, loads: {}, ticks: {}, videos: {} });
   let S;
   try { S = Object.assign(fresh(), JSON.parse(localStorage.getItem(KEY) || '{}')); } catch { S = fresh(); }
+  // quinta-feira passou a ser 'KB com a Tina' no plano sugerido
+  if (!S.v2) { if (S.template[3] === 'kettlebell-fire') S.template[3] = 'kb-tina'; S.v2 = 1; }
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* sem storage */ } };
 
   // ---------- datas ----------
@@ -453,6 +455,7 @@
               <div><h3>${esc(b.title)}</h3><p class="muted small">${esc(b.info)}</p></div>
             </div>
             ${b.interval ? `<button class="btn sm accent" data-interval="${bi}">⏱ Iniciar cronómetro</button>` : ''}
+            ${b.videos ? tinaPicker() : ''}
             <ol class="ex-list">
               ${b.ex.map((e, ei) => `
                 <li class="ex">
@@ -554,6 +557,15 @@
 
     // se a sessão foi retomada, atualiza o botão/relógio
     if (session.start) tickSession();
+  }
+
+  // vídeo sugerido roda a cada semana
+  const weekNo = d => Math.floor((monday(d) - new Date(2024, 0, 1)) / 6048e5);
+  function tinaPicker() {
+    const vids = INSPIRATION.videos, sug = weekNo(fromKey(cur.date)) % vids.length;
+    return `<p class="small"><b>Vídeo sugerido esta semana: Vídeo ${sug + 1}</b> · ou escolhe outro</p>
+      <div class="video tina" data-video="${vids[sug]}"><button class="btn sm accent" data-play>▶ Vídeo ${sug + 1}</button></div>
+      <div class="gallery">${vids.map((v, i) => i === sug ? '' : `<div class="video" data-video="${v}"><button class="btn sm ghost" data-play>Vídeo ${i + 1}</button></div>`).join('')}</div>`;
   }
 
   function bindPlay(root) {
