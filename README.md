@@ -36,6 +36,7 @@ Site novo em [`gluteos-de-aco/`](gluteos-de-aco/): 7 treinos em casa (máx. 45 m
 - Treino "Tina · Full Body KB" (na biblioteca): corpo inteiro com uma KB, do reel DDoxJoqhsGZ.
 - Treino "Tina · Legday Sem Fôlego" (na biblioteca): pernas com uma KB, da publicação DZkZVB2j1v9.
 - Treino "Tina · Circuito de Core" (na biblioteca): circuito de core e corpo inteiro, da publicação DYcAmk4mKjy.
+- Treino "Tina · Sunday Funday Legday" (na biblioteca): pernas com uma KB, da publicação DVoNjyLEthk.
 - Cada treino com séries, repetições, carga sugerida, dicas e vídeos de demonstração.
 - Cronómetro de treino, descanso automático e cronómetro de intervalos com som e voz (corridas, EMOM, AMRAP).
 - Registo de treinos feitos, cargas usadas e progresso das últimas 8 semanas.

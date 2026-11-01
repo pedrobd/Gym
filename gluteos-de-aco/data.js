@@ -17,6 +17,7 @@ const INSPIRATION = {
     'https://www.instagram.com/p/DfHtkg5kYlt/',
     'https://www.instagram.com/p/DZkZVB2j1v9/',
     'https://www.instagram.com/p/DYcAmk4mKjy/',
+    'https://www.instagram.com/p/DVoNjyLEthk/',
   ],
 };
 
@@ -782,6 +783,56 @@ const WORKOUTS = [
           { n: 'Press alternado com rotação', d: '12 reps (alternadas)', l: '2 halteres de 5 kg', tip: 'Pesos nos ombros. Empurra um para cima enquanto rodas o tronco e o pé para o lado oposto, e alterna. A rotação vem da anca.', q: 'alternating rotational press dumbbell' },
           { n: 'Flexão + remada alternada', d: '10 reps', l: 'Mãos nos halteres de 9 kg (ou 5 kg)', tip: 'Flexão com as mãos nos halteres, depois remada com um braço e depois com o outro. Pés bem afastados para a anca não rodar. Joelhos no chão se for preciso.', q: 'push up to renegade row' },
           { n: 'Flexões dive bomber', d: '5–8 reps', l: 'Peso do corpo', tip: 'Começa em V invertido (anca alta), "mergulha" a passar o peito rente ao chão e acaba com o peito para cima. A Tina ainda está a praticar 💀. Mais fácil: flexões pike.', q: 'dive bomber push up beginner' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'tina-legday-domingo',
+    name: 'Tina · Sunday Funday Legday',
+    emoji: '🎬',
+    color: '#b45309',
+    focus: 'Kettlebell · Pernas e glúteos',
+    minutes: 40,
+    kit: ['KB 12 kg', 'Halteres 9 kg', 'Livro ou disco para os calcanhares'],
+    by: 'tina',
+    intro: 'Treino da @tinalovefitness, tal como está na publicação: "Legendary KB leg day", pernas com uma KB pesada. A regra de sempre: só repetições de qualidade. 3–4 séries de cada exercício, descanso o que precisares. A Tina usa uma KB de 32 kg; aqui usas a de 12 kg com descida lenta.',
+    video: 'https://www.instagram.com/p/DVoNjyLEthk/',
+    blocks: [
+      {
+        title: 'Agachamento escalonado com KB à frente', info: 'Front Rack Staggered Stance Squat · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Agachamento escalonado com KB à frente', d: '5 × 5 (5 de cada lado)', l: 'KB 12 kg ao peito', tip: 'Um pé ligeiramente atrás (calcanhar levantado), quase todo o peso na perna da frente. Desce devagar, 3–4 s, para compensar o peso mais leve 💀.', q: 'kettlebell front rack staggered stance squat' },
+        ],
+      },
+      {
+        title: 'Agachamento sumo com KB à frente', info: 'Front Suitcase Hold Sumo Squats · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Agachamento sumo com KB à frente', d: '10 reps', l: 'KB 12 kg', tip: 'KB segura pela pega, à frente do corpo. Pés afastados e virados para fora, desce devagar com o peito aberto e joelhos para fora.', q: 'kettlebell sumo squat' },
+        ],
+      },
+      {
+        title: 'Peso morto sumo', info: 'Sumo Deadlift · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Peso morto sumo', d: '10 reps', l: 'KB 12 kg (ou 2 halteres de 9 kg para mais peso)', tip: 'Pés bem afastados e virados para fora, KB no chão entre os pés. Anca para trás, costas direitas, sobe a empurrar o chão e a apertar os glúteos.', q: 'kettlebell sumo deadlift' },
+        ],
+      },
+      {
+        title: 'Agachamento à frente com calcanhares elevados', info: 'Heel Elevated Front Squats · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Agachamento com calcanhares elevados', d: '10 reps', l: 'KB 12 kg ao peito · calcanhares num livro ou disco', tip: 'Calcanhares em cima de um livro grosso, pés juntos à largura da anca. Desce fundo com o tronco direito — trabalha muito os quadríceps.', q: 'heel elevated kettlebell front squat' },
+        ],
+      },
+      {
+        title: 'Peso morto escalonado', info: 'Staggered Deadlift · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Peso morto escalonado', d: '6 × 6 (6 de cada lado)', l: 'KB 12 kg', tip: 'Um pé ligeiramente atrás (só o calcanhar levantado), quase todo o peso na perna da frente. Anca para trás, costas direitas, sobe a apertar o glúteo.', q: 'kettlebell staggered stance deadlift' },
+        ],
+      },
+      {
+        title: 'Afundos a andar com KB à frente', info: 'Front Rack Walking Lunges · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Afundos a andar com KB à frente', d: '12–16 passos', l: 'KB 12 kg ao peito', tip: 'Passos grandes para a frente, joelho de trás quase a tocar no chão, tronco direito. Se não houver espaço em casa, faz afundos alternados no sítio 🥵.', q: 'kettlebell front rack walking lunge' },
         ],
       },
     ],
