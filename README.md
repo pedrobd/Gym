@@ -18,3 +18,16 @@ Fotos dos exercícios em `img/`, do [free-exercise-db](https://github.com/yuhona
 ## Usar
 
 Abre `index.html` no browser, ou publica com GitHub Pages (Settings → Pages → Deploy from branch).
+
+---
+
+# Casa Forte 🍑💪
+
+Site novo em [`casa-forte/`](casa-forte/): 7 treinos em casa (máx. 45 min) para fortalecer braços e glúteos e tonificar, com kettlebells 12/6 kg, halteres 9/5/1 kg, perneiras de 1 kg e elásticos.
+
+- Plano semanal (Seg → Dom) com troca de dias: escolher o treino de quinta na terça troca os dois automaticamente; opção "CrossFit na box" e "Descanso".
+- Cada treino com séries, repetições, carga sugerida, dicas e vídeos de demonstração.
+- Cronómetro de treino, descanso automático e cronómetro de intervalos com som e voz (corridas, EMOM, AMRAP).
+- Registo de treinos feitos, cargas usadas e progresso das últimas 8 semanas.
+
+Com GitHub Pages ligado, fica em `https://pedrobd.github.io/Gym/casa-forte/`.

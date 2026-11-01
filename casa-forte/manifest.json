@@ -1,0 +1,11 @@
+{
+  "name": "Casa Forte",
+  "short_name": "Casa Forte",
+  "description": "Treinos em casa: glúteos, braços, corrida e mobilidade.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#fff7f4",
+  "theme_color": "#e8505b",
+  "lang": "pt",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}
