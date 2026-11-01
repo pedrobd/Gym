@@ -15,6 +15,7 @@ const INSPIRATION = {
     'https://www.instagram.com/p/DZSFut0mMs_/',
     'https://www.instagram.com/reel/DDoxJoqhsGZ/',
     'https://www.instagram.com/p/DfHtkg5kYlt/',
+    'https://www.instagram.com/p/DZkZVB2j1v9/',
   ],
 };
 
@@ -705,6 +706,56 @@ const WORKOUTS = [
         title: 'Swing agachado com um braço + swing russo', info: 'SA Squat Swing into Russian Swing · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
         ex: [
           { n: 'Swing agachado com um braço + swing russo', d: '10 reps', l: 'KB 12 kg', tip: 'Swing com um braço a partir de uma posição mais agachada, seguido de um swing russo (KB até à altura do peito). Troca de braço a meio ou na série seguinte. Costas direitas sempre.', q: 'single arm squat swing russian swing kettlebell' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'tina-legday-ofegante',
+    name: 'Tina · Legday Sem Fôlego',
+    emoji: '🎬',
+    color: '#be123c',
+    focus: 'Kettlebell · Pernas e glúteos com cardio',
+    minutes: 40,
+    kit: ['KB 12 kg', 'KB 6 kg', 'Degrau ou livro grosso'],
+    by: 'tina',
+    intro: 'Treino da @tinalovefitness, tal como está na publicação: "não é um legday normal — é treino de força, mas a deixar-te sem fôlego". 3–4 séries de cada exercício, descanso o que precisares. A Tina usa uma KB de 24 kg; aqui usas a de 12 kg.',
+    video: 'https://www.instagram.com/p/DZkZVB2j1v9/',
+    blocks: [
+      {
+        title: 'Agachamento com KB num ombro', info: 'Single Arm Rack Squats · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Agachamento com KB num ombro', d: '10 reps (troca de lado em cada série)', l: 'KB 12 kg num ombro (rack)', tip: 'KB apoiada num ombro, cotovelo junto ao corpo. Desce a direito sem deixar o tronco inclinar para o lado da KB.', q: 'single arm kettlebell rack squat' },
+        ],
+      },
+      {
+        title: 'Afundo alternado + swing', info: 'Alt Lunges Swing · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Afundo alternado + swing', d: '12 reps', l: 'KB 12 kg (KB 6 kg para aprender)', tip: 'Combina afundos alternados com swings — é aqui que fica "sem fôlego". Vê no vídeo a sequência da Tina. Costas direitas no swing, joelho de trás quase a tocar no chão no afundo.', q: 'kettlebell lunge swing' },
+        ],
+      },
+      {
+        title: 'Peso morto escalonado', info: 'Staggered Deadlift · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Peso morto escalonado', d: '8 × 8 (8 de cada lado)', l: 'KB 12 kg', tip: 'Um pé ligeiramente atrás (só o calcanhar levantado), quase todo o peso na perna da frente. Anca para trás, costas direitas, sobe a apertar o glúteo.', q: 'kettlebell staggered stance deadlift' },
+        ],
+      },
+      {
+        title: 'Agachamento sumo Zercher', info: 'Zercher Sumo Squat · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Agachamento sumo Zercher', d: '10 reps', l: 'KB 12 kg abraçada na dobra dos cotovelos', tip: 'Segura a KB junto ao peito, apoiada na dobra dos cotovelos (posição Zercher). Pés afastados e virados para fora, desce com o tronco direito e joelhos para fora.', q: 'kettlebell zercher sumo squat' },
+        ],
+      },
+      {
+        title: 'Curtsy em défice', info: 'Deficit Curtsy Lunges · 3–4 séries · descanso o necessário', rounds: 4, rest: 0, load: true,
+        ex: [
+          { n: 'Curtsy em défice', d: '8 × 8 (8 com cada perna)', l: 'KB 12 kg ou KB 6 kg ao peito · pé da frente num degrau ou livro', tip: 'Pé da frente em cima de um degrau baixo (défice = desces mais fundo). A perna de trás cruza na diagonal, como numa vénia. Joelho da frente alinhado com o pé.', q: 'deficit curtsy lunge' },
+        ],
+      },
+      {
+        title: 'Shrimp squat', info: 'Shrimp Squat · 3–4 séries · descanso o necessário', rounds: 4, rest: 0,
+        ex: [
+          { n: 'Shrimp squat', d: '3–5 por perna', l: 'Peso do corpo · mão na parede ou numa cadeira', tip: 'Numa perna, agarra o pé da outra atrás e desce devagar até o joelho de trás tocar no chão (põe uma almofada). A Tina também está a praticar. Mais fácil: desce só até meio, com apoio.', q: 'shrimp squat beginner progression' },
         ],
       },
     ],
