@@ -1,4 +1,4 @@
-/* Casa Forte — app */
+/* Glúteos de Aço — app */
 (() => {
   'use strict';
 
@@ -331,7 +331,7 @@
     $('#exp').addEventListener('click', () => {
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' }));
-      a.download = `casa-forte-${todayKey()}.json`; a.click();
+      a.download = `gluteos-de-aco-${todayKey()}.json`; a.click();
     });
     $('#imp').addEventListener('change', e => {
       const f = e.target.files[0]; if (!f) return;
@@ -353,7 +353,7 @@
         <ul>
           ${S.template.map((id, i) => `<li><b>${DAY_SHORT[i]}</b> ${byId(id).emoji} ${esc(byId(id).name)}</li>`).join('')}
         </ul>
-        <p class="small">Nos dias de <b>CrossFit</b>, escolhe "CrossFit na box" nesse dia. Evita fazer <i>Glúteos de Aço</i> ou <i>Kettlebell Fire</i> no dia antes de uma aula pesada de pernas.</p>
+        <p class="small">Nos dias de <b>CrossFit</b>, escolhe "CrossFit na box" nesse dia. Evita fazer <i>Glúteos Power</i> ou <i>Kettlebell Fire</i> no dia antes de uma aula pesada de pernas.</p>
       </section>
 
       <section class="card tips">

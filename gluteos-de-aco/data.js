@@ -1,4 +1,4 @@
-// Casa Forte — biblioteca de treinos
+// Glúteos de Aço — biblioteca de treinos
 // Material: kettlebells 12 kg e 6 kg · halteres 2×9 kg, 2×5 kg, 2×1 kg · perneiras 1 kg · elásticos
 
 // Conta de inspiração. Para fixar um vídeo a um exercício para toda a gente,
@@ -20,7 +20,7 @@ const INSPIRATION = {
 const WORKOUTS = [
   {
     id: 'gluteos-aco',
-    name: 'Glúteos de Aço',
+    name: 'Glúteos Power',
     emoji: '🍑',
     color: '#e8505b',
     focus: 'Força · Glúteos e pernas',
