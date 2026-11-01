@@ -28,6 +28,7 @@ Site novo em [`gluteos-de-aco/`](gluteos-de-aco/): 7 treinos em casa (máx. 45 m
 - Plano semanal (Seg → Dom) com troca de dias: escolher o treino de quinta na terça troca os dois automaticamente; opção "CrossFit na box" e "Descanso".
 - Treino "Tina · Anca & Adutores" (quinta): o treino de kettlebell da publicação DfHtkg5kYlt da @tinalovefitness, tal como está na legenda.
 - Treino "Tina · Braços & Core" (terça): o treino de tronco e core da publicação DeEg3Dtnx1f, com pares de halteres onde a Tina usa duas KB.
+- Segunda e sexta: "Pernas da Tina", que alterna todas as semanas entre os 5 treinos de pernas da Tina (ciclo de 5 semanas, cada treino 2 vezes).
 - Treino "Tina · Legendary Legday" (segunda): o treino de pernas com uma KB da publicação DdRnHK2DWlz.
 - Treino "Tina · Pernas Sólidas" (sexta): o treino de pernas com uma KB da publicação Db00kIfiEXB.
 - Treino "Tina · Core de Kettlebell" (na biblioteca): corpo inteiro e core com a KB de 12 kg, da publicação Dbv23UACAI4.

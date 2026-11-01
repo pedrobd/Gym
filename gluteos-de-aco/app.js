@@ -4,7 +4,7 @@
 
   // ---------- estado ----------
   const KEY = 'casaForte.v1';
-  const ALL = [...WORKOUTS, ...EXTRAS];
+  const ALL = [...WORKOUTS, ...EXTRAS, ...ROTATIONS];
   const byId = id => ALL.find(w => w.id === id) || ALL.find(w => w.id === 'descanso');
 
   const fresh = () => ({ template: DEFAULT_PLAN.slice(), overrides: {}, done: {}, loads: {}, ticks: {}, videos: {} });
@@ -27,6 +27,12 @@
   if (!S.v6) { if (S.template[4] === 'bumbum-tonificado') S.template[4] = 'tina-pernas-solidas'; S.v6 = 1; }
   // domingo passa a ser o treino de mobilidade da Tina
   if (!S.v7) { if (S.template[6] === 'domingo-leve') S.template[6] = 'tina-mobilidade'; S.v7 = 1; }
+  // segunda e sexta passam a alternar os treinos de pernas da Tina
+  if (!S.v8) {
+    if (S.template[0] === 'tina-pernas') S.template[0] = 'rot-pernas';
+    if (S.template[4] === 'tina-pernas-solidas') S.template[4] = 'rot-pernas';
+    S.v8 = 1;
+  }
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* sem storage */ } };
 
   // ---------- datas ----------
@@ -58,7 +64,21 @@
   const igLink = `<a href="${INSPIRATION.url}" target="_blank" rel="noopener">@${INSPIRATION.handle}</a>`;
 
   // ---------- plano ----------
-  const planned = k => S.overrides[k] || S.template[wd(fromKey(k))];
+  // semanas desde uma segunda-feira fixa (para rotações e vídeo da semana)
+  const weekNo = d => Math.round((monday(d) - new Date(2024, 0, 1)) / 6048e5);
+  // resolve uma rotação no treino concreto desse dia: cada semana avança 2 posições,
+  // e cada dia com a mesma rotação nessa semana recebe o seguinte da lista
+  function resolve(id, k) {
+    const rot = ROTATIONS.find(r => r.id === id);
+    if (!rot) return id;
+    const day = wd(fromKey(k));
+    const nth = S.template.slice(0, day).filter(t => t === id).length;
+    const per = Math.max(1, S.template.filter(t => t === id).length);
+    const n = rot.pool.length;
+    return rot.pool[(((weekNo(fromKey(k)) * per + nth) % n) + n) % n];
+  }
+  const rotationOf = k => !S.overrides[k] && ROTATIONS.find(r => r.id === S.template[wd(fromKey(k))]);
+  const planned = k => resolve(S.overrides[k] || S.template[wd(fromKey(k))], k);
   const planFor = k => (S.done[k] && S.done[k].w) || planned(k);
 
   // Muda o treino de um dia. Se esse treino estava noutro dia da mesma semana, troca os dois.
@@ -108,6 +128,7 @@
 
   const optionList = sel => `
     <optgroup label="Treinos em casa">${WORKOUTS.map(w => `<option value="${w.id}" ${w.id === sel ? 'selected' : ''}>${w.emoji} ${esc(w.name)}</option>`).join('')}</optgroup>
+    <optgroup label="Alternar">${ROTATIONS.map(w => `<option value="${w.id}" ${w.id === sel ? 'selected' : ''}>${w.emoji} ${esc(w.name)}</option>`).join('')}</optgroup>
     <optgroup label="Outros">${EXTRAS.map(w => `<option value="${w.id}" ${w.id === sel ? 'selected' : ''}>${w.emoji} ${esc(w.name)}</option>`).join('')}</optgroup>`;
 
   const feelEmoji = ['', '😮‍💨', '😕', '🙂', '😃', '🤩'];
@@ -212,7 +233,7 @@
           <article class="day ${k === tk ? 'today' : ''} ${d ? 'done' : ''}" style="--c:${w.color}">
             <div class="day-head">
               <div><b>${DAY_NAMES[wd(fromKey(k))]}</b> <span class="muted small">${fmtDate(k)}</span></div>
-              ${d ? `<span class="pill ok">✓ feito</span>` : k === tk ? `<span class="pill hot">hoje</span>` : moved ? `<span class="pill">alterado</span>` : ''}
+              ${d ? `<span class="pill ok">✓ feito</span>` : k === tk ? `<span class="pill hot">hoje</span>` : moved ? `<span class="pill">alterado</span>` : rotationOf(k) ? `<span class="pill">🔁 rotação</span>` : ''}
             </div>
             <div class="day-body" ${w.extra ? '' : `data-open="${w.id}" data-date="${k}" role="button" tabindex="0"`}>
               <span class="mid-emoji">${w.emoji}</span>
@@ -366,7 +387,7 @@
       <section class="card tips">
         <h4>🗓 A semana sugerida</h4>
         <ul>
-          ${S.template.map((id, i) => `<li><b>${DAY_SHORT[i]}</b> ${byId(id).emoji} ${esc(byId(id).name)}</li>`).join('')}
+          ${S.template.map((id, i) => `<li><b>${DAY_SHORT[i]}</b> ${byId(id).emoji} ${esc(byId(id).name)}${byId(id).rotation ? ` — esta semana: <i>${esc(byId(planned(keyOf(addDays(monday(new Date()), i)))).name)}</i>` : ''}</li>`).join('')}
         </ul>
         <p class="small">Nos dias de <b>CrossFit</b>, escolhe "CrossFit na box" nesse dia. Evita fazer <i>Glúteos Power</i> ou <i>Kettlebell Fire</i> no dia antes de uma aula pesada de pernas.</p>
       </section>
@@ -576,7 +597,6 @@
   }
 
   // vídeo sugerido roda a cada semana
-  const weekNo = d => Math.floor((monday(d) - new Date(2024, 0, 1)) / 6048e5);
   function tinaPicker() {
     const vids = INSPIRATION.videos, sug = weekNo(fromKey(cur.date)) % vids.length;
     return `<p class="small"><b>Vídeo sugerido esta semana: Vídeo ${sug + 1}</b> · ou escolhe outro</p>

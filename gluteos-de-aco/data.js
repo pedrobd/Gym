@@ -847,8 +847,14 @@ const EXTRAS = [
     intro: 'Descansar também é treinar: é aqui que o músculo cresce. Uma caminhada leve é bem-vinda.' },
 ];
 
+// Rotações: um dia do plano com uma rotação recebe um treino diferente em cada semana
+const ROTATIONS = [
+  { id: 'rot-pernas', name: 'Pernas da Tina (alterna todas as semanas)', emoji: '🔁', color: '#e8505b', rotation: true,
+    pool: ['tina-pernas', 'tina-pernas-solidas', 'tina-kb-legday', 'tina-legday-ofegante', 'tina-legday-domingo'] },
+];
+
 // Plano base: Segunda → Domingo
-const DEFAULT_PLAN = ['tina-pernas', 'tina-bracos', 'corrida-turbo', 'tina-anca', 'tina-pernas-solidas', 'corrida-zen', 'tina-mobilidade'];
+const DEFAULT_PLAN = ['rot-pernas', 'tina-bracos', 'corrida-turbo', 'tina-anca', 'rot-pernas', 'corrida-zen', 'tina-mobilidade'];
 
 const DAY_NAMES = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 const DAY_SHORT = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
