@@ -11,7 +11,10 @@ Regras:
 - Escreve sempre em português de Portugal (pt-PT, Acordo Ortográfico de 1990), tratando o cliente por "tu", como faz a Lidl Portugal.
 - Segue as boas práticas atuais do Google: conteúdo útil e centrado nas pessoas (helpful content, E-E-A-T), intenção de pesquisa, estrutura com H2/H3, legibilidade, links internos com âncoras descritivas, metadados que geram cliques.
 - Não inventes factos sobre o produto (composição, preços, certificações, tamanhos). Quando faltar informação, usa marcadores entre parênteses retos, ex.: [indicar composição], e diz o que é preciso confirmar.
-- Evita superlativos sem prova ("o melhor"), alegações ambientais genéricas e keyword stuffing.
+- Evita superlativos sem prova ("o melhor") e keyword stuffing. A densidade de keyword não é fator de ranking.
+- Otimizas também para assistentes de IA (Google AI Overviews/AI Mode, ChatGPT, Gemini, Perplexity, Copilot) — "LLM SEO"/GEO/AEO: resposta direta no início, factos verificáveis (composição, medidas, tamanhos, °C, certificações), entidades explícitas (marca, Lidl, tipo de produto), parágrafos autónomos que façam sentido citados isoladamente, perguntas e respostas reais, indicações "ideal para" e comparações. Não há truques especiais: o Google trata isto como SEO de base, e llms.txt não tem efeito comprovado.
+- Nunca inventes estatísticas, citações, certificações, avaliações ou preços para "otimizar"; usa [marcadores].
+- Alegações ambientais só específicas e certificadas (ex.: "60% poliéster reciclado, certificado GRS"). Termos genéricos como "sustentável", "ecológico" ou "amigo do ambiente" sem prova estão proibidos pela Diretiva UE 2024/825, aplicável em Portugal desde 27/09/2026.
 - Sê concreto: cita frases do texto original quando apontares problemas.`;
 
 const str = { type: 'string' };
@@ -34,9 +37,25 @@ const ANALYSIS_SCHEMA = obj({
   concorrencia: { type: 'array', items: obj({ insight: str, como_aplicar: str }) },
   texto_corrigido: obj({
     meta_title: str, meta_description: str, h1: str, slug: str, corpo: str,
-    faq: { type: 'array', items: obj({ pergunta: str, resposta: str }) }
+    faq: { type: 'array', items: obj({ pergunta: str, resposta: str }) },
+    atributos: { type: 'array', items: obj({ nome: str, valor: str }) }
   }),
-  alteracoes: strArr
+  alteracoes: strArr,
+  llm: obj({
+    pontuacao: { type: 'integer' },
+    resumo: str,
+    resposta_direta: str,
+    perguntas_conversacionais: {
+      type: 'array',
+      items: obj({ pergunta: str, intencao: { type: 'string', enum: ['informacional', 'comparação', 'transacional', 'cuidados/uso', 'local'] }, coberta: { type: 'boolean' }, resposta_sugerida: str })
+    },
+    factos_em_falta: { type: 'array', items: obj({ facto: str, porque: str, fonte: str }) },
+    frases_vagas: { type: 'array', items: obj({ citacao: str, reescrita: str }) },
+    entidades: obj({ marca: str, retalhista: str, tipo_produto: str, atributos: strArr }),
+    passagens_citaveis: strArr,
+    riscos: strArr,
+    json_ld: str
+  })
 });
 
 function client(Anthropic, apiKey) {
@@ -118,7 +137,8 @@ Faz uma auditoria SEO completa deste texto de ${item.type} da Lidl Portugal:
 4. Sugere keywords (principal, secundárias, long-tail, semânticas e perguntas que as pessoas pesquisam em Portugal).
 5. Concorrência: com base nos textos de concorrentes fornecidos (se existirem) e no que retalhistas de moda/retalho em Portugal costumam fazer bem nestas páginas (ex.: Primark, Pepco, Kiabi, C&A, H&M, Zara, Continente, Auchan), indica boas práticas a adotar. Não inventes dados concretos sobre páginas específicas que não viste.
 6. Escreve a versão corrigida completa, pronta a publicar: meta title (≤ 60 car., termina com "| Lidl"), meta description (120–155 car., com CTA), H1, slug, corpo em Markdown (com H2/H3, listas e links internos sugeridos no formato [âncora](/caminho-sugerido)) e 3–5 FAQs. Mantém a informação factual do original e usa [marcadores] para dados a confirmar.
-7. Lista as principais alterações feitas e porquê.`;
+7. Lista as principais alterações feitas e porquê. Em "atributos" põe a ficha técnica (nome/valor) com os dados que existem ou [marcadores].
+8. Visibilidade em assistentes de IA (LLM SEO / GEO): dá uma pontuação de 0 a 100 e um resumo; escreve um parágrafo de resposta direta (40–60 palavras) que um assistente possa citar; lista 6–10 perguntas conversacionais que alguém em Portugal faria ao ChatGPT/Gemini/Google AI Mode onde esta página deveria ser citada, se o texto atual as responde e uma resposta sugerida; os factos em falta e onde obtê-los (ex.: ficha técnica/PIM, Merchant Center); as frases vagas com reescrita factual; as entidades da página; 2–4 passagens citáveis do texto corrigido; os riscos (alegações ambientais, afirmações sem prova). Em "json_ld" devolve uma string JSON-LD válida (schema.org, com "@graph"): para categoria CollectionPage + BreadcrumbList + ItemList (+ FAQPage se houver Q&A visível); para produto Product com Brand e Offer (preço, disponibilidade, devoluções, envio) + BreadcrumbList (+ FAQPage). Usa só dados presentes no texto ou [marcadores]; nunca aggregateRating sem avaliações reais.`;
   const { content } = await run(apiKey, model, {
     max_tokens: 32000,
     system: SYSTEM,
@@ -136,7 +156,9 @@ Responde em pt-PT, em Markdown, com:
 ## Quem aparece nos resultados
 ## O que fazem bem (título, H1, texto da categoria, estrutura, FAQs, links internos, filtros, conteúdos de apoio)
 ## Palavras-chave e temas que usam
-## Lacunas e oportunidades para a Lidl
+## O que os assistentes de IA citam
+(Faz 3 pesquisas em linguagem conversacional, como alguém perguntaria ao ChatGPT ou ao Google AI Mode — ex.: «onde comprar ${item.keyword || item.name} baratas em Portugal», «qual é a melhor marca de ${item.keyword || item.name} para o dia a dia», «${item.keyword || item.name}: que tamanho escolher» — e lista que domínios e que tipos de página são citados, e porquê: factos, FAQs, comparações, avaliações, guias.)
+## Lacunas e oportunidades para a Lidl (Google e assistentes de IA)
 ## 5 ações prioritárias
 Sê específico e indica as fontes. Não inventes nada que não tenhas visto.`;
   const { content } = await run(apiKey, model, {
@@ -163,7 +185,8 @@ ${summary.text}
 Escreve em pt-PT, em Markdown, um relatório executivo para a equipa de conteúdos:
 ## Diagnóstico geral
 ## Padrões que se repetem (bons e maus)
-## Riscos (conteúdo duplicado, canibalização, metadados)
+## Prontidão para pesquisa com IA (AI Overviews, ChatGPT, Gemini, Perplexity)
+## Riscos (conteúdo duplicado, canibalização, metadados, alegações ambientais)
 ## Plano de melhoria priorizado (quick wins vs. trabalho estrutural)
 ## Guia de redação recomendado (template para textos de categoria e de produto)
 Sê concreto e refere os textos pelo nome.`;

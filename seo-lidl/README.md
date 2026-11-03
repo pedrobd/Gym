@@ -11,6 +11,27 @@ Site estático para auditar textos de **categorias** e **produtos** (pt-PT) e me
   - Legibilidade: índice Flesch adaptado ao português, frases longas, parágrafos, voz passiva, conectores;
   - Conteúdo: comprimento por tipo de página, informação essencial (materiais, tamanhos, cuidados…), cobertura semântica do domínio, FAQ;
   - Marca e linguagem: grafia consistente da marca (ex.: Esmara), termos de português do Brasil, superlativos e alegações arriscadas.
+- **IA / LLM SEO (GEO/AEO)**: uma pontuação separada de "prontidão para IA" (Google AI Overviews/AI Mode, ChatGPT, Gemini, Perplexity), com estas verificações:
+  - resposta direta no início;
+  - entidades explícitas (marca + Lidl + tipo de produto);
+  - densidade de factos verificáveis;
+  - certificações;
+  - alegações ambientais genéricas, proibidas pela Diretiva UE 2024/825 desde 27/09/2026;
+  - perguntas e respostas;
+  - subtítulos em forma de pergunta;
+  - parágrafos citáveis isoladamente;
+  - linguagem vaga;
+  - indicações «ideal para» e comparações;
+  - atualidade;
+  - factos comerciais (preço, disponibilidade, devoluções, entrega);
+  - ficha técnica «Atributo: valor».
+
+  As regras vêm de uma pesquisa de boas práticas atuais: o estudo GEO (KDD 2024), o guia do Google para funcionalidades de IA e estudos de citação de LLMs. Não inclui `llms.txt`, que não tem efeito comprovado.
+- **Dados estruturados (JSON-LD)**: gera o JSON-LD para a página:
+  - categoria: CollectionPage + BreadcrumbList + ItemList;
+  - produto: Product + Brand + Offer, com devoluções e envio;
+  - em ambos, FAQPage quando há perguntas e respostas visíveis.
+- A pontuação da densidade de keyword deixou de contar a favor (não é fator de ranking); só penaliza o excesso.
 - **Pré-visualização no Google** e lista de prioridades ("o que mudar primeiro").
 - **Texto corrigido**: rascunho automático, ou versão completa reescrita por IA (metadados, H1, slug, corpo com H2/listas/links e FAQ), com comparação lado a lado com o original. Podes guardá-la como nova versão e ver a pontuação a subir.
 - **Concorrência**: cola textos de concorrentes para comparar estrutura e comprimento e ver os termos que eles usam e tu não. Com IA, a ferramenta pesquisa na web quem aparece no Google Portugal para a keyword e o que está a fazer bem.

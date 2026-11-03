@@ -208,3 +208,4 @@ details summary { cursor: pointer; font-weight: 600; }
 .overview-cols { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); }
 td.problems { min-width: 180px; }
 @media (max-width: 1100px) { .overview-cols { grid-template-columns: minmax(0, 1fr); } }
+pre.code { background: var(--surface-2); border-radius: 10px; padding: 12px; font-size: .78rem; line-height: 1.45; max-height: 320px; overflow: auto; white-space: pre; margin: 8px 0; }

@@ -28,26 +28,35 @@ const PT_BR = [
   ['tênis', 'sapatilhas'], ['moletom', 'sweatshirt / camisola'], ['calcinha', 'cuecas'], ['sutiã', 'soutien'],
   ['jaqueta', 'casaco / blusão'], ['terno', 'fato'], ['regata', 'top de alças / camisola de alças'], ['meia-calça', 'collants'],
   ['bermuda', 'calções (bermudas também é usado)'], ['maiô', 'fato de banho'], ['biquíni', 'biquíni (ok) — verificar acentuação'],
-  ['celular', 'telemóvel'], ['time', 'equipa'], ['ônibus', 'autocarro'], ['trem', 'comboio'], ['geladeira', 'frigorífico'],
-  ['banheiro', 'casa de banho'], ['café da manhã', 'pequeno-almoço'], ['academia', 'ginásio'], ['sorvete', 'gelado'],
-  ['legal', 'fixe / interessante'], ['bacana', 'fixe'], ['xícara', 'chávena'], ['suco', 'sumo'], ['grama', 'relva (se jardim)'],
-  ['fato', 'facto (se significa "acontecimento")'], ['contato', 'contacto'], ['ótimo', 'ótimo (ok em pt-PT AO90)'],
-  ['tela', 'ecrã'], ['mouse', 'rato'], ['usuário', 'utilizador'], ['arquivo', 'ficheiro'], ['salvar', 'guardar']
-].filter(([t]) => !['biquíni', 'ótimo', 'bermuda', 'fato', 'grama'].includes(t)); // evitar falsos positivos frequentes
-
-// Afirmações arriscadas (publicidade enganosa / exigências legais) — atenção em retalho
-const RISKY = [
-  /\bo melhor\b/i, /\ba melhor\b/i, /\bos melhores\b/i, /\bas melhores\b/i, /\bn[ºo.]?\s?1\b/i, /\bnúmero 1\b/i,
-  /\b100\s?% (sustentável|ecológic[oa]|natural)\b/i, /\bgrátis\b/i, /\bgaranti(do|da|mos)\b/i, /\bmais barat[oa]s? do mercado\b/i,
-  /\beco-?friendly\b/i, /\bamig[oa] do ambiente\b/i
+  ['celular', 'telemóvel'], ['ônibus', 'autocarro'], ['trem', 'comboio'], ['geladeira', 'frigorífico'],
+  ['banheiro', 'casa de banho'], ['café da manhã', 'pequeno-almoço'], ['sorvete', 'gelado'],
+  ['bacana', 'fixe'], ['xícara', 'chávena'], ['suco', 'sumo'], ['contato', 'contacto'],
+  ['mouse', 'rato'], ['usuário', 'utilizador'], ['salvar', 'guardar'], ['shorts', 'calções'], ['sunga', 'calções de banho']
 ];
+
+// Afirmações arriscadas (publicidade enganosa) — as alegações ambientais têm verificação própria (llm-green)
+const RISKY = [
+  /(?<![\p{L}])(o|a|os|as) melhor(es)?(?![\p{L}])/iu, /\bn[ºo.]?\s?1\b/i, /número 1/i, /mais barat[oa]s? do mercado/i
+];
+
+// ---------- GEO / LLM: factos verificáveis, certificações, linguagem vaga ----------
+const NA = '(?![\\p{L}\\d])';
+const FACT_RE = new RegExp(`\\d+(?:[.,]\\d+)?\\s?(?:%|°\\s?C|º\\s?C|cm|mm|kg|g|ml|l|W|V|mAh|anos?|meses|dias|peças|unid\\.?|€|euros?)${NA}`, 'giu');
+const SIZE_RE = /\b(?:XXS|XS|S|M|L|XL|XXL|3XL)\b\s?(?:\(\d{2}\/\d{2}\)\s?)?(?:a|até|–|-)\s?\b(?:XS|S|M|L|XL|XXL|3XL)\b|\b(?:3[2-9]|4\d|5[0-6])\/(?:3[2-9]|4\d|5[0-6])\b/g;
+const CERT_RE = /OEKO-?TEX|STANDARD 100|MADE IN GREEN|GOTS|Better Cotton|\bBCI\b|Fairtrade|\bFSC\b|EU Ecolabel|Rótulo Ecológico|bluesign|\bGRS\b|Global Recycled Standard|\bRCS\b|Grüner Knopf|ISO \d{3,5}/i;
+export const factCount = t => (t.match(FACT_RE) || []).length + (t.match(SIZE_RE) || []).length + (t.match(new RegExp(CERT_RE.source, 'gi')) || []).length;
+const GREEN_RE = /(sustent[áa]ve(l|is)|ecol[óo]gic[oa]s?|amig[oa]s? do ambiente|eco-?friendly|biodegrad[áa]ve(l|is)|neutr[oa]s? em carbono|carbono neutro|respons[áa]ve(l|is)|consciente|mais verde)/i;
+const GREEN_OK_RE = /\d+\s?%\s?(de\s)?(algodão|poliéster|poliamida|material|fibras?)?\s?(reciclad|orgânic|biológic)/i;
+const FLUFF_RE = /(máximo conforto|qualidade (excecional|superior|premium)|alta qualidade|incrível|fantástic\w*|inigualável|imperdível|sem igual|sinónimo de|e muito mais|todas as ocasiões|para todos os gostos|a pensar em ti|experiência única|design moderno|estilo único|(?<![\p{L}])(o|a|os|as) melhor(es)?(?![\p{L}]))/giu;
+const PLACEHOLDER_RE = /\[(indicar|responder|confirmar|inserir|preencher)[^\]]*\]|\bXX+\b|lorem ipsum|\bTODO\b/i;
+const Q_RE = /^\s*(?:#{2,4}\s*|\*\*|<h[2-4][^>]*>\s*|<strong>\s*)?(como|qual|quais|que|quanto|quantos|quantas|onde|quando|posso|pode|devo|há|existe|existem|é|são|tem|têm|porquê|por que)\b[^?\n]{5,140}\?/gimu;
 
 // Léxico semântico por domínio (para a "cobertura de tópicos")
 export const LEXICONS = {
   moda: ['tecido', 'algodão', 'material', 'tamanho', 'tamanhos', 'coleção', 'estilo', 'conforto', 'confortável', 'look',
     'combinar', 'peça', 'peças', 'básico', 'básicos', 'tendência', 'tendências', 'estação', 'verão', 'inverno', 'primavera',
     'outono', 'cor', 'cores', 'padrão', 'corte', 'ajuste', 'elástico', 'lavagem', 'lavar', 'máquina', 'qualidade', 'preço',
-    'sustentável', 'reciclado', 'certificado', 'oeko-tex', 'dia a dia', 'ocasião', 'guarda-roupa', 'mulher', 'senhora',
+    'composição', 'certificado', 'oeko-tex', 'dia a dia', 'ocasião', 'guarda-roupa', 'mulher', 'senhora',
     'casual', 'elegante', 'respirável', 'macio', 'suave'],
   casa: ['material', 'dimensões', 'medidas', 'resistente', 'fácil de limpar', 'design', 'decoração', 'divisão', 'sala',
     'quarto', 'cozinha', 'arrumação', 'qualidade', 'preço', 'garantia', 'montagem', 'cor', 'estilo', 'conforto', 'durável'],
@@ -181,6 +190,189 @@ function check(id, group, label, weight, status, msg, fix = '', priority = null)
   return { id, group, label, weight, status, msg, fix, priority: priority || (weight >= 3 ? 'alta' : weight >= 2 ? 'média' : 'baixa') };
 }
 
+// ---------- IA / LLM (GEO / AEO) ----------
+// Baseado em: GEO (Aggarwal et al., KDD 2024 — factos/estatísticas/fontes aumentam a citação em respostas generativas),
+// guia do Google para funcionalidades de IA (AI Overviews/AI Mode = SEO de base + conteúdo claro), estudos de citação de
+// LLMs (resposta no início da página, frescura), feeds de compras em IA (atributos completos) e Diretiva UE 2024/825.
+export const LLM = 'IA / LLM';
+
+export function qaPairs(raw) {
+  const lines = String(raw || '').replace(/<\/(p|h[1-6]|li|div)>/gi, '\n').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').split(/\n/);
+  const pairs = [];
+  lines.forEach((l, i) => {
+    Q_RE.lastIndex = 0;
+    const m = Q_RE.exec(l);
+    if (!m) return;
+    const q = m[0].replace(/^[\s#*]+/, '').trim();
+    // resposta: resto da linha + linhas seguintes até à próxima pergunta/subtítulo
+    let ans = l.slice(m.index + m[0].length).replace(/^\**\s*/, '');
+    for (let j = i + 1; j < lines.length && words(ans).length < 60; j++) {
+      Q_RE.lastIndex = 0;
+      if (Q_RE.test(lines[j]) || /^\s*#/.test(lines[j])) break;
+      ans += ' ' + lines[j];
+    }
+    ans = ans.trim();
+    pairs.push({ q, a: ans, answered: words(ans).length >= 8 && !/^\[/.test(ans) });
+  });
+  return pairs;
+}
+
+function llmChecks({ item, type, kw, brand, h1, text, ws, wc, ss, body }) {
+  const out = [];
+  const add = (id, label, weight, status, msg, fix = '') => out.push(check(id, LLM, label, weight, status, msg, fix));
+  const first50 = ws.slice(0, 50).join(' ');
+  const first50raw = text.split(/\s+/).slice(0, 60).join(' ');
+  const subject = kw || h1 || item.name || '';
+
+  // 1. Resposta direta no início
+  const A = subject && looseContains(first50, subject);
+  const B = /(?<![\p{L}])(são|é|inclui|incluem|reúne|encontras|tens|disponíve(l|is)|feit[oa]s? (de|em)|com)(?![\p{L}])/iu.test(first50);
+  const C = factCount(first50raw) >= 1 || /algodão|poliéster|elastano|linho|viscose|tamanho|ideal para|cintura|inverno|verão/i.test(first50);
+  add('llm-answer-first', 'Resposta direta no início', 3, A && B && C ? OK : A ? WARN : BAD,
+    A && B && C ? 'As primeiras frases dizem logo o que é, para quem e com factos — fácil de citar por um assistente de IA.'
+      : A ? 'O tema aparece no início, mas sem resposta concreta (o que é + factos).' : 'As primeiras frases não respondem diretamente a "o que é / o que encontro aqui".',
+    A && B && C ? '' : `Abre com 1–2 frases autónomas: o quê + para quem + 1–2 factos. Ex.: «As leggings de senhora Esmara têm cintura alta e 95% algodão, em tamanhos S a XL.»`);
+
+  // 2. Entidades explícitas
+  const firstTwo = ss.slice(0, 2).join(' ');
+  const head = words(kw || h1)[0];
+  const ent = [brand && norm(firstTwo).includes(norm(brand)), /lidl/i.test(firstTwo), head && words(firstTwo).some(w => stem(w) === stem(head))].filter(Boolean).length;
+  add('llm-entities', 'Entidades explícitas (marca, Lidl, tipo de produto)', 2, ent >= 3 ? OK : ent === 2 ? WARN : BAD,
+    `${ent}/3 entidades nas 2 primeiras frases (marca${brand ? ` "${brand}"` : ''}, Lidl, tipo de produto).`,
+    ent >= 3 ? '' : `Nomeia a marca, o Lidl e o tipo de produto juntos: «${brand || 'A marca'}, a marca própria de ${type === 'produto' ? 'moda' : 'moda de senhora'} do Lidl…». Os LLMs associam entidades que aparecem juntas.`);
+
+  // 3. Densidade factual
+  const facts = factCount(text);
+  const fd = wc ? (facts / wc) * 100 : 0;
+  const [okF, warnF] = type === 'produto' ? [3, 1.5] : [1.5, 0.7];
+  add('llm-facts', 'Densidade factual (números, medidas, %)', 3, fd >= okF ? OK : fd >= warnF ? WARN : BAD,
+    `${facts} facto(s) verificável(eis) — ${fd.toFixed(1)} por 100 palavras (alvo ≥ ${okF}).`,
+    fd >= okF ? '' : 'Acrescenta dados da ficha técnica (composição em %, gama de tamanhos, °C de lavagem, n.º de peças, medidas). Estatísticas e factos aumentam a probabilidade de citação em respostas de IA. Nunca inventes números.');
+
+  // 4. Certificações
+  if (['moda', 'casa', 'alimentar'].includes(item.domain || 'moda')) {
+    add('llm-cert', 'Certificações / provas verificáveis', 2, CERT_RE.test(text) ? OK : WARN,
+      CERT_RE.test(text) ? `Menciona certificação (${text.match(CERT_RE)[0]}).` : 'Sem certificações ou provas verificáveis.',
+      CERT_RE.test(text) ? '' : 'Se o produto tem certificação (ex.: OEKO-TEX® STANDARD 100 com o n.º do certificado), menciona-a. Não inventes — confirma na ficha técnica.');
+  }
+
+  // 5. Alegações ambientais (Diretiva UE 2024/825, aplicável desde 27/09/2026)
+  const greenBad = ss.filter(s => GREEN_RE.test(s) && !CERT_RE.test(s) && !GREEN_OK_RE.test(s));
+  if (ss.some(s => GREEN_RE.test(s))) {
+    add('llm-green', 'Alegações ambientais concretas (Diretiva UE 2024/825)', 3, greenBad.length ? BAD : OK,
+      greenBad.length ? `Alegação ambiental genérica, proibida desde 27/09/2026: «${greenBad[0].slice(0, 110)}».` : 'As alegações ambientais são específicas e/ou certificadas.',
+      greenBad.length ? 'Substitui por um facto específico e certificado: «60% poliéster reciclado (certificado GRS)». Os assistentes de IA também desvalorizam alegações vagas.' : '');
+  }
+
+  // 6. Bloco de perguntas e respostas
+  const pairs = qaPairs(item.body);
+  const answered = pairs.filter(p => p.answered).length;
+  const qaStatus = type === 'categoria' ? (answered >= 3 ? OK : answered >= 1 ? WARN : BAD) : (answered >= 2 ? OK : WARN);
+  add('llm-qa', 'Perguntas e respostas', 2, qaStatus,
+    `${answered} pergunta(s) com resposta${pairs.length > answered ? ` (${pairs.length - answered} sem resposta ou com marcador)` : ''}. Q&A ajuda pessoas e assistentes de IA (ChatGPT, AI Overviews) a extrair respostas; o Google já não mostra rich results de FAQ para retalho.`,
+    qaStatus === OK ? '' : 'Acrescenta 3–5 perguntas reais com respostas de 1–3 frases: «Que tamanho escolher?», «Como lavar…?», «Posso comprar online?».');
+
+  // 7. Subtítulos com intenção
+  const subs = body.headings.filter(h => h.level >= 2);
+  if (subs.length >= 2) {
+    const qh = subs.filter(h => /\?$|^(como|qual|quais|que|guia|diferença|tamanhos|cuidados|materiais)\b/i.test(h.text.trim()));
+    add('llm-qheadings', 'Subtítulos com intenção / pergunta', 1, qh.length ? OK : WARN,
+      `${qh.length}/${subs.length} subtítulos refletem perguntas ou intenções de pesquisa.`,
+      qh.length ? '' : 'Ex.: «Que tamanho de leggings escolher?», «Como lavar pijamas de algodão?» — correspondem às perguntas feitas a assistentes de IA.');
+  }
+
+  // 8. Parágrafos autónomos
+  if (body.paragraphs.length >= 2) {
+    const dep = body.paragraphs.filter(p => /^(ela|elas|ele|eles|isto|isso|aquilo|estas|estes|essas|esses)\s+(são|é|têm|tem|podem|ficam|combinam|oferecem|foram)\b/i.test(p.trim()));
+    const pct = dep.length / body.paragraphs.length;
+    add('llm-selfcontained', 'Parágrafos autónomos (citáveis isoladamente)', 1, pct <= 0.1 ? OK : WARN,
+      `${dep.length} parágrafo(s) começam com pronome e dependem do anterior.`,
+      pct <= 0.1 ? '' : 'Repete o sujeito («As leggings Esmara…») em vez de pronomes; cada parágrafo deve fazer sentido sozinho.');
+  }
+
+  // 9. Linguagem vaga
+  const fluff = text.match(FLUFF_RE) || [];
+  const f = wc ? (fluff.length / wc) * 100 : 0;
+  const fluffSt = f >= 2 && facts === 0 ? BAD : (f > 1 || fluff.length > facts) ? WARN : OK;
+  add('llm-fluff', 'Linguagem vaga sem factos', 2, fluffSt,
+    fluff.length ? `${fluff.length} expressão(ões) vaga(s): ${[...new Set(fluff.map(x => x.toLowerCase()))].slice(0, 5).map(x => `«${x}»`).join(', ')} — para ${facts} facto(s).` : 'Sem linguagem de marketing vaga.',
+    fluffSt === OK ? '' : 'Troca cada expressão vaga por um facto: «máximo conforto» → «cintura elástica de 5 cm». Os LLMs ignoram adjetivos e citam factos.');
+
+  // 10. Casos de uso / comparações
+  const uc = (text.match(/(?<![\p{L}])(ideal|ideais|indicad[oa]s?|recomendad[oa]s?|perfeit[oa]s?)\s+para\s+(?!tod[oa]s(?![\p{L}])|qualquer(?![\p{L}]))\p{L}+/giu) || []).length;
+  const cmp = /(em vez de|comparad[oa]s? com|diferença entre|mais (leve|quente|fresc|resistente|elástic|macio)\w*\s+(do\s)?que|\bvs\.?\b)/i.test(text);
+  const ucSt = type === 'produto' ? (uc ? OK : WARN) : (uc && cmp ? OK : WARN);
+  add('llm-usecase', 'Indicações «ideal para» e comparações', 1, ucSt,
+    `${uc} indicação(ões) de uso${type === 'categoria' ? `, ${cmp ? 'com' : 'sem'} comparação` : ''}.`,
+    ucSt === OK ? '' : 'Responde a «qual é melhor para…»: «O algodão escovado é mais quente do que o algodão simples — ideal para o inverno.» São o tipo de pergunta feita a assistentes de IA.');
+
+  // 11. Atualidade
+  const years = (text.match(/\b20[2-3]\d\b/g) || []).map(Number);
+  const nowY = new Date().getFullYear();
+  const fresh = years.length || /cole(ç|c)(ão|ões)\s+(primavera|verão|outono|inverno)|(primavera|verão|outono|inverno)[\s-](\d{2}|20\d{2})|nova coleção/i.test(text);
+  const old = years.filter(y => y < nowY - 1);
+  add('llm-fresh', 'Atualidade (estação / coleção / ano)', 1, old.length ? WARN : fresh ? OK : WARN,
+    old.length ? `Referência desatualizada: ${old.join(', ')}.` : fresh ? 'Indica coleção/estação atual.' : 'Sem referência à coleção, estação ou ano.',
+    old.length || !fresh ? 'Indica a coleção/estação (ex.: «coleção outono-inverno») e mantém dateModified no JSON-LD. Os assistentes de IA preferem conteúdo recente.' : '');
+
+  // 12. Factos comerciais
+  const com = [/\d+[.,]\d{2}\s?€|€\s?\d+/, /(lojas?(?![\p{L}])|online|lidl\.pt|disponíve|esgotad|enquanto durar)/iu, /devolu|devolver|troca/i, /entrega|portes|envio/i, /garantia/i].filter(r => r.test(text)).length;
+  const comSt = type === 'produto' ? (com >= 3 ? OK : com === 2 ? WARN : BAD) : (com >= 2 ? OK : com === 1 ? WARN : BAD);
+  add('llm-commerce', 'Factos comerciais (preço, disponibilidade, devoluções, entrega)', 2, comSt,
+    `${com}/5 factos comerciais no texto.`,
+    comSt === OK ? '' : 'Os assistentes de compras (ChatGPT Shopping, AI Mode) precisam de preço, disponibilidade, devoluções e entrega. Se vêm do template, garante que estão em HTML visível e no Offer do JSON-LD.');
+
+  // 13. Ficha técnica «Atributo: valor»
+  if (type === 'produto') {
+    const specs = (String(item.body).match(/^\s*(?:[-*•]\s*|<li>\s*)?[A-ZÀ-Ú][\p{L} /]{2,25}:\s*\S+/gmu) || []).length + (String(item.body).match(/<tr/gi) || []).length;
+    add('llm-specs', 'Ficha técnica em formato «Atributo: valor»', 2, specs >= 4 ? OK : specs >= 2 ? WARN : BAD,
+      `${specs} atributo(s) estruturado(s).`,
+      specs >= 4 ? '' : 'Lista Composição, Tamanhos, Cores, Cuidados, Referência — os mesmos atributos do feed Merchant Center / ChatGPT Shopping.');
+  }
+  return out;
+}
+
+// ---------- JSON-LD (dados estruturados) ----------
+export function buildJsonLd(item, extra = {}) {
+  const base = 'https://www.lidl.pt';
+  const path = (item.slug || '/' + slugify(item.keyword || item.name)).replace(/^https?:\/\/[^/]+/i, '');
+  const url = base + (path.startsWith('/') ? path : '/' + path);
+  const h1 = item.h1 || item.name;
+  const brand = item.brand || '[marca]';
+  const today = new Date().toISOString().slice(0, 10);
+  const pairs = (extra.faq && extra.faq.length ? extra.faq.map(f => ({ q: f.pergunta, a: f.resposta, answered: true })) : qaPairs(item.body)).filter(p => p.answered);
+  const org = { '@type': 'Organization', '@id': `${base}/#org`, name: 'Lidl Portugal', url: base, logo: '[URL do logótipo]' };
+  const bc = { '@type': 'BreadcrumbList', '@id': `${url}#bc`, itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Início', item: base + '/' },
+    { '@type': 'ListItem', position: 2, name: '[Categoria-mãe]', item: '[URL da categoria-mãe]' },
+    { '@type': 'ListItem', position: 3, name: h1, item: url }] };
+  const faq = pairs.length ? { '@type': 'FAQPage', mainEntity: pairs.map(p => ({ '@type': 'Question', name: p.q, acceptedAnswer: { '@type': 'Answer', text: p.a } })) } : null;
+  const body = parseBody(item.body).text;
+  const graph = [org];
+  if (item.type === 'produto') {
+    const mat = body.match(/\d+\s?%\s?[\p{L}]+(?:,?\s*\d+\s?%\s?[\p{L}]+)*/u);
+    const care = body.match(/\d+\s?°\s?C/);
+    graph.push({
+      '@type': 'Product', '@id': `${url}#product`, name: h1, description: extra.description || item.metaDescription || '[descrição curta]',
+      sku: '[referência]', gtin13: '[EAN]', image: ['[URL da imagem]'], brand: { '@type': 'Brand', name: brand },
+      ...(mat ? { material: mat[0] } : { material: '[composição]' }), color: '[cor]', size: '[tamanhos]',
+      ...(care ? { additionalProperty: [{ '@type': 'PropertyValue', name: 'Lavagem', value: care[0] }] } : {}),
+      offers: { '@type': 'Offer', url, price: '[0.00]', priceCurrency: 'EUR', availability: 'https://schema.org/InStock',
+        itemCondition: 'https://schema.org/NewCondition', seller: { '@id': `${base}/#org` },
+        hasMerchantReturnPolicy: { '@type': 'MerchantReturnPolicy', applicableCountry: 'PT', returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow', merchantReturnDays: '[30]' },
+        shippingDetails: { '@type': 'OfferShippingDetails', shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'PT' }, shippingRate: { '@type': 'MonetaryAmount', value: '[portes]', currency: 'EUR' } } }
+    }, bc);
+  } else {
+    graph.push({
+      '@type': 'CollectionPage', '@id': `${url}#page`, url, name: h1, description: extra.description || item.metaDescription || '[descrição]',
+      inLanguage: 'pt-PT', dateModified: today, publisher: { '@id': `${base}/#org` }, about: { '@type': 'Brand', name: brand },
+      breadcrumb: { '@id': `${url}#bc` }, mainEntity: { '@id': `${url}#list` }
+    }, bc, { '@type': 'ItemList', '@id': `${url}#list`, itemListElement: [{ '@type': 'ListItem', position: 1, url: '[URL do produto 1]', name: '[nome do produto 1]' }, { '@type': 'ListItem', position: 2, url: '[URL do produto 2]', name: '[nome do produto 2]' }] });
+  }
+  if (faq) graph.push(faq);
+  return JSON.stringify({ '@context': 'https://schema.org', '@graph': graph }, null, 2);
+}
+
 export function analyze(item) {
   const type = item.type || 'categoria';
   const kw = (item.keyword || '').trim();
@@ -198,14 +390,15 @@ export function analyze(item) {
   const checks = [];
 
   // 1. Comprimento
-  const [minW, idealW, maxW] = type === 'produto' ? [120, 180, 450] : [200, 300, 900];
+  // (o Google não usa contagem de palavras; isto é só um indicador de profundidade)
+  const [minW, idealW, maxW] = type === 'produto' ? [80, 150, 600] : [150, 250, 1000];
   checks.push(wc < minW
-    ? check('length', 'Conteúdo', 'Comprimento do texto', 3, BAD, `${wc} palavras — curto para uma página de ${type} (mín. recomendado ${minW}, ideal ${idealW}+).`, `Acrescenta conteúdo útil: ${type === 'produto' ? 'materiais, medidas, cuidados, utilizações e benefícios' : 'subcategorias, ocasiões de uso, dicas de estilo e uma secção de perguntas frequentes'}.`)
+    ? check('length', 'Conteúdo', 'Profundidade do texto', 2, BAD, `${wc} palavras — curto para uma página de ${type} (indicativo: ${idealW}+). O que conta é responder às dúvidas, não o número de palavras.`, `Acrescenta conteúdo útil: ${type === 'produto' ? 'materiais, medidas, cuidados, utilizações e benefícios' : 'subcategorias, ocasiões de uso, dicas de escolha e perguntas frequentes'}.`)
     : wc < idealW
-      ? check('length', 'Conteúdo', 'Comprimento do texto', 3, WARN, `${wc} palavras — aceitável, mas abaixo do ideal (${idealW}+).`, 'Expande com informação que responda a dúvidas reais dos clientes.')
+      ? check('length', 'Conteúdo', 'Profundidade do texto', 2, WARN, `${wc} palavras — aceitável, mas provavelmente deixa dúvidas por responder.`, 'Expande com informação que responda a dúvidas reais dos clientes.')
       : wc > maxW
-        ? check('length', 'Conteúdo', 'Comprimento do texto', 3, WARN, `${wc} palavras — longo para ${type}; garante que tudo é útil e escaneável.`, 'Divide em secções com subtítulos e listas, ou move parte para um guia/blog.')
-        : check('length', 'Conteúdo', 'Comprimento do texto', 3, OK, `${wc} palavras — bom comprimento para ${type}.`));
+        ? check('length', 'Conteúdo', 'Profundidade do texto', 2, WARN, `${wc} palavras — longo para ${type}; garante que tudo é útil e escaneável.`, 'Divide em secções com subtítulos e listas, ou move parte para um guia/blog.')
+        : check('length', 'Conteúdo', 'Profundidade do texto', 2, OK, `${wc} palavras — boa profundidade para ${type}.`));
 
   // 2. Keyword principal
   if (!kw) {
@@ -218,13 +411,16 @@ export function analyze(item) {
     checks.push(looseContains(first, kw)
       ? check('kw-intro', 'Palavra-chave', 'Keyword no início do texto', 3, OK, 'A palavra-chave aparece nas primeiras 100 palavras.')
       : check('kw-intro', 'Palavra-chave', 'Keyword no início do texto', 3, BAD, 'A palavra-chave não aparece nas primeiras 100 palavras.', `Reescreve a primeira frase para incluir "${kw}" de forma natural.`));
+    // densidade não é fator de ranking — só penalizamos excesso (keyword stuffing)
+    const per100 = wc ? (kwCount * 100) / wc : 0;
+    const inSent = ss.length ? ss.filter(s => countPhrase(norm(s), kw)).length / ss.length : 0;
     checks.push(kwCount === 0
-      ? check('kw-density', 'Palavra-chave', 'Densidade da keyword', 2, BAD, `"${kw}" não aparece de forma exata no texto (${looseContains(text, kw) ? 'só em variações' : 'nem em variações'}).`, 'Usa a keyword exata 2–4 vezes, mais sinónimos e variações.')
-      : density > 3
-        ? check('kw-density', 'Palavra-chave', 'Densidade da keyword', 2, BAD, `Densidade de ${density.toFixed(1)}% (${kwCount}×) — risco de keyword stuffing.`, 'Substitui algumas ocorrências por sinónimos ou pronomes.')
-        : density < 0.5 && wc > 150
-          ? check('kw-density', 'Palavra-chave', 'Densidade da keyword', 2, WARN, `Densidade de ${density.toFixed(1)}% (${kwCount}×) — baixa.`, 'Acrescenta mais 1–2 menções naturais, idealmente num subtítulo.')
-          : check('kw-density', 'Palavra-chave', 'Densidade da keyword', 2, OK, `Densidade de ${density.toFixed(1)}% (${kwCount}×) — equilibrada.`));
+      ? check('kw-stuffing', 'Palavra-chave', 'Uso natural da keyword', 1, looseContains(text, kw) ? OK : WARN, looseContains(text, kw) ? `"${kw}" aparece em variações naturais.` : `"${kw}" não aparece no texto, nem em variações.`, looseContains(text, kw) ? '' : 'Menciona o tema da pesquisa de forma natural no texto.')
+      : per100 > 3 || (inSent > 0.5 && ss.length >= 4)
+        ? check('kw-stuffing', 'Palavra-chave', 'Uso natural da keyword', 1, BAD, `"${kw}" aparece ${kwCount}× (${density.toFixed(1)}% do texto, em ${Math.round(inSent * 100)}% das frases) — keyword stuffing.`, 'Substitui ocorrências por sinónimos, pronomes ou pelo nome da marca. O Google e os LLMs penalizam repetição forçada.')
+        : per100 > 2
+          ? check('kw-stuffing', 'Palavra-chave', 'Uso natural da keyword', 1, WARN, `"${kw}" aparece ${kwCount}× — no limite do excessivo.`, 'Varia com sinónimos.')
+          : check('kw-stuffing', 'Palavra-chave', 'Uso natural da keyword', 1, OK, `"${kw}" aparece ${kwCount}× — uso natural.`));
     if (body.headings.filter(h => h.level >= 2).length) {
       const inSub = body.headings.some(h => h.level >= 2 && looseContains(h.text, kw));
       checks.push(inSub
@@ -247,7 +443,8 @@ export function analyze(item) {
   } else {
     const issues = [];
     let st = OK;
-    if (title.length > 60) { issues.push(`${title.length} caracteres — será cortado no Google (máx. ~60)`); st = WARN; }
+    if (title.length > 65) { issues.push(`${title.length} caracteres — provavelmente cortado ou reescrito pelo Google (alvo 50–65)`); st = WARN; }
+    if (brand && (title.match(new RegExp(brand.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')) || []).length > 1) { issues.push(`a marca "${brand}" aparece repetida`); st = WARN; }
     if (title.length < 30) { issues.push(`${title.length} caracteres — curto, desperdiça espaço`); st = WARN; }
     if (kw && !looseContains(title, kw)) { issues.push('não contém a keyword'); st = BAD; }
     else if (kw && strip(norm(title)).indexOf(strip(norm(words(kw)[0] || ''))) > 25) { issues.push('a keyword aparece tarde no título'); if (st === OK) st = WARN; }
@@ -374,7 +571,7 @@ export function analyze(item) {
   // 17. Atributos / cobertura de informação
   const attrs = type === 'produto'
     ? [['material/composição', /algodão|poliéster|elastano|viscose|linho|lã|nylon|poliamida|material|composição|\d+\s?%/i],
-      ['tamanhos/medidas', /tamanho|tamanhos|\b(xs|s|m|l|xl|xxl)\b|\b\d{2}[–-]\d{2}\b|medidas|cm\b/i],
+      ['tamanhos/medidas', /[Tt]amanhos?|TAMANHOS?|\b(XS|S|M|L|XL|XXL)\b|\b\d{2}[–\-/]\d{2}\b|[Mm]edidas|\dcm\b|\d cm\b/],
       ['cuidados/lavagem', /lav(ar|agem|ável)|máquina|°c|ºc|passar a ferro|secar/i],
       ['benefício/utilização', /ideal para|perfeit[oa] para|confort|prátic|versátil|dia a dia|ocasião|utiliza/i],
       ['cor/variantes', /cor(es)?\b|preto|branco|azul|bege|cinzento|rosa|verde|vermelho|padrão|estampad/i]]
@@ -398,14 +595,6 @@ export function analyze(item) {
     `${lexFound.length}/${lex.length} termos do domínio "${DOMAIN_LABELS[item.domain || 'moda']}" presentes.`,
     cov < 0.25 ? 'Considera incluir (quando fizer sentido): ' + lexMissing.slice(0, 12).join(', ') + '.' : ''));
 
-  // 19. FAQ
-  if (type === 'categoria') {
-    const hasFaq = /perguntas frequentes|faq/i.test(text) || (text.match(/\?/g) || []).length >= 2;
-    checks.push(hasFaq
-      ? check('faq', 'Conteúdo', 'Perguntas frequentes', 1, OK, 'Tem perguntas/respostas — bom para featured snippets e "As pessoas também perguntam".')
-      : check('faq', 'Conteúdo', 'Perguntas frequentes', 1, WARN, 'Sem secção de perguntas frequentes.', 'Acrescenta 3–5 FAQs reais (ex.: "Que tamanhos estão disponíveis?", "Como lavar…?").'));
-  }
-
   // 20. pt-BR
   const brFound = PT_BR.filter(([t]) => new RegExp(`(^|[^\\p{L}])${t}s?(?![\\p{L}])`, 'iu').test(tn));
   checks.push(brFound.length
@@ -420,7 +609,16 @@ export function analyze(item) {
   if (risky.length) toneIssues.push(`afirmações a validar juridicamente: ${[...new Set(risky)].map(r => `"${r}"`).join(', ')}`);
   if (excl > 2) toneIssues.push(`${excl} pontos de exclamação`);
   if (caps.length) toneIssues.push(`palavras em maiúsculas: ${[...new Set(caps)].slice(0, 5).join(', ')}`);
-  checks.push(check('tone', 'Linguagem', 'Tom e afirmações', 1, toneIssues.length ? WARN : OK, toneIssues.length ? toneIssues.join('; ') + '.' : 'Tom adequado, sem afirmações absolutas.', toneIssues.length ? 'Evita superlativos sem prova e alegações ambientais genéricas (greenwashing); usa certificações concretas (ex.: OEKO-TEX®).' : ''));
+  checks.push(check('tone', 'Linguagem', 'Tom e afirmações', 1, toneIssues.length ? WARN : OK, toneIssues.length ? toneIssues.join('; ') + '.' : 'Tom adequado, sem afirmações absolutas.', toneIssues.length ? 'Evita superlativos sem prova ("o melhor", "n.º 1") — são publicidade enganosa se não houver fundamento.' : ''));
+
+  // 23. Marcadores por preencher
+  const ph = text.match(PLACEHOLDER_RE) || [title, desc, h1].join(' ').match(PLACEHOLDER_RE);
+  checks.push(ph
+    ? check('placeholders', 'Conteúdo', 'Marcadores por preencher', 3, BAD, `Texto com marcadores por preencher (ex.: "${ph[0]}") — não publicar assim.`, 'Substitui os [marcadores] pelos dados reais da ficha técnica.')
+    : check('placeholders', 'Conteúdo', 'Marcadores por preencher', 3, OK, 'Sem marcadores por preencher.'));
+
+  // ---------- IA / LLM (GEO/AEO) ----------
+  llmChecks({ item, type, kw, brand, h1, text, ws, wc, ss, body }).forEach(c => checks.push(c));
 
   // 22. Slug
   if (item.slug) {
@@ -445,13 +643,18 @@ export function analyze(item) {
     groups[c.group].got += c.weight * (c.status === OK ? 1 : c.status === WARN ? 0.5 : 0);
   });
   Object.values(groups).forEach(g => g.score = Math.round((g.got / g.total) * 100));
+  const llmScore = groups[LLM]?.score ?? 0;
+  const seoChecks = checks.filter(c => c.group !== LLM);
+  const seoTotal = seoChecks.reduce((n, c) => n + c.weight, 0);
+  const seoScore = seoTotal ? Math.round(seoChecks.reduce((n, c) => n + c.weight * (c.status === OK ? 1 : c.status === WARN ? 0.5 : 0), 0) / seoTotal * 100) : 0;
 
   return {
-    score, checks, groups,
+    score, seoScore, llmScore, checks, groups,
     stats: {
       words: wc, sentences: ss.length, paragraphs: body.paragraphs.length, headings: body.headings.length,
       links: body.links.length, listItems: body.listItems, flesch, readingTime: Math.max(1, Math.round(wc / 220)),
-      avgSentence: ss.length ? +(wc / ss.length).toFixed(1) : 0
+      avgSentence: ss.length ? +(wc / ss.length).toFixed(1) : 0,
+      facts: factCount(text)
     },
     body, h1, topTerms: topTerms(text, 15)
   };
@@ -558,7 +761,8 @@ export function overview(items) {
   const avgWords = analyses.length ? Math.round(analyses.reduce((n, x) => n + x.a.stats.words, 0) / analyses.length) : 0;
   const fl = analyses.map(x => x.a.stats.flesch).filter(v => v != null);
   const avgFlesch = fl.length ? Math.round(fl.reduce((a, b) => a + b, 0) / fl.length) : null;
-  return { analyses, issues, duplicates, cannibal, dupTitles, avg, avgWords, avgFlesch };
+  const mean = k => analyses.length ? Math.round(analyses.reduce((n, x) => n + x.a[k], 0) / analyses.length) : 0;
+  return { analyses, issues, duplicates, cannibal, dupTitles, avg, avgWords, avgFlesch, avgSeo: mean('seoScore'), avgLlm: mean('llmScore') };
 }
 
 // Rascunho automático (sem IA): aplica correções mecânicas e acrescenta estrutura em falta
@@ -576,7 +780,10 @@ export function autoDraft(item, analysis) {
   const paras = body.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
   const failed = id => analysis.checks.find(c => c.id === id && c.status !== OK);
   const out = [];
-  if (failed('kw-intro') && kw) out.push(`Descobre a nossa seleção de ${kw}${brand ? ` ${brand}` : ''} no Lidl: qualidade a preço Lidl, para o teu dia a dia.`);
+  // resposta direta no início (GEO): o quê + marca + Lidl + factos
+  if ((failed('kw-intro') || failed('llm-answer-first') || failed('llm-entities')) && kw) {
+    out.push(`${cap(kw)}${brand ? ` ${brand}, a marca própria do Lidl,` : ' no Lidl'} ${item.type === 'produto' ? 'com' : 'reúne'} [indicar 1–2 factos concretos: composição em %, gama de tamanhos, preço ou n.º de modelos].`);
+  }
   paras.forEach((p, i) => {
     if (words(p).length > 120) {
       const ss = sentences(p);
@@ -585,7 +792,10 @@ export function autoDraft(item, analysis) {
     } else out.push(p);
     if (i === 0 && failed('subs') && paras.length > 2) out.push(`## ${cap(kw)}: como escolher`);
   });
-  if (failed('faq')) {
+  if (failed('llm-specs')) {
+    out.push('## Características', '- Composição: [indicar %]', '- Tamanhos: [indicar gama]', '- Cores: [indicar]', '- Cuidados: [indicar temperatura de lavagem]', '- Referência: [indicar]');
+  }
+  if (failed('llm-qa')) {
     out.push('## Perguntas frequentes',
       `**Que tamanhos estão disponíveis em ${kw}?**\n[Responder com a gama de tamanhos.]`,
       `**Como devo lavar e cuidar destas peças?**\n[Indicar temperatura e cuidados.]`,

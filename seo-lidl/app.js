@@ -1,4 +1,4 @@
-import { analyze, overview, compareCompetitors, autoDraft, fleschLabel, DOMAIN_LABELS, slugify } from './analyzer.js';
+import { analyze, overview, compareCompetitors, autoDraft, fleschLabel, DOMAIN_LABELS, slugify, buildJsonLd } from './analyzer.js';
 import { aiAnalyze, aiCompetitors, aiOverview, DEFAULT_MODEL } from './ai.js';
 import { SAMPLES } from './samples.js';
 
@@ -213,7 +213,10 @@ function renderAnalysis(it, a) {
     <div>
       <div class="card">
         <div class="score">
-          <div class="ring" style="--v:${a.score};--c:${scoreColor(a.score)}"><span>${a.score}<small>/100</small></span></div>
+          <div class="stack" style="justify-items:center;gap:6px">
+            <div class="ring" style="--v:${a.score};--c:${scoreColor(a.score)}"><span>${a.score}<small>global</small></span></div>
+            <div class="row small"><span class="pill ${scoreClass(a.seoScore)}" title="SEO clássico (Google)">SEO ${a.seoScore}</span><span class="pill ${scoreClass(a.llmScore)}" title="Prontidão para assistentes de IA (AI Overviews, ChatGPT, Gemini, Perplexity)">IA ${a.llmScore}</span></div>
+          </div>
           <div class="bars">${Object.entries(a.groups).map(([g, v]) => `<div class="bar"><span>${esc(g)}</span><span class="track"><i style="width:${v.score}%;background:${scoreColor(v.score)}"></i></span><b>${v.score}</b></div>`).join('')}</div>
         </div>
         <div class="stats">
@@ -222,12 +225,20 @@ function renderAnalysis(it, a) {
           <div class="stat"><b>${a.stats.avgSentence}</b><span>palavras/frase</span></div>
           <div class="stat"><b>${a.stats.headings}</b><span>subtítulos</span></div>
           <div class="stat"><b>${a.stats.links}</b><span>links</span></div>
-          <div class="stat"><b>${a.stats.readingTime} min</b><span>leitura</span></div>
+          <div class="stat"><b>${a.stats.facts}</b><span>factos verificáveis</span></div>
         </div>
       </div>
       <div class="card">
         <h3>Pré-visualização no Google</h3>
         ${serpPreview(it, a.h1)}
+      </div>
+      <div class="card">
+        <h3>Dados estruturados (JSON-LD)</h3>
+        <p class="muted small" style="margin-top:0">Ajudam o Google (merchant listings) e os assistentes de compras de IA a perceber a página. Gerado a partir do texto — preenche os [marcadores] e confirma com a equipa técnica o que o template já publica.</p>
+        <pre class="code">${esc(buildJsonLd(it))}</pre>
+        <div class="row">${copyBtn(`<script type="application/ld+json">\n${buildJsonLd(it)}\n</script>`, 'Copiar JSON-LD')}
+          <a class="btn sm" href="https://validator.schema.org/" target="_blank" rel="noopener noreferrer">Validador schema.org</a>
+          <a class="btn sm" href="https://search.google.com/test/rich-results" target="_blank" rel="noopener noreferrer">Teste de resultados avançados</a></div>
       </div>
       <div class="card">
         <h3>O que mudar primeiro</h3>
@@ -243,10 +254,15 @@ function renderAnalysis(it, a) {
     <div class="card">
       <h3>Análise detalhada</h3>
       ${checksList(a.checks)}
-      <p class="muted small" style="margin-top:14px">Para uma análise de conteúdo mais profunda (intenção de pesquisa, tom, keywords sugeridas) e um texto reescrito, usa o separador <b>Texto corrigido</b>.</p>
+      <p class="muted small" style="margin-top:14px">O grupo <b>IA / LLM</b> mede se o texto é fácil de citar por assistentes de IA (resposta direta, factos, entidades, Q&amp;A). Para uma análise mais profunda e um texto reescrito, usa o separador <b>Texto corrigido</b>.</p>
     </div>
   </div>`;
+  bindCopy($('#tab'));
 }
+
+const fullBody = fix => fix.corpo
+  + (fix.atributos?.length && !/##\s*Características/i.test(fix.corpo) ? '\n\n## Características\n\n' + fix.atributos.map(x => `- ${x.nome}: ${x.valor}`).join('\n') : '')
+  + (fix.faq?.length ? '\n\n## Perguntas frequentes\n\n' + fix.faq.map(f => `**${f.pergunta}**\n${f.resposta}`).join('\n\n') : '');
 
 function copyBtn(text, label = 'Copiar') {
   return `<button class="btn sm" data-copy="${esc(text)}">${label}</button>`;
@@ -258,7 +274,7 @@ function bindCopy(root = document) {
 }
 
 function correctedBlock(fix, source) {
-  const corpo = fix.corpo + (fix.faq?.length ? '\n\n## Perguntas frequentes\n\n' + fix.faq.map(f => `**${f.pergunta}**\n${f.resposta}`).join('\n\n') : '');
+  const corpo = fullBody(fix);
   return `
     <div class="stack">
       ${[['Meta title', fix.meta_title, `${fix.meta_title.length} car.`], ['Meta description', fix.meta_description, `${fix.meta_description.length} car.`], ['H1', fix.h1, ''], ['Slug', fix.slug, '']]
@@ -278,14 +294,45 @@ function bindCorrected(root, it, fix) {
     try { await navigator.clipboard.writeText(html); toast('HTML copiado.'); } catch { toast('Não foi possível copiar.'); }
   });
   $$('[data-apply]', root).forEach(b => b.onclick = () => {
-    const corpo = fix.corpo + (fix.faq?.length ? '\n\n## Perguntas frequentes\n\n' + fix.faq.map(f => `**${f.pergunta}**\n${f.resposta}`).join('\n\n') : '');
-    const v = { ...structuredClone(it), id: uid(), name: it.name.replace(/ \(v\d+\)$/, '') + ` (v${state.items.filter(x => x.name.startsWith(it.name.replace(/ \(v\d+\)$/, ''))).length + 1})`,
+    const corpo = fullBody(fix);
+    const v ={ ...structuredClone(it), id: uid(), name: it.name.replace(/ \(v\d+\)$/, '') + ` (v${state.items.filter(x => x.name.startsWith(it.name.replace(/ \(v\d+\)$/, ''))).length + 1})`,
       metaTitle: fix.meta_title, metaDescription: fix.meta_description, h1: fix.h1, slug: fix.slug, body: corpo, ai: null, aiComp: null, updated: Date.now() };
     const before = analyze(it).score, after = analyze(v).score;
     state.items.splice(state.items.indexOf(it), 0, v);
     state.selectedId = v.id; state.tab = 'analysis'; save(); render();
     toast(`Nova versão criada: ${before} → ${after} pontos.`);
   });
+}
+
+function prettyJson(s) {
+  try { return JSON.stringify(JSON.parse(s), null, 2); } catch { return s; }
+}
+
+function llmCard(l) {
+  const jsonld = prettyJson(l.json_ld || '');
+  return `
+    <div class="card" style="margin-top:16px">
+      <h3>Visibilidade em assistentes de IA (LLM SEO / GEO)</h3>
+      <div class="cols">
+        <div class="stack">
+          <div class="score"><div class="ring" style="--v:${l.pontuacao};--c:${scoreColor(l.pontuacao)}"><span>${l.pontuacao}<small>IA</small></span></div>
+            <p style="flex:1;min-width:200px;margin:0">${esc(l.resumo)}</p></div>
+          <div class="field-out"><div><small>Resposta direta para o início da página (citável por IA)</small>${esc(l.resposta_direta)}</div>${copyBtn(l.resposta_direta)}</div>
+          <div><b>Perguntas que as pessoas fazem a assistentes de IA</b>
+            <div class="tablewrap"><table><thead><tr><th>Pergunta</th><th>Intenção</th><th>Coberta</th></tr></thead><tbody>
+            ${l.perguntas_conversacionais.map(p => `<tr><td><b>${esc(p.pergunta)}</b><br><span class="small muted">${esc(p.resposta_sugerida)}</span></td><td><span class="tag">${esc(p.intencao)}</span></td><td>${p.coberta ? '<span class="pill ok">sim</span>' : '<span class="pill bad">não</span>'}</td></tr>`).join('')}
+            </tbody></table></div></div>
+          <div><b>Entidades</b><div class="tags" style="margin-top:6px">${[l.entidades.marca, l.entidades.retalhista, l.entidades.tipo_produto, ...l.entidades.atributos].filter(Boolean).map(x => `<span class="tag">${esc(x)}</span>`).join('')}</div></div>
+        </div>
+        <div class="stack">
+          ${l.factos_em_falta.length ? `<div><b>Factos em falta</b><ul class="small">${l.factos_em_falta.map(f => `<li><b>${esc(f.facto)}</b> — ${esc(f.porque)} <span class="muted">(fonte: ${esc(f.fonte)})</span></li>`).join('')}</ul></div>` : ''}
+          ${l.frases_vagas.length ? `<div><b>Frases vagas → factos</b><ul class="small">${l.frases_vagas.map(f => `<li>«${esc(f.citacao)}» → <b>${esc(f.reescrita)}</b></li>`).join('')}</ul></div>` : ''}
+          ${l.passagens_citaveis.length ? `<div><b>Passagens citáveis</b><ul class="small">${l.passagens_citaveis.map(p => `<li>${esc(p)}</li>`).join('')}</ul></div>` : ''}
+          ${l.riscos.length ? `<div class="notice small"><b>Riscos:</b> ${l.riscos.map(esc).join(' · ')}</div>` : ''}
+          ${jsonld ? `<div><div class="row"><b>JSON-LD sugerido</b><span class="spacer"></span>${copyBtn(`<script type="application/ld+json">\n${jsonld}\n</script>`, 'Copiar')}</div><pre class="code">${esc(jsonld)}</pre></div>` : ''}
+        </div>
+      </div>
+    </div>`;
 }
 
 function renderRewrite(it, a) {
@@ -309,7 +356,7 @@ function renderRewrite(it, a) {
     <div class="cols" style="margin-top:16px">
       <div>
         <div class="card">
-          <div class="score"><div class="ring" style="--v:${ai.pontuacao};--c:${scoreColor(ai.pontuacao)}"><span>${ai.pontuacao}<small>IA</small></span></div>
+          <div class="score"><div class="ring" style="--v:${ai.pontuacao};--c:${scoreColor(ai.pontuacao)}"><span>${ai.pontuacao}<small>SEO</small></span></div>
           <div style="flex:1;min-width:200px"><p style="margin-top:0">${esc(ai.resumo)}</p><p class="small"><b>Intenção de pesquisa:</b> ${esc(ai.intencao_pesquisa)}</p></div></div>
         </div>
         <div class="card"><h3>O que está bem</h3><ul>${ai.pontos_fortes.map(p => `<li>${esc(p)}</li>`).join('')}</ul></div>
@@ -329,15 +376,17 @@ function renderRewrite(it, a) {
         <div class="card"><h3>Texto corrigido</h3><div id="aifix">${correctedBlock(ai.texto_corrigido, 'ai')}</div></div>
         <div class="card"><h3>Alterações feitas</h3><ul>${ai.alteracoes.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>
       </div>
-    </div>` : ''}
+    </div>
+    ${ai.llm ? llmCard(ai.llm) : ''}` : ''}
     <div class="card" style="margin-top:16px">
       <details ${ai ? '' : 'open'}>
         <summary>Rascunho automático (sem IA)</summary>
-        <p class="muted small">Correções mecânicas: metadados no formato recomendado, keyword na introdução, termos pt-BR substituídos, parágrafos longos divididos, estrutura de FAQ e CTA quando faltam. Revê sempre antes de publicar — os campos entre [ ] têm de ser preenchidos.</p>
+        <p class="muted small">Correções mecânicas: metadados no formato recomendado, frase de resposta direta (SEO + IA) no início, ficha técnica, termos pt-BR substituídos, parágrafos longos divididos, estrutura de FAQ e CTA quando faltam. Revê sempre antes de publicar — os campos entre [ ] têm de ser preenchidos.</p>
         <div id="draft">${correctedBlock(draft, 'draft')}</div>
       </details>
     </div>`;
   const g = $('[data-goto]'); if (g) g.onclick = e => { e.preventDefault(); state.view = 'settings'; render(); };
+  bindCopy($('#tab'));
   bindCorrected($('#draft'), it, draft);
   if (ai) bindCorrected($('#aifix'), it, ai.texto_corrigido);
   $('#runai').onclick = async () => {
@@ -355,8 +404,10 @@ function renderRewrite(it, a) {
 const settingsArgs = () => ({ apiKey: state.settings.apiKey, model: state.settings.model || DEFAULT_MODEL, effort: state.settings.effort });
 
 const PRACTICES = [
+  ['Resposta direta e factos no topo (IA)', 'As páginas mais citadas por assistentes de IA dizem logo o que é o produto/categoria, com factos (composição, tamanhos, preço). Cerca de metade das citações vem do primeiro terço da página.'],
+  ['Dados estruturados completos', 'Product + Offer (preço, stock, devoluções, envio) nos produtos; CollectionPage + ItemList + BreadcrumbList nas categorias. Alimentam merchant listings e assistentes de compras.'],
   ['Texto de categoria acima e abaixo da grelha', 'Uma introdução curta (2–3 frases com a keyword) acima dos produtos e um texto mais longo com H2, dicas e FAQ abaixo da grelha — não atrasa a compra e dá contexto ao Google.'],
-  ['FAQ com perguntas reais', 'Perguntas como "Que tamanho escolher?", "Como lavar…?" ou "Posso devolver?" respondem a pesquisas long-tail e aparecem em "As pessoas também perguntam".'],
+  ['FAQ com perguntas reais', 'Perguntas como "Que tamanho escolher?", "Como lavar…?" ou "Posso devolver?" respondem a pesquisas long-tail e às perguntas feitas a assistentes de IA.'],
   ['Links para subcategorias', 'Retalhistas de moda ligam a partir do texto às subcategorias (vestidos, calças, pijamas…) com âncoras descritivas — reforça a arquitetura do site.'],
   ['Guias de tamanhos e materiais', 'Informação de composição, corte e guia de tamanhos reduz devoluções e cobre pesquisas de comparação.'],
   ['Sazonalidade e tendências', 'Atualizam textos por estação ("vestidos de verão", "casacos de inverno") e criam páginas para momentos (regresso às aulas, Natal).'],
@@ -431,12 +482,14 @@ function practiceDone(title, it) {
   const a = analyze(it);
   const st = id => a.checks.find(c => c.id === id)?.status === 'ok';
   return ({
-    'FAQ com perguntas reais': st('faq'),
+    'FAQ com perguntas reais': st('llm-qa'),
     'Links para subcategorias': st('links'),
     'Metadados com benefício + marca': st('title') && st('desc'),
-    'Prova de qualidade concreta': st('tone') && /oeko|certific|avalia/i.test(it.body),
+    'Prova de qualidade concreta': st('tone') && st('llm-cert'),
     'Guias de tamanhos e materiais': /tamanho/i.test(it.body) && /(algodão|material|composição|tecido)/i.test(it.body),
     'Sazonalidade e tendências': /verão|inverno|primavera|outono|tendênc/i.test(it.body),
+    'Resposta direta e factos no topo (IA)': st('llm-answer-first') && st('llm-facts'),
+    'Dados estruturados completos': false,
     'Texto de categoria acima e abaixo da grelha': it.type === 'produto' || a.stats.headings >= 2,
     'Conteúdo único por página': !overview(state.items).duplicates.some(d => d.a.id === it.id || d.b.id === it.id)
   })[title] ?? false;
@@ -472,6 +525,8 @@ function renderOverview() {
       <div class="kpi"><b style="color:${scoreColor(o.avg)}">${o.avg}</b><span>pontuação média</span></div>
       <div class="kpi"><b>${dist.ok} / ${dist.warn} / ${dist.bad}</b><span>bons · a melhorar · fracos</span></div>
       <div class="kpi"><b>${o.avgWords}</b><span>palavras em média</span></div>
+      <div class="kpi"><b style="color:${scoreColor(o.avgSeo)}">${o.avgSeo}</b><span>SEO clássico (média)</span></div>
+      <div class="kpi"><b style="color:${scoreColor(o.avgLlm)}">${o.avgLlm}</b><span>prontidão para IA / LLMs (média)</span></div>
       <div class="kpi"><b>${o.avgFlesch ?? '—'}</b><span>legibilidade média (${fleschLabel(o.avgFlesch)})</span></div>
       <div class="kpi"><b style="color:${o.duplicates.length + o.cannibal.length + o.dupTitles.length ? 'var(--bad)' : 'var(--ok)'}">${o.duplicates.length + o.cannibal.length + o.dupTitles.length}</b><span>riscos entre páginas</span></div>
     </div>
@@ -550,20 +605,28 @@ function buildPlan(o) {
   add('links', 'Reforçar links internos', 'Ligar categorias ↔ subcategorias ↔ produtos com âncoras descritivas.');
   add('ptbr', 'Uniformizar para português de Portugal', 'Substituir termos de pt-BR (você, camiseta, tênis…).');
   add('brand', 'Uniformizar menções à marca', 'Mesma grafia da marca em todos os textos.');
-  add('faq', 'Acrescentar FAQs às categorias', '3–5 perguntas reais para captar pesquisas long-tail.');
+  add('llm-qa', 'Acrescentar perguntas e respostas', '3–5 perguntas reais com respostas curtas — servem pessoas e assistentes de IA.');
   add('sent', 'Simplificar frases longas', 'Frases até ~20 palavras; legibilidade Flesch 50+.');
   add('semantic', 'Enriquecer o vocabulário', 'Usar termos relacionados do domínio (tecidos, cortes, ocasiões…).');
+  add('placeholders', 'Preencher marcadores antes de publicar', 'Há textos com [marcadores] por preencher.');
+  add('llm-green', 'Corrigir alegações ambientais genéricas', 'Proibidas pela Diretiva UE 2024/825 desde 27/09/2026 — usar factos certificados.');
+  add('llm-answer-first', 'Abrir cada texto com uma resposta direta', 'O quê + para quem + 1–2 factos nas primeiras frases: é o que os assistentes de IA citam.');
+  add('llm-facts', 'Aumentar a densidade factual', 'Composição em %, tamanhos, °C, medidas, certificações — vindos da ficha técnica.');
+  add('llm-fluff', 'Trocar linguagem vaga por factos', '«Máximo conforto» → «cintura elástica de 5 cm».');
+  add('llm-entities', 'Nomear marca + Lidl + tipo de produto juntos', 'Reforça a associação de entidades nos LLMs.');
+  add('llm-commerce', 'Tornar visíveis preço, disponibilidade, devoluções e entrega', 'Usados pelos assistentes de compras (ChatGPT Shopping, AI Mode).');
+  add('llm-specs', 'Fichas técnicas «Atributo: valor» nos produtos', 'Os mesmos atributos do feed Merchant Center.');
   return plan.sort((a, b) => b.impact - a.impact).slice(0, 8);
 }
 
 function overviewSummary(o) {
-  const lines = o.analyses.map(({ item, a }) => `- "${item.name}" (${item.type}, keyword: ${item.keyword || '—'}, ${a.stats.words} palavras, Flesch ${a.stats.flesch ?? '—'}, pontuação ${a.score}). Falhas: ${a.checks.filter(c => c.status !== 'ok').map(c => `${c.label} [${c.status}]: ${c.msg}`).join(' | ') || 'nenhuma'}\n  Início do texto: ${a.body.text.slice(0, 300).replace(/\s+/g, ' ')}…`);
+  const lines = o.analyses.map(({ item, a }) => `- "${item.name}" (${item.type}, keyword: ${item.keyword || '—'}, ${a.stats.words} palavras, Flesch ${a.stats.flesch ?? '—'}, pontuação ${a.score}: SEO ${a.seoScore}, IA/LLM ${a.llmScore}). Falhas: ${a.checks.filter(c => c.status !== 'ok').map(c => `${c.label} [${c.status}]: ${c.msg}`).join(' | ') || 'nenhuma'}\n  Início do texto: ${a.body.text.slice(0, 300).replace(/\s+/g, ' ')}…`);
   const risks = [
     ...o.cannibal.map(c => `Canibalização "${c.kw}": ${c.list.map(i => i.name).join(', ')}`),
     ...o.duplicates.map(d => `Semelhança ${Math.round(d.sim * 100)}%: ${d.a.name} ↔ ${d.b.name}`),
     ...o.dupTitles.map(d => `Meta title repetido: ${d.list.map(i => i.name).join(', ')}`)
   ];
-  return { count: o.analyses.length, text: `Pontuação média: ${o.avg}. Palavras médias: ${o.avgWords}.\n\nTextos:\n${lines.join('\n')}\n\nRiscos:\n${risks.join('\n') || 'nenhum'}` };
+  return { count: o.analyses.length, text: `Pontuação média: ${o.avg} (SEO ${o.avgSeo}, IA/LLM ${o.avgLlm}). Palavras médias: ${o.avgWords}.\n\nTextos:\n${lines.join('\n')}\n\nRiscos:\n${risks.join('\n') || 'nenhum'}` };
 }
 
 // ---------------- import / export ----------------
@@ -598,9 +661,9 @@ function download(name, content, type) {
 }
 
 function exportCSV(o) {
-  const head = ['nome', 'tipo', 'keyword', 'pontuacao', 'palavras', 'flesch', ...[...new Set(o.analyses.flatMap(x => x.a.checks.map(c => c.label)))], 'prioridades'];
-  const labels = head.slice(6, -1);
-  const lines = o.analyses.map(({ item, a }) => [item.name, item.type, item.keyword, a.score, a.stats.words, a.stats.flesch ?? '',
+  const head = ['nome', 'tipo', 'keyword', 'pontuacao', 'seo', 'ia_llm', 'palavras', 'flesch', ...[...new Set(o.analyses.flatMap(x => x.a.checks.map(c => c.label)))], 'prioridades'];
+  const labels = head.slice(8, -1);
+  const lines = o.analyses.map(({ item, a }) => [item.name, item.type, item.keyword, a.score, a.seoScore, a.llmScore, a.stats.words, a.stats.flesch ?? '',
     ...labels.map(l => { const c = a.checks.find(x => x.label === l); return c ? ({ ok: 'OK', warn: 'Melhorar', bad: 'Mau' })[c.status] : ''; }),
     a.checks.filter(c => c.status !== 'ok').map(c => c.fix || c.msg).join(' | ')]);
   download(`relatorio-seo-${new Date().toISOString().slice(0, 10)}.csv`, '﻿' + [head, ...lines].map(r => r.map(csvCell).join(';')).join('\n'), 'text/csv;charset=utf-8');
