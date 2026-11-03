@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Auditor SEO de Textos</title>
+  <meta name="description" content="Análise SEO de textos de categorias e produtos (Lidl / Esmara): diagnóstico, texto corrigido, concorrência e visão geral.">
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">SEO</span>
+      <div>
+        <strong>Auditor SEO de Textos</strong>
+        <small>Categorias e produtos · pt-PT</small>
+      </div>
+    </div>
+    <nav class="mainnav">
+      <button data-view="overview">Visão geral</button>
+      <button data-view="item">Textos</button>
+      <button data-view="import">Importar / Exportar</button>
+      <button data-view="settings">Definições</button>
+    </nav>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+    <main id="main"></main>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

@@ -18,3 +18,7 @@ Fotos dos exercícios em `img/`, do [free-exercise-db](https://github.com/yuhona
 ## Usar
 
 Abre `index.html` no browser, ou publica com GitHub Pages (Settings → Pages → Deploy from branch).
+
+## Auditor SEO de textos
+
+A pasta [`seo-lidl/`](seo-lidl/) tem uma ferramenta independente para análise SEO de textos de categorias e produtos (ex.: Esmara). Ver [`seo-lidl/README.md`](seo-lidl/README.md).
