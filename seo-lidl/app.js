@@ -1,5 +1,6 @@
 import { analyze, overview, compareCompetitors, autoDraft, fleschLabel, DOMAIN_LABELS, slugify, buildJsonLd } from './analyzer.js';
 import { aiAnalyze, aiCompetitors, aiOverview, DEFAULT_MODEL } from './ai.js';
+import { listGeminiModels, GEMINI_FALLBACK_MODEL } from './gemini.js';
 import { SAMPLES } from './samples.js';
 
 const KEY = 'lidl-seo-auditor-v1';
@@ -18,9 +19,10 @@ let state = load();
 function load() {
   try {
     const s = JSON.parse(localStorage.getItem(KEY));
+    if (s && Array.isArray(s.items) && s.settings && !s.settings.provider) s.settings.provider = s.settings.apiKey ? 'anthropic' : 'gemini';
     if (s && Array.isArray(s.items)) return { view: 'overview', tab: 'analysis', filter: 'all', q: '', overviewAI: null, sort: 'score', ...s, busy: {} };
   } catch { /* storage indisponível */ }
-  return { items: [], selectedId: null, view: 'overview', tab: 'analysis', filter: 'all', q: '', settings: { apiKey: '', model: DEFAULT_MODEL, effort: 'high', theme: 'auto' }, overviewAI: null, sort: 'score', busy: {} };
+  return { items: [], selectedId: null, view: 'overview', tab: 'analysis', filter: 'all', q: '', settings: { provider: 'gemini', apiKey: '', geminiKey: '', geminiModel: '', model: DEFAULT_MODEL, effort: 'high', theme: 'auto' }, overviewAI: null, sort: 'score', busy: {} };
 }
 function save() {
   try {
@@ -337,18 +339,18 @@ function llmCard(l) {
 
 function renderRewrite(it, a) {
   const busy = state.busy[it.id + ':ai'];
-  const hasKey = !!state.settings.apiKey;
+  const hasKey = hasAiKey();
   const ai = it.ai;
   const draft = autoDraft(it, a);
   $('#tab').innerHTML = `
     <div class="card">
       <div class="row">
         <div><h3 style="margin:0">Análise aprofundada e texto corrigido com IA</h3>
-        <span class="muted small">Usa as regras automáticas + textos dos concorrentes como contexto. Modelo: ${esc(state.settings.model)}.</span></div>
+        <span class="muted small">Usa as regras automáticas + textos dos concorrentes como contexto. Modelo: ${esc(modelLabel())}.</span></div>
         <span class="spacer"></span>
         <button class="btn primary" id="runai" ${busy || !it.body.trim() ? 'disabled' : ''}>${ai ? 'Gerar de novo' : 'Analisar com IA'}</button>
       </div>
-      ${!hasKey ? `<div class="notice info" style="margin-top:12px">Para usar a IA, adiciona a tua chave da API da Anthropic em <a href="#" data-goto="settings">Definições</a>. Sem chave, tens em baixo um rascunho automático.</div>` : ''}
+      ${!hasKey ? `<div class="notice info" style="margin-top:12px">Para usar a IA, adiciona uma chave em <a href="#" data-goto="settings">Definições</a> — o Google Gemini tem um plano gratuito. Sem chave, tens em baixo um rascunho automático.</div>` : ''}
       ${busy ? `<div class="loading" style="margin-top:12px"><span class="spinner"></span><span id="prog">A analisar o texto… isto pode demorar 1–2 minutos.</span></div>` : ''}
       ${it.aiError ? `<div class="error" style="margin-top:12px">${esc(it.aiError)}</div>` : ''}
     </div>
@@ -401,7 +403,12 @@ function renderRewrite(it, a) {
   };
 }
 
-const settingsArgs = () => ({ apiKey: state.settings.apiKey, model: state.settings.model || DEFAULT_MODEL, effort: state.settings.effort });
+const isGemini = () => state.settings.provider === 'gemini';
+const hasAiKey = () => !!(isGemini() ? state.settings.geminiKey : state.settings.apiKey);
+const modelLabel = () => isGemini() ? `Gemini · ${state.settings.geminiModel || GEMINI_FALLBACK_MODEL}` : (state.settings.model || DEFAULT_MODEL);
+const settingsArgs = () => isGemini()
+  ? { provider: 'gemini', apiKey: state.settings.geminiKey, model: state.settings.geminiModel || GEMINI_FALLBACK_MODEL }
+  : { provider: 'anthropic', apiKey: state.settings.apiKey, model: state.settings.model || DEFAULT_MODEL, effort: state.settings.effort };
 
 const PRACTICES = [
   ['Resposta direta e factos no topo (IA)', 'As páginas mais citadas por assistentes de IA dizem logo o que é o produto/categoria, com factos (composição, tamanhos, preço). Cerca de metade das citações vem do primeiro terço da página.'],
@@ -447,7 +454,7 @@ function renderCompetition(it) {
       <div class="card">
         <div class="row"><h3 style="margin:0">Pesquisa da concorrência com IA</h3><span class="spacer"></span>
         <button class="btn primary" id="compai" ${busy ? 'disabled' : ''}>${it.aiComp ? 'Pesquisar de novo' : 'Pesquisar na web'}</button></div>
-        <p class="muted small">Pesquisa no Google Portugal quem aparece para "${esc(it.keyword || it.name)}" e o que estão a fazer bem. Requer chave da API e a pesquisa web ativa na consola da Anthropic.</p>
+        <p class="muted small">Pesquisa no Google Portugal quem aparece para "${esc(it.keyword || it.name)}" e o que estão a fazer bem. Requer uma chave de IA (com a Anthropic, a pesquisa web tem de estar ativa na consola; com o Gemini usa a Pesquisa Google).</p>
         ${busy ? `<div class="loading"><span class="spinner"></span><span id="cprog">A pesquisar a concorrência…</span></div>` : ''}
         ${it.aiCompError ? `<div class="error">${esc(it.aiCompError)}</div>` : ''}
         ${it.aiComp ? `<div class="md">${md(it.aiComp.markdown)}</div>
@@ -468,7 +475,7 @@ function renderCompetition(it) {
   $$('[data-ct]').forEach(el => el.oninput = () => { it.competitors[+el.dataset.ct].text = el.value; save(); });
   const go = $('#cmpgo'); if (go) go.onclick = () => renderItem();
   $('#compai').onclick = async () => {
-    if (!state.settings.apiKey) { state.view = 'settings'; render(); return; }
+    if (!hasAiKey()) { state.view = 'settings'; render(); return; }
     state.busy[it.id + ':comp'] = true; it.aiCompError = null; renderItem();
     try {
       it.aiComp = await aiCompetitors({ ...settingsArgs(), item: it, onProgress: n => { const p = $('#cprog'); if (p) p.textContent = `A escrever o relatório… (${n} caracteres)`; } });
@@ -578,7 +585,7 @@ function renderOverview() {
   $$('tr[data-open]').forEach(tr => tr.onclick = () => { state.selectedId = tr.dataset.open; state.view = 'item'; state.tab = 'analysis'; save(); render(); window.scrollTo(0, 0); });
   $('#csv').onclick = () => exportCSV(o);
   $('#ovai').onclick = async () => {
-    if (!state.settings.apiKey) { state.view = 'settings'; render(); return; }
+    if (!hasAiKey()) { state.view = 'settings'; render(); return; }
     state.busy.overview = true; state.overviewAIError = null; renderOverview();
     try {
       state.overviewAI = await aiOverview({ ...settingsArgs(), summary: overviewSummary(o), onProgress: n => { const p = $('#oprog'); if (p) p.textContent = `A escrever… (${n} caracteres)`; } });
@@ -730,29 +737,63 @@ function renderImport() {
 
 function renderSettings() {
   const s = state.settings;
+  const g = s.provider === 'gemini';
+  const gModels = s.geminiModels?.length ? s.geminiModels : [{ id: s.geminiModel || GEMINI_FALLBACK_MODEL, label: s.geminiModel || GEMINI_FALLBACK_MODEL }];
   $('#main').innerHTML = `
-  <div class="card stack" style="max-width:720px">
+  <div class="card stack" style="max-width:760px">
     <h3>Inteligência artificial (opcional)</h3>
-    <p class="muted small" style="margin:0">A análise automática funciona sem IA. Para a análise aprofundada, o texto corrigido escrito por IA, a pesquisa da concorrência na web e o relatório global, adiciona uma chave da API da Anthropic (cria-a em <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer">console.anthropic.com</a>).</p>
-    <div class="notice small">A chave fica guardada apenas neste browser e é enviada diretamente à API da Anthropic. Não uses este site num computador partilhado com a chave guardada.</div>
-    <label class="f">Chave da API<input type="password" id="k" value="${esc(s.apiKey)}" placeholder="sk-ant-…" autocomplete="off"></label>
-    <div class="grid2">
-      <label class="f">Modelo<select id="m">
-        ${[['claude-opus-5-5', 'Claude Opus 5.5 (recomendado)'], ['claude-sonnet-5-5', 'Claude Sonnet 5.5 (mais rápido e barato)'], ['claude-fable-5-1', 'Claude Fable 5.1 (o mais capaz)']].map(([v, l]) => `<option value="${v}" ${s.model === v ? 'selected' : ''}>${l}</option>`).join('')}
-      </select></label>
-      <label class="f">Profundidade (effort)<select id="ef">
-        ${[['medium', 'Média — mais rápido'], ['high', 'Alta (recomendado)'], ['xhigh', 'Muito alta — mais lento']].map(([v, l]) => `<option value="${v}" ${s.effort === v ? 'selected' : ''}>${l}</option>`).join('')}
-      </select></label>
+    <p class="muted small" style="margin:0">A análise automática funciona sem IA. A IA acrescenta a análise aprofundada, o texto reescrito, a pesquisa da concorrência na web e o relatório global.</p>
+    <label class="f">Fornecedor<select id="pv">
+      <option value="gemini" ${g ? 'selected' : ''}>Google Gemini — tem plano gratuito</option>
+      <option value="anthropic" ${!g ? 'selected' : ''}>Anthropic Claude — pago, análise mais profunda</option>
+    </select></label>
+    <div id="pv-gemini" class="stack" ${g ? '' : 'hidden'}>
+      <div class="notice info small">
+        <b>Como obter uma chave gratuita:</b> entra em <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer">aistudio.google.com/apikey</a> com uma conta Google, carrega em <b>Create API key</b> e cola-a aqui. O plano gratuito cobre os modelos <b>Flash</b> e <b>Flash-Lite</b>, com limites de pedidos por minuto e por dia.
+      </div>
+      <div class="notice small"><b>Atenção à confidencialidade:</b> no plano gratuito, a Google pode usar o conteúdo enviado para melhorar os seus produtos. Não envies textos internos ou ainda não publicados que não possam sair da empresa — para isso usa o plano pago do Gemini ou a Anthropic.</div>
+      <label class="f">Chave da API do Gemini<input type="password" id="gk" value="${esc(s.geminiKey || '')}" placeholder="AIza…" autocomplete="off"></label>
+      <div class="row" style="align-items:end">
+        <label class="f" style="flex:1">Modelo<select id="gm">${gModels.map(m => `<option value="${esc(m.id)}" ${m.id === s.geminiModel ? 'selected' : ''}>${esc(m.label)} (${esc(m.id)})</option>`).join('')}</select></label>
+        <button class="btn" id="gload">Carregar modelos da minha chave</button>
+      </div>
+      <p class="muted small" style="margin:0">Recomendado no plano gratuito: o modelo <b>Flash</b> mais recente da lista. Os modelos Pro exigem faturação ativa.</p>
     </div>
+    <div id="pv-anthropic" class="stack" ${g ? 'hidden' : ''}>
+      <p class="muted small" style="margin:0">Cria a chave em <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer">console.anthropic.com</a> (requer créditos pré-pagos).</p>
+      <label class="f">Chave da API da Anthropic<input type="password" id="k" value="${esc(s.apiKey)}" placeholder="sk-ant-…" autocomplete="off"></label>
+      <div class="grid2">
+        <label class="f">Modelo<select id="m">
+          ${[['claude-opus-5-5', 'Claude Opus 5.5 (recomendado)'], ['claude-sonnet-5-5', 'Claude Sonnet 5.5 (mais rápido e barato)'], ['claude-haiku-5-5', 'Claude Haiku 5.5 (muito barato)'], ['claude-fable-5-1', 'Claude Fable 5.1 (o mais capaz)']].map(([v, l]) => `<option value="${v}" ${s.model === v ? 'selected' : ''}>${l}</option>`).join('')}
+        </select></label>
+        <label class="f">Profundidade (effort)<select id="ef">
+          ${[['medium', 'Média — mais rápido'], ['high', 'Alta (recomendado)'], ['xhigh', 'Muito alta — mais lento']].map(([v, l]) => `<option value="${v}" ${s.effort === v ? 'selected' : ''}>${l}</option>`).join('')}
+        </select></label>
+      </div>
+    </div>
+    <div class="notice small">As chaves ficam guardadas apenas neste browser e são enviadas diretamente ao fornecedor. Não guardes chaves num computador partilhado.</div>
     <h3 style="margin-top:8px">Aparência</h3>
     <label class="f">Tema<select id="th">${[['auto', 'Automático'], ['light', 'Claro'], ['dark', 'Escuro']].map(([v, l]) => `<option value="${v}" ${s.theme === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
-    <div class="row"><button class="btn primary" id="sv">Guardar</button>${s.apiKey ? '<button class="btn danger" id="rk">Remover chave</button>' : ''}</div>
+    <div class="row"><button class="btn primary" id="sv">Guardar</button>${s.apiKey || s.geminiKey ? '<button class="btn danger" id="rk">Remover chaves</button>' : ''}</div>
   </div>`;
+  $('#pv').onchange = e => { $('#pv-gemini').hidden = e.target.value !== 'gemini'; $('#pv-anthropic').hidden = e.target.value === 'gemini'; };
+  $('#gload').onclick = async () => {
+    const key = $('#gk').value.trim();
+    if (!key) { toast('Cola primeiro a chave do Gemini.'); return; }
+    const b = $('#gload'); b.disabled = true; b.textContent = 'A carregar…';
+    try {
+      const models = await listGeminiModels(key);
+      if (!models.length) throw new Error('Nenhum modelo de texto disponível para esta chave.');
+      s.geminiKey = key; s.geminiModels = models;
+      if (!models.some(m => m.id === s.geminiModel)) s.geminiModel = models[0].id;
+      save(); renderSettings(); toast(`${models.length} modelos carregados.`);
+    } catch (e) { toast(e.message); b.disabled = false; b.textContent = 'Carregar modelos da minha chave'; }
+  };
   $('#sv').onclick = () => {
-    Object.assign(s, { apiKey: $('#k').value.trim(), model: $('#m').value, effort: $('#ef').value, theme: $('#th').value });
+    Object.assign(s, { provider: $('#pv').value, geminiKey: $('#gk').value.trim(), geminiModel: $('#gm').value, apiKey: $('#k').value.trim(), model: $('#m').value, effort: $('#ef').value, theme: $('#th').value });
     applyTheme(); save(); toast('Definições guardadas.'); renderSettings();
   };
-  const rk = $('#rk'); if (rk) rk.onclick = () => { s.apiKey = ''; save(); renderSettings(); toast('Chave removida.'); };
+  const rk = $('#rk'); if (rk) rk.onclick = () => { s.apiKey = ''; s.geminiKey = ''; save(); renderSettings(); toast('Chaves removidas.'); };
 }
 
 // ---------------- router ----------------

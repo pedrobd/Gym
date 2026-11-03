@@ -40,7 +40,13 @@ Site estático para auditar textos de **categorias** e **produtos** (pt-PT) e me
 
 ## IA (opcional)
 
-Em **Definições**, coloca uma chave da API da Anthropic. Usa o modelo Claude Opus 5.5 por defeito (podes escolher Sonnet 5.5 ou Fable 5.1). A chave fica só no teu browser e é enviada diretamente para a API da Anthropic. A pesquisa da concorrência usa a ferramenta de pesquisa web, que tem de estar ativa na consola da Anthropic.
+Em **Definições**, escolhe o fornecedor:
+
+- **Google Gemini (gratuito):** cria uma chave em [aistudio.google.com/apikey](https://aistudio.google.com/apikey) e cola-a no site. Depois carrega em "Carregar modelos da minha chave" e escolhe um modelo **Flash**. O plano gratuito cobre Flash e Flash-Lite, com limites de pedidos por minuto e por dia. A pesquisa da concorrência usa a Pesquisa Google do Gemini.
+  - Atenção: no plano gratuito, a Google pode usar o conteúdo enviado para melhorar os seus produtos. Não envies textos confidenciais.
+- **Anthropic Claude (pago):** usa uma chave de [console.anthropic.com](https://console.anthropic.com/settings/keys). O modelo por defeito é o Claude Opus 5.5; também podes escolher Sonnet 5.5, Haiku 5.5 ou Fable 5.1. A pesquisa da concorrência usa a ferramenta de pesquisa web, que tem de estar ativa na consola.
+
+As chaves ficam só no teu browser e são enviadas diretamente ao fornecedor.
 
 ## Usar
 

@@ -1,9 +1,36 @@
-// Análise com IA (Claude) — opcional. A chave fica só no browser (localStorage) e é enviada diretamente à API da Anthropic.
+// Análise com IA — opcional. Fornecedores: Anthropic (Claude) ou Google (Gemini, com plano gratuito).
+// As chaves ficam só no browser (localStorage) e são enviadas diretamente à API de cada fornecedor.
+import { geminiGenerate } from './gemini.js';
 const SDK_URL = 'https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@0.137.0/+esm';
 let sdkPromise;
 const loadSdk = () => (sdkPromise ||= import(SDK_URL).then(m => m.default || m.Anthropic));
 
 export const DEFAULT_MODEL = 'claude-opus-5-5';
+
+// ---- utilitários para fornecedores sem "structured outputs" estritos (Gemini) ----
+// Esqueleto de exemplo a partir do schema, para pôr no prompt
+function skeleton(sc) {
+  if (sc.enum) return sc.enum.join(' | ');
+  if (sc.type === 'object') return Object.fromEntries(Object.entries(sc.properties).map(([k, v]) => [k, skeleton(v)]));
+  if (sc.type === 'array') return [skeleton(sc.items)];
+  return sc.type === 'integer' ? 0 : sc.type === 'boolean' ? false : '…';
+}
+// Garante que a resposta tem a forma esperada (campos em falta ficam vazios)
+function conform(sc, v) {
+  if (sc.type === 'object') return Object.fromEntries(Object.entries(sc.properties).map(([k, p]) => [k, conform(p, v && typeof v === 'object' ? v[k] : undefined)]));
+  if (sc.type === 'array') return Array.isArray(v) ? v.map(x => conform(sc.items, x)) : [];
+  if (sc.type === 'integer') return Math.max(0, Math.min(100, Math.round(Number(v) || 0)));
+  if (sc.type === 'boolean') return v === true || v === 'true';
+  if (sc.enum) return sc.enum.includes(v) ? v : sc.enum[0];
+  return v == null ? '' : typeof v === 'string' ? v : JSON.stringify(v);
+}
+function parseJson(text) {
+  const t = text.trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '');
+  try { return JSON.parse(t); } catch { /* tenta extrair o objeto */ }
+  const a = t.indexOf('{'), b = t.lastIndexOf('}');
+  if (a >= 0 && b > a) { try { return JSON.parse(t.slice(a, b + 1)); } catch { /* falha abaixo */ } }
+  throw new Error('Não foi possível ler a resposta da IA (JSON inválido). Tenta de novo.');
+}
 
 const SYSTEM = `És um especialista sénior em SEO e copywriting para e-commerce de retalho em Portugal, a trabalhar para a Lidl Portugal (lidl.pt).
 Contexto: a Lidl vende marcas próprias como a Esmara (moda de senhora), Livergy (homem), Lupilu/Pepperts (criança), Parkside, Silvercrest, Livarno, Crivit, entre outras. A proposta de valor é qualidade a preço Lidl; há venda em loja e online, com campanhas semanais (folheto).
@@ -127,7 +154,7 @@ async function run(apiKey, model, params, onProgress) {
   }
 }
 
-export async function aiAnalyze({ apiKey, model, effort, item, ruleAnalysis, competitors, onProgress }) {
+export async function aiAnalyze({ provider, apiKey, model, effort, item, ruleAnalysis, competitors, onProgress }) {
   const prompt = `${itemBlock(item, ruleAnalysis, competitors)}
 
 Faz uma auditoria SEO completa deste texto de ${item.type} da Lidl Portugal:
@@ -139,6 +166,13 @@ Faz uma auditoria SEO completa deste texto de ${item.type} da Lidl Portugal:
 6. Escreve a versão corrigida completa, pronta a publicar: meta title (≤ 60 car., termina com "| Lidl"), meta description (120–155 car., com CTA), H1, slug, corpo em Markdown (com H2/H3, listas e links internos sugeridos no formato [âncora](/caminho-sugerido)) e 3–5 FAQs. Mantém a informação factual do original e usa [marcadores] para dados a confirmar.
 7. Lista as principais alterações feitas e porquê. Em "atributos" põe a ficha técnica (nome/valor) com os dados que existem ou [marcadores].
 8. Visibilidade em assistentes de IA (LLM SEO / GEO): dá uma pontuação de 0 a 100 e um resumo; escreve um parágrafo de resposta direta (40–60 palavras) que um assistente possa citar; lista 6–10 perguntas conversacionais que alguém em Portugal faria ao ChatGPT/Gemini/Google AI Mode onde esta página deveria ser citada, se o texto atual as responde e uma resposta sugerida; os factos em falta e onde obtê-los (ex.: ficha técnica/PIM, Merchant Center); as frases vagas com reescrita factual; as entidades da página; 2–4 passagens citáveis do texto corrigido; os riscos (alegações ambientais, afirmações sem prova). Em "json_ld" devolve uma string JSON-LD válida (schema.org, com "@graph"): para categoria CollectionPage + BreadcrumbList + ItemList (+ FAQPage se houver Q&A visível); para produto Product com Brand e Offer (preço, disponibilidade, devoluções, envio) + BreadcrumbList (+ FAQPage). Usa só dados presentes no texto ou [marcadores]; nunca aggregateRating sem avaliações reais.`;
+  if (provider === 'gemini') {
+    const { text } = await geminiGenerate({
+      apiKey, model, system: SYSTEM, json: true, onProgress,
+      prompt: `${prompt}\n\nResponde APENAS com um objeto JSON válido com exatamente esta estrutura (os valores são exemplos de tipo; "pontuacao" é um inteiro de 0 a 100; "json_ld" é uma string com JSON escapado):\n${JSON.stringify(skeleton(ANALYSIS_SCHEMA))}`
+    });
+    return conform(ANALYSIS_SCHEMA, parseJson(text));
+  }
   const { content } = await run(apiKey, model, {
     max_tokens: 32000,
     system: SYSTEM,
@@ -149,7 +183,7 @@ Faz uma auditoria SEO completa deste texto de ${item.type} da Lidl Portugal:
   try { return JSON.parse(text); } catch { throw new Error('Não foi possível ler a resposta da IA.'); }
 }
 
-export async function aiCompetitors({ apiKey, model, effort, item, onProgress }) {
+export async function aiCompetitors({ provider, apiKey, model, effort, item, onProgress }) {
   const prompt = `Pesquisa na web como os concorrentes da Lidl em Portugal trabalham o SEO para a pesquisa "${item.keyword || item.name}" (${item.type}${item.brand ? `, marca própria ${item.brand}` : ''}).
 Analisa as páginas que aparecem bem posicionadas no Google Portugal (google.pt) para esta pesquisa e pesquisas próximas — retalhistas de moda/retalho como Primark, Pepco, Kiabi, C&A, H&M, Zara, Shein, Continente, Auchan, El Corte Inglés, ou outros que surjam.
 Responde em pt-PT, em Markdown, com:
@@ -161,6 +195,10 @@ Responde em pt-PT, em Markdown, com:
 ## Lacunas e oportunidades para a Lidl (Google e assistentes de IA)
 ## 5 ações prioritárias
 Sê específico e indica as fontes. Não inventes nada que não tenhas visto.`;
+  if (provider === 'gemini') {
+    const { text, sources } = await geminiGenerate({ apiKey, model, system: SYSTEM, prompt, search: true, onProgress });
+    return { markdown: text, sources };
+  }
   const { content } = await run(apiKey, model, {
     max_tokens: 24000,
     system: SYSTEM,
@@ -177,7 +215,7 @@ Sê específico e indica as fontes. Não inventes nada que não tenhas visto.`;
   return { markdown: text, sources: [...sources.entries()].map(([url, title]) => ({ url, title })) };
 }
 
-export async function aiOverview({ apiKey, model, effort, summary, onProgress }) {
+export async function aiOverview({ provider, apiKey, model, effort, summary, onProgress }) {
   const prompt = `Abaixo está o resumo da auditoria SEO automática de ${summary.count} textos (categorias e produtos) da Lidl Portugal.
 <resumo>
 ${summary.text}
@@ -190,6 +228,7 @@ Escreve em pt-PT, em Markdown, um relatório executivo para a equipa de conteúd
 ## Plano de melhoria priorizado (quick wins vs. trabalho estrutural)
 ## Guia de redação recomendado (template para textos de categoria e de produto)
 Sê concreto e refere os textos pelo nome.`;
+  if (provider === 'gemini') return (await geminiGenerate({ apiKey, model, system: SYSTEM, prompt, onProgress })).text;
   const { content } = await run(apiKey, model, {
     max_tokens: 16000,
     system: SYSTEM,
