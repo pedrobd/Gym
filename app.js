@@ -948,7 +948,7 @@
 
   function weightEntries() {
     return Object.values(days)
-      .filter((d) => Number(d.weight) > 0 || Number(d.waist) > 0)
+      .filter((d) => Number(d.weight) > 0 || Number(d.waist) > 0 || Number(d.fat) > 0 || Number(d.visceral) > 0)
       .sort((a, b) => (a.date < b.date ? -1 : 1));
   }
 
@@ -1075,6 +1075,8 @@
     const today_ = days[date] || {};
     if (document.activeElement !== $("#body-weight")) $("#body-weight").value = today_.weight || "";
     if (document.activeElement !== $("#body-waist")) $("#body-waist").value = today_.waist || "";
+    if (document.activeElement !== $("#body-fat")) $("#body-fat").value = today_.fat || "";
+    if (document.activeElement !== $("#body-visceral")) $("#body-visceral").value = today_.visceral || "";
     const entries = weightEntries();
     const ws = entries.filter((d) => Number(d.weight) > 0);
     const waists = entries.filter((d) => Number(d.waist) > 0);
@@ -1110,14 +1112,15 @@
     }
 
     $("#weight-chart").innerHTML = lineChart(ws.map((d) => ({ date: d.date, v: Number(d.weight) })), "kg");
+    renderComposition(entries);
     $("#body-table").innerHTML = entries.length
-      ? `<table><thead><tr><th>Data</th><th>Peso</th><th>Cintura</th><th></th></tr></thead><tbody>${entries
+      ? `<table><thead><tr><th>Data</th><th>Peso</th><th>Cintura</th><th>Gordura</th><th>Visceral</th><th></th></tr></thead><tbody>${entries
           .slice()
           .reverse()
           .map(
             (d) => `<tr><td>${fmtDate(d.date)}</td><td>${Number(d.weight) > 0 ? fmt1(Number(d.weight)) + " kg" : "–"}</td><td>${
               Number(d.waist) > 0 ? fmt1(Number(d.waist)) + " cm" : "–"
-            }</td><td><button class="link danger-text" data-body-del="${d.date}">Apagar</button></td></tr>`
+            }</td><td>${Number(d.fat) > 0 ? fmt1(Number(d.fat)) + "%" : "–"}</td><td>${Number(d.visceral) > 0 ? Number(d.visceral) : "–"}</td><td><button class="link danger-text" data-body-del="${d.date}">Apagar</button></td></tr>`
           )
           .join("")}</tbody></table>`
       : "";
@@ -1143,7 +1146,40 @@
       </div>`;
   }
 
-  function lineChart(points, unit) {
+  // Gordura corporal e visceral (da balança): massa gorda e magra, evolução e gráfico da % de gordura.
+  const visceralLabel = (v) => (v <= 9 ? "normal" : v <= 14 ? "alta" : "muito alta");
+  function renderComposition(entries) {
+    const fats = entries.filter((d) => Number(d.fat) > 0);
+    const vis = entries.filter((d) => Number(d.visceral) > 0);
+    $("#comp-box").hidden = !fats.length && !vis.length;
+    if (!fats.length && !vis.length) return;
+    // massa gorda e magra só nos registos com peso e gordura no mesmo dia
+    const both = fats.filter((d) => Number(d.weight) > 0);
+    const mass = (d) => ({ fat: (Number(d.weight) * Number(d.fat)) / 100, lean: Number(d.weight) * (1 - Number(d.fat) / 100) });
+    const last = both[both.length - 1], firstB = both[0];
+    const diff = (a, b) => (a - b > 0 ? "+" : a - b < 0 ? "−" : "") + fmt1(Math.abs(a - b));
+    const lastFat = fats.length ? Number(fats[fats.length - 1].fat) : 0;
+    const lastVis = vis.length ? Number(vis[vis.length - 1].visceral) : 0;
+    $("#comp-stats").innerHTML = `
+      <li><b>${lastFat ? fmt1(lastFat) + "%" : "–"}</b><span>gordura corporal${fats.length > 1 ? ` (${diff(lastFat, Number(fats[0].fat))} desde o início)` : ""}</span></li>
+      <li><b>${last ? fmt1(mass(last).fat) : "–"}</b><span>massa gorda (kg)${both.length > 1 ? ` · ${diff(mass(last).fat, mass(firstB).fat)} kg` : ""}</span></li>
+      <li><b>${last ? fmt1(mass(last).lean) : "–"}</b><span>massa magra (kg)${both.length > 1 ? ` · ${diff(mass(last).lean, mass(firstB).lean)} kg` : ""}</span></li>
+      <li class="${lastVis > 9 ? "vis-high" : ""}"><b>${lastVis || "–"}</b><span>gordura visceral${lastVis ? ` (${visceralLabel(lastVis)})` : ""}</span></li>`;
+    let msg = "";
+    if (both.length > 1) {
+      const lostFat = mass(firstB).fat - mass(last).fat, lostLean = mass(firstB).lean - mass(last).lean;
+      const lost = lostFat + lostLean;
+      if (lost > 0.5) {
+        const pct = Math.round((Math.max(0, lostFat) / lost) * 100);
+        msg = `Do peso que perdeste, ≈${pct}% foi gordura. ${pct >= 75 ? "Ótimo: o treino de força e a proteína estão a proteger o músculo." : "Mais de um quarto foi massa magra: garante a proteína e não faltes aos treinos de força; se perderes mais de 1% do peso por semana, come um pouco mais."}`;
+      }
+    }
+    $("#comp-msg").textContent = `${msg}${msg ? " " : ""}A balança mede por bioimpedância: o valor muda com a água e a comida, por isso conta a tendência, sempre em jejum. Visceral: até 9 normal, 10–14 alta, 15 ou mais muito alta.`;
+    $("#fat-chart").hidden = fats.length < 2;
+    if (fats.length > 1) $("#fat-chart").innerHTML = lineChart(fats.map((d) => ({ date: d.date, v: Number(d.fat) })), "%", "Evolução da gordura corporal");
+  }
+
+  function lineChart(points, unit, label = "Evolução do peso") {
     if (!points.length) return `<p class="empty">Ainda sem pesagens. Regista a primeira em cima.</p>`;
     const W = 640, H = 240, P = { l: 44, r: 16, t: 20, b: 36 };
     const vs = points.map((p) => p.v);
@@ -1168,7 +1204,7 @@
       )
       .join("");
     const lastP = points[points.length - 1];
-    return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Evolução do peso">
+    return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${label}">
       ${grid}<text x="8" y="14" class="axis">${unit}</text>
       <path d="${path}" class="line"/>${dots}
       <text x="${Math.min(x(lastP.date), W - P.r - 20)}" y="${y(lastP.v) - 10}" class="label" text-anchor="middle">${fmt1(lastP.v)}</text></svg>`;
@@ -1532,15 +1568,16 @@
   $("#body-save").addEventListener("click", async () => {
     const w = Number($("#body-weight").value);
     const c = Number($("#body-waist").value);
+    const f = Number($("#body-fat").value);
+    const v = Math.round(Number($("#body-visceral").value));
     const status = $("#body-status");
-    if (!(w > 0) && !(c > 0)) {
-      status.textContent = "Escreve o peso, a cintura ou os dois.";
+    if (!(w > 0) && !(c > 0) && !(f > 0) && !(v > 0)) {
+      status.textContent = "Escreve pelo menos um valor: peso, cintura, gordura ou visceral.";
       return;
     }
     const date = bodyDate();
-    $("#body-weight").blur();
-    $("#body-waist").blur();
-    await updateDay(date, { weight: w > 0 ? w : 0, waist: c > 0 ? c : 0 });
+    ["#body-weight", "#body-waist", "#body-fat", "#body-visceral"].forEach((s) => $(s).blur());
+    await updateDay(date, { weight: w > 0 ? w : 0, waist: c > 0 ? c : 0, fat: f > 0 ? f : 0, visceral: v > 0 ? v : 0 });
     status.textContent = `Guardado (${fmtDate(date)}).`;
   });
   $("#body-table").addEventListener("click", (e) => {
@@ -1557,7 +1594,7 @@
       }, 4000);
       return;
     }
-    updateDay(b.dataset.bodyDel, { weight: 0, waist: 0 });
+    updateDay(b.dataset.bodyDel, { weight: 0, waist: 0, fat: 0, visceral: 0 });
   });
 
   function addShopItem() {
