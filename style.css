@@ -433,7 +433,7 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
 .pw-bar i { position: absolute; left: -2px; right: -2px; height: 2px; background: var(--accent); }
 .pw-lbl { font-size: .7rem; font-weight: 700; text-transform: uppercase; color: var(--muted); }
 .pw-day.sel .pw-lbl { color: var(--ink); }
-.weigh-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: .6rem; align-items: end; }
+.weigh-form { display: grid; grid-template-columns: repeat(4, 1fr) auto; gap: .6rem; align-items: end; }
 .weigh-form label { display: flex; flex-direction: column; gap: .3rem; }
 .weigh-form input { font-size: 1.15rem; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; }
 #body-trend { background: var(--surface); }
@@ -662,3 +662,9 @@ button:focus-visible, a:focus-visible, label.button-like:focus-within { outline:
 .swap-opt b { font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; }
 .swap .link { justify-self: start; padding-left: 0; }
 .swap-tag { font-weight: 700; font-size: .78rem; color: var(--ink); background: var(--tint-warm); border-radius: 999px; padding: .2rem .55rem; }
+
+/* composição corporal */
+#comp-box h3 { margin-top: 1.5rem; }
+#comp-stats { grid-template-columns: repeat(4, 1fr); }
+#comp-stats li.vis-high b { color: var(--accent); }
+@media (max-width: 600px) { #comp-stats { grid-template-columns: repeat(2, 1fr); } }

@@ -154,17 +154,25 @@
         </details>
       </div>
 
-      <h2>Peso e cintura</h2>
-      <p class="muted small">Pesa-te de manhã, em jejum, depois da casa de banho, 1–2 vezes por semana. Mede a cintura à altura do umbigo, sem apertar.</p>
+      <h2>Peso, cintura e gordura</h2>
+      <p class="muted small">Pesa-te de manhã, em jejum, depois da casa de banho, 1–2 vezes por semana. Mede a cintura à altura do umbigo, sem apertar. A gordura corporal e a visceral são as da tua balança (opcionais).</p>
       <div class="weigh-form">
         <label>Peso (kg)<input type="number" id="body-weight" inputmode="decimal" step="0.1" min="30" max="300" placeholder="–"></label>
         <label>Cintura (cm)<input type="number" id="body-waist" inputmode="decimal" step="0.5" min="40" max="200" placeholder="–"></label>
+        <label>Gordura (%)<input type="number" id="body-fat" inputmode="decimal" step="0.1" min="3" max="70" placeholder="–"></label>
+        <label>Visceral<input type="number" id="body-visceral" inputmode="numeric" step="1" min="1" max="30" placeholder="–"></label>
         <button id="body-save" class="pill-btn dark">Guardar</button>
       </div>
       <p id="body-status" class="muted small"></p>
       <ul class="week-stats" id="body-stats"></ul>
       <div id="body-trend" class="callout"></div>
       <div id="weight-chart" class="chart"></div>
+      <div id="comp-box" hidden>
+        <h3>Composição corporal</h3>
+        <ul class="week-stats" id="comp-stats"></ul>
+        <p id="comp-msg" class="muted small"></p>
+        <div id="fat-chart" class="chart"></div>
+      </div>
       <div id="body-table"></div>
     </section>
 
