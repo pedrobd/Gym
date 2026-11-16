@@ -323,7 +323,6 @@
     $('alertTask').textContent = r.text;
     const left = r.hasDeadline && r.end > Date.now() ? 'Tens até às ' + hm(r.end) + ' · faltam ' + sayDuration(r.end - Date.now()) : '';
     $('alertMeta').textContent = left;
-    $('alert').scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
   function hideAlert() { $('alert').hidden = true; current = null; stopListening(); }
 
@@ -461,16 +460,16 @@
   async function onMic() {
     unlock();
     if (activeRec && micBusy) { stopListening(); return; }
-    if (!CAN_LISTEN) { $('typeInput').focus(); toast('Este browser não percebe voz. Usa o Chrome, o Edge ou o Safari, ou escreve.'); return; }
+    if (!CAN_LISTEN) { setTyping(true); toast('Este browser não percebe voz. Usa o Chrome, o Edge ou o Safari, ou escreve.'); return; }
     cancelSpeech();
     micBusy = true;
     $('mic').classList.add('listening');
-    $('micLabel').textContent = 'A ouvir… fala à vontade';
+    $('micLabel').textContent = 'A ouvir…';
     $('transcript').textContent = '';
     try {
       const text = await listen({ onInterim: (t) => { $('transcript').textContent = '“' + t + '”'; } });
       $('mic').classList.remove('listening');
-      $('micLabel').textContent = 'Toca e diz o que tens de fazer';
+      $('micLabel').textContent = 'Toca e fala';
       micBusy = false;
       if (!text) { $('transcript').textContent = 'Não ouvi nada. Tenta outra vez.'; return; }
       $('transcript').textContent = '“' + text + '”';
@@ -478,7 +477,7 @@
     } catch (e) {
       micBusy = false;
       $('mic').classList.remove('listening');
-      $('micLabel').textContent = 'Toca e diz o que tens de fazer';
+      $('micLabel').textContent = 'Toca e fala';
       const msg = e.message === 'not-allowed' || e.message === 'service-not-allowed'
         ? 'Tens de dar autorização ao microfone (no cadeado ao lado do endereço).'
         : e.message === 'network' ? 'O reconhecimento de voz precisa de internet.' : 'Não consegui ouvir. Tenta outra vez ou escreve.';
@@ -487,6 +486,17 @@
   }
 
   // ---------- desenhar ----------
+  const ICON = {
+    check: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z"/></svg>',
+    repeat: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 7h10v3l4-4-4-4v3H5v6h2V7Zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4Z"/></svg>',
+    clock: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 10.4 3.5 2.1-.8 1.3L11 13V7h2v5.4Z"/></svg>',
+    bell: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.4-2h-4.8a2.5 2.5 0 0 0 2.4 2Zm7-6V11a7 7 0 0 0-5.5-6.8V3.5a1.5 1.5 0 0 0-3 0v.7A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/></svg>',
+    say: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M3 10v4h4l5 4V6L7 10H3Zm13.5 2A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4Z"/></svg>',
+    undo: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12.5 8c-2.6 0-5 1-6.9 2.6L2 7v9h9l-3.6-3.6A8 8 0 0 1 20.1 16l2.4-.8A10.5 10.5 0 0 0 12.5 8Z"/></svg>',
+    trash: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12ZM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4Z"/></svg>',
+  };
+  const shortInterval = (min) => min === 60 ? 'De hora a hora' : min === 30 ? 'De meia em meia hora' : min % 60 === 0 ? 'De ' + (min / 60) + ' em ' + (min / 60) + ' h' : 'De ' + min + ' em ' + min + ' min';
+
   function render() {
     const open = reminders.filter(r => !r.done).sort((a, b) => {
       const na = nextEvent(a), nb = nextEvent(b);
@@ -497,41 +507,96 @@
     $('empty').hidden = open.length > 0;
     $('count').textContent = open.length ? String(open.length) : '';
     $('doneWrap').hidden = done.length === 0;
-    $('doneCount').textContent = '(' + done.length + ')';
+    $('doneCount').textContent = String(done.length);
     $('doneList').innerHTML = done.map(r => `<li class="item finished" data-id="${r.id}">
-        <p class="item-task">${esc(r.text)}</p>
-        <p class="item-sched">Feito às ${hm(r.doneAt)}</p>
-        <div class="item-actions"><button class="round" data-act="undo" aria-label="Voltar a pôr na lista" title="Desfazer">↺</button>
-        <button class="round" data-act="delete" aria-label="Apagar" title="Apagar">✕</button></div></li>`).join('');
+        <span class="check" aria-hidden="true">${ICON.check}</span>
+        <div class="item-body"><p class="item-task">${esc(r.text)}</p></div>
+        <div class="item-when"><small>feito às ${hm(r.doneAt)}</small>
+          <span style="display:flex;gap:6px"><button class="say" data-act="undo" aria-label="Voltar a pôr na lista" title="Desfazer">${ICON.undo}</button>
+          <button class="say" data-act="delete" aria-label="Apagar" title="Apagar">${ICON.trash}</button></span></div></li>`).join('');
+    renderHeader(open, done);
     updateCountdowns();
   }
+
+  function renderHeader(open, done) {
+    const h = new Date().getHours();
+    const hello = h < 6 ? 'Boa noite' : h < 13 ? 'Bom dia' : h < 20 ? 'Boa tarde' : 'Boa noite';
+    $('greeting').textContent = hello + (settings.name ? ', ' + settings.name : '') + '.';
+    $('today').textContent = cap(new Date().toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'short' }).replace('.', ''));
+    document.querySelector('.list-head').hidden = open.length === 0;
+    const n = open.length;
+    $('summary').innerHTML = n === 0
+      ? (done.length ? 'Tudo feito. <b>Boa!</b>' : 'Nada pendente. Diz-me o que tens de fazer.')
+      : 'Tens <b>' + n + (n === 1 ? ' coisa' : ' coisas') + '</b> para fazer' + (done.length ? ' · ' + done.length + ' já ' + (done.length === 1 ? 'feita' : 'feitas') : '') + '.';
+  }
+
   function itemHTML(r) {
     const st = status(r);
+    const tags = [];
+    if (r.once) tags.push(`<span class="tag">${ICON.bell}Uma vez</span>`);
+    else tags.push(`<span class="tag">${ICON.repeat}${esc(shortInterval(r.interval))}</span>`);
+    if (r.hasDeadline) tags.push(`<span class="tag deadline">${ICON.clock}${dayWord(r.end)}até ${hm(r.end)}</span>`);
+    else if (!r.once && r.end) tags.push(`<span class="tag">até ${hm(r.end)}</span>`);
     return `<li class="item ${st}" data-id="${r.id}">
-      <p class="item-task">${esc(r.text)}</p>
-      <p class="item-sched">${esc(describe(r))}</p>
-      <p class="item-next" data-next="${r.id}"></p>
-      <div class="item-actions">
-        <button class="round" data-act="say" aria-label="Ouvir" title="Ouvir"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M3 10v4h4l5 4V6L7 10H3Zm13.5 2A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4Z"/></svg></button>
-        <button class="round" data-act="edit" aria-label="Editar" title="Editar"><svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M3 17.2V21h3.8l11-11-3.8-3.8-11 11ZM20.7 7a1 1 0 0 0 0-1.4l-2.3-2.3a1 1 0 0 0-1.4 0l-1.8 1.8 3.8 3.8L20.7 7Z"/></svg></button>
-        <button class="round ok" data-act="done" aria-label="Marcar como feito" title="Feito"><svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z"/></svg></button>
-      </div>
+      <button class="check" data-act="done" aria-label="Marcar como feito">${ICON.check}</button>
+      <button class="item-body" data-act="edit" aria-label="Editar ${esc(r.text)}">
+        <p class="item-task">${esc(r.text)}</p>
+        <div class="item-meta">${tags.join('')}</div>
+        ${r.hasDeadline ? `<div class="item-bar"><i data-bar="${r.id}"></i></div>` : ''}
+      </button>
+      <div class="item-when" data-next="${r.id}"><b></b><small></small></div>
     </li>`;
   }
+
+  const progress = (r, now) => {
+    const from = r.createdAt || r.firstAt, to = r.end;
+    return to > from ? Math.min(1, Math.max(0, (now - from) / (to - from))) : 1;
+  };
+
   function updateCountdowns() {
     const now = Date.now();
     document.querySelectorAll('[data-next]').forEach(el => {
       const r = reminders.find(x => x.id === el.dataset.next);
       if (!r) return;
       const ev = nextEvent(r);
-      let txt;
-      if (ev) {
-        const label = { final: 'Último aviso', deadline: 'Hora limite', snooze: 'Volto a lembrar' }[ev.kind] || 'Próximo aviso';
-        txt = label + ' ' + dayWord(ev.at) + 'às ' + hm(ev.at) + ' · daqui a ' + shortDur(ev.at - now);
-      } else txt = r.hasDeadline || r.once ? 'Já passou a hora. Fizeste?' : 'Sem mais avisos';
-      if (el.textContent !== txt) el.textContent = txt;
+      const b = el.querySelector('b'), sm = el.querySelector('small');
+      const big = ev ? hm(ev.at) : (r.hasDeadline || r.once ? '!' : '—');
+      const small = ev ? (dayWord(ev.at) ? dayWord(ev.at).trim() : 'em ' + shortDur(ev.at - now)) : (r.hasDeadline || r.once ? 'Já passou. Fizeste?' : 'sem avisos');
+      if (b.textContent !== big) b.textContent = big;
+      if (sm.textContent !== small) sm.textContent = small;
     });
+    document.querySelectorAll('[data-bar]').forEach(el => {
+      const r = reminders.find(x => x.id === el.dataset.bar);
+      if (r) el.style.width = Math.round(progress(r, now) * 100) + '%';
+    });
+    updateNext(now);
   }
+
+  // cartão grande: o próximo aviso de todos
+  function updateNext(now) {
+    let best = null, bestEv = null;
+    reminders.forEach(r => {
+      if (r.done) return;
+      const ev = nextEvent(r);
+      if (ev && (!bestEv || ev.at < bestEv.at)) { best = r; bestEv = ev; }
+    });
+    $('next').hidden = !best;
+    if (!best) return;
+    const label = { final: 'Último aviso', deadline: 'Hora limite', snooze: 'Volto a lembrar', once: 'A seguir' }[bestEv.kind] || 'Próximo aviso';
+    setText('nextKind', label);
+    setText('nextIn', dayWord(bestEv.at) ? cap(dayWord(bestEv.at).trim()) : 'daqui a ' + shortDur(bestEv.at - now));
+    setText('nextTime', hm(bestEv.at));
+    setText('nextTask', best.text);
+    const meta = best.once ? 'Aviso único' : shortInterval(best.interval) + (best.hasDeadline ? ' · prazo às ' + hm(best.end) : '');
+    setText('nextMeta', meta);
+    // anel: quanto falta para o próximo aviso (cheio = acabou de avisar, vazio = vai tocar)
+    const span = best.once ? Math.max(bestEv.at - (best.createdAt || now), MIN) : (bestEv.kind === 'regular' ? best.interval * MIN : 15 * MIN);
+    const left = Math.min(1, Math.max(0, (bestEv.at - now) / span));
+    $('nextRing').style.strokeDashoffset = String(326.7 * (1 - left));
+    $('nextBarWrap').hidden = !best.hasDeadline;
+    if (best.hasDeadline) $('nextBar').style.width = Math.round(progress(best, now) * 100) + '%';
+  }
+  const setText = (id, t) => { const el = $(id); if (el.textContent !== t) el.textContent = t; };
   const shortDur = (ms) => {
     const m = Math.max(0, Math.ceil(ms / MIN));
     if (m < 60) return m + ' min';
@@ -662,6 +727,17 @@
     $('transcript').textContent = '';
     handleInput(v);
   });
+  function setTyping(on) {
+    $('typeForm').hidden = !on;
+    $('typeToggle').setAttribute('aria-expanded', String(on));
+    if (on) setTimeout(() => $('typeInput').focus(), 30);
+  }
+  $('typeToggle').addEventListener('click', () => setTyping($('typeForm').hidden));
+  $('readAll').addEventListener('click', () => { unlock(); readList(); });
+  document.querySelectorAll('[data-example]').forEach(b => b.addEventListener('click', () => {
+    setTyping(true);
+    $('typeInput').value = b.dataset.example;
+  }));
   $('unlock').addEventListener('click', () => { unlock(); speak('Som ligado. Estou aqui para te lembrar.'); });
   document.addEventListener('pointerdown', unlock, { capture: true });
   document.addEventListener('keydown', unlock, { capture: true });
@@ -669,7 +745,11 @@
   $('list').addEventListener('click', (e) => {
     const b = e.target.closest('button[data-act]'); if (!b) return;
     const r = reminders.find(x => x.id === b.closest('[data-id]').dataset.id); if (!r) return;
-    if (b.dataset.act === 'done') markDone(r, true);
+    if (b.dataset.act === 'done') {
+      const li = b.closest('.item');
+      li.classList.add('completing');
+      setTimeout(() => markDone(r, true), 380);
+    }
     else if (b.dataset.act === 'edit') openEdit(r);
     else if (b.dataset.act === 'say') speak(message(r, 'regular'));
   });
@@ -813,7 +893,8 @@
     speechSynthesis.addEventListener ? speechSynthesis.addEventListener('voiceschanged', loadVoices) : (speechSynthesis.onvoiceschanged = loadVoices);
   }
   if (!CAN_LISTEN) {
-    $('micLabel').textContent = 'Este browser não percebe voz — escreve em baixo';
+    $('micLabel').textContent = 'Sem voz neste browser';
+    setTyping(true);
     $('mic').disabled = true;
   }
   if (!NATIVE) {

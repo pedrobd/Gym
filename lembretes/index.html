@@ -5,12 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Lembra-me</title>
   <meta name="description" content="Lembretes falados: dizes o que tens de fazer e a app lembra-te em voz alta, de hora a hora.">
-  <meta name="theme-color" content="#f6f3ee" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#16161a" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f7f4ef" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121216" media="(prefers-color-scheme: dark)">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icon.svg">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Manrope:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -20,74 +23,139 @@
   </button>
 
   <header class="top">
-    <h1>Lembra-me</h1>
-    <div class="top-actions">
-      <button id="keepAwake" class="chip" aria-pressed="false" title="Impede o ecrã de desligar enquanto a app está aberta">Ecrã ligado</button>
-      <button id="openSettings" class="icon-btn" aria-label="Definições">
-        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7Zm7.4-2.5.1-1-.1-1 2.1-1.6-2-3.4-2.5 1a7.6 7.6 0 0 0-1.7-1l-.4-2.6h-4l-.4 2.7c-.6.2-1.2.6-1.7 1l-2.5-1-2 3.4L4.6 11l-.1 1 .1 1-2.1 1.6 2 3.4 2.5-1c.5.4 1.1.8 1.7 1l.4 2.6h4l.4-2.6c.6-.3 1.2-.6 1.7-1l2.5 1 2-3.4-2.3-1.6Z"/></svg>
-      </button>
+    <div class="top-row">
+      <p id="today" class="today"></p>
+      <div class="top-actions">
+        <button id="keepAwake" class="chip" aria-pressed="false" title="Impede o ecrã de desligar enquanto a página está aberta">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10Zm0-5 1.5 3h-3L12 2Zm0 20-1.5-3h3L12 22ZM2 12l3-1.5v3L2 12Zm20 0-3 1.5v-3l3 1.5ZM4.9 4.9l3.2 1.1-2.1 2.1-1.1-3.2Zm14.2 14.2-3.2-1.1 2.1-2.1 1.1 3.2Zm0-14.2-1.1 3.2-2.1-2.1 3.2-1.1ZM4.9 19.1l1.1-3.2 2.1 2.1-3.2 1.1Z"/></svg>
+          Ecrã ligado
+        </button>
+        <button id="openSettings" class="icon-btn" aria-label="Definições">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="10" cy="17" r="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+        </button>
+      </div>
     </div>
+    <h1 id="greeting" class="greeting">Olá</h1>
+    <p id="summary" class="summary"></p>
   </header>
 
   <main>
-    <section id="alert" class="alert" hidden aria-live="assertive">
-      <p class="alert-kicker" id="alertKicker">Agora</p>
-      <p class="alert-task" id="alertTask"></p>
-      <p class="alert-meta" id="alertMeta"></p>
-      <div class="alert-actions">
-        <button class="btn btn-done" data-alert="done">Feito ✓</button>
-        <button class="btn" data-alert="snooze10">+10 min</button>
-        <button class="btn" data-alert="snooze30">+30 min</button>
-        <button class="btn btn-ghost" data-alert="repeat">Repetir</button>
+    <section id="next" class="next" hidden aria-live="polite">
+      <div class="next-head">
+        <span id="nextKind" class="next-kind">A seguir</span>
+        <span id="nextIn" class="next-in"></span>
       </div>
-      <p class="alert-hint" id="alertHint"></p>
+      <div class="next-body">
+        <div class="next-ring" aria-hidden="true">
+          <svg viewBox="0 0 120 120"><circle class="ring-bg" cx="60" cy="60" r="52"/><circle id="nextRing" class="ring-fg" cx="60" cy="60" r="52"/></svg>
+          <span id="nextTime" class="next-time"></span>
+        </div>
+        <div class="next-text">
+          <p id="nextTask" class="next-task"></p>
+          <p id="nextMeta" class="next-meta"></p>
+        </div>
+      </div>
+      <div id="nextBarWrap" class="next-bar" hidden><i id="nextBar"></i></div>
     </section>
-
-    <section class="capture">
-      <button id="mic" class="mic" aria-label="Falar um lembrete">
-        <span class="mic-ring"></span>
-        <svg viewBox="0 0 24 24" width="46" height="46" aria-hidden="true"><path fill="currentColor" d="M12 14a3 3 0 0 0 3-3V5a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V21h2v-3.1a7 7 0 0 0 6-6.9h-2Z"/></svg>
-      </button>
-      <p id="micLabel" class="mic-label">Toca e diz o que tens de fazer</p>
-      <p id="transcript" class="transcript" aria-live="polite"></p>
-      <p class="examples">Ex.: <q>Lembra-me de hora a hora de ir à InPost até às 16h</q> · <q>Daqui a 20 minutos tirar a roupa da máquina</q> · <q>O que tenho para hoje?</q></p>
-
-      <form id="typeForm" class="type-form" autocomplete="off">
-        <input id="typeInput" type="text" placeholder="…ou escreve aqui" aria-label="Escrever lembrete" enterkeyhint="done">
-        <button class="btn" type="submit">Adicionar</button>
-      </form>
-    </section>
-
-    <div id="toast" class="toast" hidden role="status"></div>
 
     <section class="list-wrap">
       <div class="list-head">
-        <h2>Para fazer</h2>
+        <h2>Hoje e a seguir</h2>
         <span id="count" class="count"></span>
       </div>
       <ul id="list" class="list"></ul>
-      <p id="empty" class="empty">Ainda não há lembretes. Carrega no microfone e diz o que não te podes esquecer.</p>
+
+      <div id="empty" class="empty">
+        <div class="empty-art" aria-hidden="true">
+          <svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="44" fill="var(--accent-soft)"/><path fill="var(--accent)" d="M60 70a10 10 0 0 0 10-10V40a10 10 0 1 0-20 0v20a10 10 0 0 0 10 10Zm17-10a17 17 0 0 1-34 0h-6a23 23 0 0 0 20 22.8V90h6v-7.2A23 23 0 0 0 83 60h-6Z"/><circle cx="92" cy="30" r="6" fill="var(--sun)"/><circle cx="26" cy="86" r="4" fill="var(--sun)"/></svg>
+        </div>
+        <h3>A tua cabeça fica livre.</h3>
+        <p>Carrega no microfone e diz o que não te podes esquecer. Eu lembro-te em voz alta.</p>
+        <div class="examples">
+          <button class="example" data-example="Lembra-me de hora a hora de ir à InPost até às 16h">“De hora a hora ir à InPost até às 16h”</button>
+          <button class="example" data-example="Daqui a 20 minutos tirar a roupa da máquina">“Daqui a 20 min tirar a roupa”</button>
+          <button class="example" data-example="Amanhã às 9 ligar ao dentista">“Amanhã às 9 ligar ao dentista”</button>
+        </div>
+      </div>
 
       <details id="doneWrap" class="done-wrap" hidden>
-        <summary>Feitos <span id="doneCount"></span></summary>
+        <summary><span>Feitos</span> <span id="doneCount" class="count"></span></summary>
         <ul id="doneList" class="list list-done"></ul>
         <button id="clearDone" class="link-btn">Limpar feitos</button>
       </details>
     </section>
 
     <section id="notice" class="notice">
-      <p id="noticeText"><b>Deixa esta página aberta.</b> Os avisos tocam enquanto a app estiver aberta (pode estar noutro separador ou com o ecrã ligado). Se fechares o browser, não toca.</p>
+      <p id="noticeText"><b>Deixa esta página aberta.</b> Os avisos tocam enquanto a página estiver aberta (pode estar noutro separador ou com o ecrã ligado). Se fechares o browser, não toca.</p>
       <div class="notice-actions">
-        <button id="enableNotif" class="btn btn-ghost" hidden>Ativar notificações</button>
+        <button id="enableNotif" class="btn btn-soft" hidden>Ativar notificações</button>
         <button id="fixBattery" class="btn btn-primary" hidden>Permitir funcionar em segundo plano</button>
-        <button id="fixNotif" class="btn btn-ghost" hidden>Ativar notificações</button>
-        <button id="fixAlarm" class="btn btn-ghost" hidden>Permitir alarmes</button>
+        <button id="fixNotif" class="btn btn-soft" hidden>Ativar notificações</button>
+        <button id="fixAlarm" class="btn btn-soft" hidden>Permitir alarmes</button>
       </div>
     </section>
   </main>
 
+  <!-- aviso em ecrã inteiro -->
+  <section id="alert" class="alert" hidden role="alertdialog" aria-live="assertive" aria-labelledby="alertTask">
+    <div class="alert-inner">
+      <div class="alert-bell" aria-hidden="true">
+        <span></span><span></span>
+        <svg viewBox="0 0 24 24" width="44" height="44"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.4-2h-4.8a2.5 2.5 0 0 0 2.4 2Zm7-6V11a7 7 0 0 0-5.5-6.8V3.5a1.5 1.5 0 0 0-3 0v.7A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/></svg>
+      </div>
+      <p class="alert-kicker" id="alertKicker">Agora</p>
+      <p class="alert-task" id="alertTask"></p>
+      <p class="alert-meta" id="alertMeta"></p>
+      <button class="alert-done" data-alert="done">
+        <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z"/></svg>
+        Feito
+      </button>
+      <div class="alert-actions">
+        <button class="alert-btn" data-alert="snooze10">+10 min</button>
+        <button class="alert-btn" data-alert="snooze30">+30 min</button>
+        <button class="alert-btn" data-alert="repeat" aria-label="Repetir">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M3 10v4h4l5 4V6L7 10H3Zm13.5 2A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4ZM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6Z"/></svg>
+          Repetir
+        </button>
+      </div>
+      <p class="alert-hint" id="alertHint"></p>
+    </div>
+  </section>
+
+  <div id="toast" class="toast" hidden role="status"></div>
+
+  <!-- barra de baixo: microfone ao alcance do polegar -->
+  <div class="dock">
+    <p id="transcript" class="transcript" aria-live="polite"></p>
+    <form id="typeForm" class="type-form" autocomplete="off" hidden>
+      <input id="typeInput" type="text" placeholder="Ex.: às 15h ligar à mãe" aria-label="Escrever lembrete" enterkeyhint="done">
+      <button class="send" type="submit" aria-label="Adicionar">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg>
+      </button>
+    </form>
+    <div class="dock-bar">
+      <button id="typeToggle" class="dock-btn" aria-label="Escrever em vez de falar" aria-expanded="false">
+        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M20 5H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Zm-9 3h2v2h-2V8Zm0 3h2v2h-2v-2ZM8 8h2v2H8V8Zm0 3h2v2H8v-2Zm-1 2H5v-2h2v2Zm0-3H5V8h2v2Zm9 7H8v-2h8v2Zm0-4h-2v-2h2v2Zm0-3h-2V8h2v2Zm3 3h-2v-2h2v2Zm0-3h-2V8h2v2Z"/></svg>
+        <span>Escrever</span>
+      </button>
+      <div class="mic-wrap">
+        <button id="mic" class="mic" aria-label="Falar um lembrete">
+          <span class="mic-ring"></span><span class="mic-ring r2"></span>
+          <svg class="mic-icon" viewBox="0 0 24 24" width="34" height="34" aria-hidden="true"><path fill="currentColor" d="M12 14a3 3 0 0 0 3-3V5a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V21h2v-3.1a7 7 0 0 0 6-6.9h-2Z"/></svg>
+          <span class="mic-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+        </button>
+        <p id="micLabel" class="mic-label">Toca e fala</p>
+      </div>
+      <button id="readAll" class="dock-btn" aria-label="Ouvir o que tenho para fazer">
+        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M3 10v4h4l5 4V6L7 10H3Zm13.5 2A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4ZM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6Z"/></svg>
+        <span>Ouvir</span>
+      </button>
+    </div>
+  </div>
+
   <dialog id="editDlg" class="dlg">
     <form method="dialog" id="editForm">
+      <div class="dlg-grip" aria-hidden="true"></div>
       <h2>Editar lembrete</h2>
       <label>O que tens de fazer
         <input id="eTask" type="text" required>
@@ -113,7 +181,7 @@
           <input id="eEnd" type="time">
         </label>
       </div>
-      <label class="check"><input id="eDeadline" type="checkbox"> <span>É um prazo (avisa 15 min antes e à hora limite)</span></label>
+      <label class="toggle"><input id="eDeadline" type="checkbox"> <span>É um prazo (avisa 15 min antes e à hora limite)</span></label>
       <div class="dlg-actions">
         <button type="button" class="btn btn-danger" id="eDelete">Apagar</button>
         <span class="spacer"></span>
@@ -125,6 +193,7 @@
 
   <dialog id="settingsDlg" class="dlg">
     <form method="dialog" id="settingsForm">
+      <div class="dlg-grip" aria-hidden="true"></div>
       <h2>Definições</h2>
       <label>O teu nome (a voz chama-te pelo nome)
         <input id="sName" type="text" placeholder="opcional">
@@ -150,9 +219,9 @@
           <option value="3">3 vezes</option>
         </select>
       </label>
-      <label class="check"><input id="sChime" type="checkbox"> <span>Tocar um sinal antes de falar</span></label>
-      <label class="check" id="sAlarmWrap" hidden><input id="sAlarm" type="checkbox"> <span>Usar o volume do alarme (ouve-se mesmo com o telemóvel em silêncio)</span></label>
-      <label class="check"><input id="sListen" type="checkbox"> <span>Depois do aviso, ouvir a resposta (<q>feito</q>, <q>adia 15 minutos</q>)</span></label>
+      <label class="toggle"><input id="sChime" type="checkbox"> <span>Tocar um sinal antes de falar</span></label>
+      <label class="toggle" id="sAlarmWrap" hidden><input id="sAlarm" type="checkbox"> <span>Usar o volume do alarme (ouve-se mesmo com o telemóvel em silêncio)</span></label>
+      <label class="toggle"><input id="sListen" type="checkbox"> <span>Depois do aviso, ouvir a resposta (<q>feito</q>, <q>adia 15 minutos</q>)</span></label>
       <div id="diagWrap" class="diag" hidden>
         <h3>Diagnóstico</h3>
         <p id="diagInfo" class="diag-info"></p>
