@@ -299,6 +299,12 @@ button { cursor: pointer; }
   background: radial-gradient(130% 90% at 50% 0%, var(--accent-2) 0%, var(--accent) 45%, #c93512 100%);
   color: #fff; animation: fade .25s ease-out;
 }
+.alert-close {
+  position: absolute; top: calc(14px + env(safe-area-inset-top)); right: 14px;
+  display: flex; align-items: center; gap: 6px; height: 44px; padding: 0 14px 0 10px; border-radius: 99px;
+  border: 0; background: rgba(0,0,0,.16); color: #fff; font-weight: 800; font-size: 15px;
+}
+.alert-close:hover { background: rgba(0,0,0,.26); }
 .alert-inner { width: 100%; max-width: 440px; text-align: center; display: grid; justify-items: center; }
 .alert-bell {
   position: relative; width: 96px; height: 96px; border-radius: 50%; display: grid; place-items: center;

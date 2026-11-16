@@ -100,8 +100,12 @@ public class MainActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        // Voltar não fecha a app de vez: os alarmes continuam marcados de qualquer forma.
-        moveTaskToBack(true);
+        // Primeiro fecha o que estiver aberto na interface (aviso, definições, edição).
+        // Se não houver nada, a app vai para segundo plano: os alarmes continuam marcados.
+        if (web == null || !pageReady) { moveTaskToBack(true); return; }
+        web.evaluateJavascript("(window.__native && __native.onBack()) ? 'closed' : 'none'", result -> {
+            if (result == null || !result.contains("closed")) moveTaskToBack(true);
+        });
     }
 
     void js(final String code) {

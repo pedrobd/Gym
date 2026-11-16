@@ -326,6 +326,14 @@
   }
   function hideAlert() { $('alert').hidden = true; current = null; stopListening(); }
 
+  function closeTopLayer() {
+    if (!$('alert').hidden) { cancelSpeech(); hideAlert(); return true; }
+    for (const id of ['editDlg', 'settingsDlg']) if ($(id).open) { $(id).close(); return true; }
+    if (!$('typeForm').hidden) { setTyping(false); return true; }
+    return false;
+  }
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('alert').hidden) closeTopLayer(); });
+
   async function markDone(r, spoken) {
     r.done = true; r.doneAt = Date.now();
     save(); render();
@@ -771,6 +779,7 @@
     else if (a === 'snooze10') snooze(r, 10, true);
     else if (a === 'snooze30') snooze(r, 30, true);
     else if (a === 'repeat') speak(message(r, current.kind));
+    else if (a === 'close') hideAlert();
   });
 
   $('eInterval').addEventListener('change', syncEditFields);
@@ -859,6 +868,8 @@
       },
       onActions() { applyNativeActions(); },
       onResume() { applyNativeActions(); tick(); syncNative(); updateNativeNotice(); },
+      // botão "voltar" do Android: fecha o que estiver aberto; devolve false se não havia nada para fechar
+      onBack() { return closeTopLayer(); },
     };
     document.documentElement.classList.add('native');
     $('keepAwake').hidden = true;
