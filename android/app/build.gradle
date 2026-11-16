@@ -10,8 +10,8 @@ android {
         applicationId 'pt.pedrobd.lembrame'
         minSdk 26
         targetSdk 34
-        versionCode 5
-        versionName '1.4'
+        versionCode 6
+        versionName '1.5'
     }
 
     // Chave fixa para que cada nova versão instale por cima da anterior sem perder os lembretes.

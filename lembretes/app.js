@@ -186,7 +186,10 @@
   let nativeListen = null;
   function listen({ onInterim, maxMs } = {}) {
     if (NATIVE) {
-      return new Promise((resolve) => { nativeListen = resolve; NATIVE.listen(); });
+      return new Promise((resolve, reject) => {
+        nativeListen = { resolve, reject, onInterim };
+        NATIVE.listen(maxMs ? 'answer' : 'dictation');
+      });
     }
     return new Promise((resolve, reject) => {
       if (!SR) return reject(new Error('unsupported'));
@@ -195,7 +198,8 @@
       activeRec = rec;
       rec.lang = 'pt-PT';
       rec.interimResults = true;
-      rec.continuous = false;
+      // ditado: continua a ouvir nas pausas e só acaba após ~3,5 s de silêncio (ou novo toque no microfone)
+      rec.continuous = !maxMs;
       rec.maxAlternatives = 1;
       let finalText = '', lastText = '', err = null;
       rec.onresult = (e) => {
@@ -206,10 +210,14 @@
         }
         lastText = (finalText + ' ' + interim).trim();
         if (onInterim) onInterim(lastText);
+        if (!maxMs && lastText) armSilence(3500);
       };
+      let silence = null;
+      const armSilence = (ms) => { clearTimeout(silence); silence = setTimeout(() => { try { rec.stop(); } catch (e) {} }, ms); };
+      if (!maxMs) armSilence(8000);
       rec.onerror = (e) => { err = e.error; };
       rec.onend = () => {
-        clearTimeout(timer);
+        clearTimeout(timer); clearTimeout(silence);
         if (activeRec === rec) activeRec = null;
         const text = (finalText || lastText).trim();
         if (text) resolve(text);
@@ -220,7 +228,10 @@
       try { rec.start(); } catch (e) { reject(e); }
     });
   }
-  function stopListening() { if (activeRec) { try { activeRec.stop(); } catch (e) {} } }
+  function stopListening() {
+    if (NATIVE) { if (nativeListen) NATIVE.stopListening(); return; }
+    if (activeRec) { try { activeRec.stop(); } catch (e) {} }
+  }
 
   // ---------- mensagens faladas ----------
   function message(r, kind) { return cap(rawMessage(r, kind)); }
@@ -477,12 +488,12 @@
   let micBusy = false;
   async function onMic() {
     unlock();
-    if (activeRec && micBusy) { stopListening(); return; }
+    if (micBusy) { stopListening(); return; } // segundo toque: terminei de falar
     if (!CAN_LISTEN) { setTyping(true); toast('Este browser não percebe voz. Usa o Chrome, o Edge ou o Safari, ou escreve.'); return; }
     cancelSpeech();
     micBusy = true;
     $('mic').classList.add('listening');
-    $('micLabel').textContent = 'A ouvir…';
+    $('micLabel').textContent = 'Toca para terminar';
     $('transcript').textContent = '';
     try {
       const text = await listen({ onInterim: (t) => { $('transcript').textContent = '“' + t + '”'; } });
@@ -497,7 +508,7 @@
       $('mic').classList.remove('listening');
       $('micLabel').textContent = 'Toca e fala';
       const msg = e.message === 'not-allowed' || e.message === 'service-not-allowed'
-        ? 'Tens de dar autorização ao microfone (no cadeado ao lado do endereço).'
+        ? (NATIVE ? 'Tens de autorizar o microfone: Definições do Android → Apps → Lembra-me → Permissões.' : 'Tens de dar autorização ao microfone (no cadeado ao lado do endereço).')
         : e.message === 'network' ? 'O reconhecimento de voz precisa de internet.' : 'Não consegui ouvir. Tenta outra vez ou escreve.';
       $('transcript').textContent = msg;
     }
@@ -866,7 +877,12 @@
   if (NATIVE) {
     window.__native = {
       onSpeakDone(tok) { const f = nativeWaiters[tok]; if (f) { delete nativeWaiters[tok]; f(); } },
-      onListen(text) { const f = nativeListen; nativeListen = null; if (f) f(text || ''); },
+      onListen(text, err) {
+        const f = nativeListen; nativeListen = null;
+        if (!f) return;
+        if (!text && err) f.reject(new Error(err)); else f.resolve(text || '');
+      },
+      onPartial(text) { if (nativeListen && nativeListen.onInterim) nativeListen.onInterim(text); },
       onFired(id, kind) {
         delete nativeWatch[id];
         const r = reminders.find(x => x.id === id);

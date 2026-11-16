@@ -31,7 +31,10 @@ public class Bridge {
     public void stopSpeaking() { a.speech.stop(); }
 
     @JavascriptInterface
-    public void listen() { a.runOnUiThread(a::startListening); }
+    public void listen(String mode) { a.runOnUiThread(() -> a.listen(mode)); }
+
+    @JavascriptInterface
+    public void stopListening() { a.runOnUiThread(a::stopListening); }
 
     /** Recebe da interface a lista de próximos avisos e as definições, e marca o próximo alarme. */
     @JavascriptInterface

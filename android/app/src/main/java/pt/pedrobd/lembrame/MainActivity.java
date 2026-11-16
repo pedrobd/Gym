@@ -32,6 +32,9 @@ public class MainActivity extends Activity {
 
     WebView web;
     Speech speech;
+    Dictation dictation;
+    private static final int REQ_MIC = 2;
+    private String pendingListenMode = null;
     private boolean pageReady = false;
 
     @Override
@@ -39,6 +42,15 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         Notif.channels(this);
         speech = new Speech(this, false);
+        dictation = new Dictation(this, new Dictation.Out() {
+            @Override public void partial(String text) {
+                js("window.__native && __native.onPartial && __native.onPartial(" + JSONObject.quote(text) + ")");
+            }
+            @Override public void done(String text, String error) {
+                js("window.__native && __native.onListen(" + (text == null || text.isEmpty() ? "null" : JSONObject.quote(text))
+                        + "," + (error == null ? "null" : JSONObject.quote(error)) + ")");
+            }
+        });
 
         web = new WebView(this);
         setContentView(web);
@@ -87,13 +99,37 @@ public class MainActivity extends Activity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == REQ_MIC) {
+            String mode = pendingListenMode;
+            pendingListenMode = null;
+            boolean ok = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+            if (mode != null) { if (ok) listen(mode); else startListening(); }
+            return;
+        }
         js("window.__native && __native.onResume()");
+    }
+
+    /** "dictation": ouve até 3,5 s de silêncio ou até tocar de novo. "answer": uma frase curta. */
+    void listen(String mode) {
+        if (!Dictation.available(this)) { startListening(); return; }
+        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            pendingListenMode = mode;
+            requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, REQ_MIC);
+            return;
+        }
+        if ("answer".equals(mode)) dictation.start(false, 7000);
+        else dictation.start(true, 0);
+    }
+
+    void stopListening() {
+        if (dictation != null && dictation.isActive()) dictation.finish();
     }
 
     @Override
     protected void onDestroy() {
         if (current.get() == this) current = new WeakReference<>(null);
         if (speech != null) speech.shutdown();
+        if (dictation != null) dictation.destroy();
         if (web != null) web.destroy();
         super.onDestroy();
     }
