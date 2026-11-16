@@ -15,11 +15,19 @@ import java.util.Map;
 /** Voz do Android (TextToSpeech) em português de Portugal. */
 final class Speech implements TextToSpeech.OnInitListener {
     interface Done { void run(String id); }
+    interface Ready { void run(boolean ok, String info); }
 
     private final TextToSpeech tts;
     private boolean ready = false, failed = false;
     private final List<Runnable> waiting = new ArrayList<>();
     private final Map<String, Done> callbacks = new HashMap<>();
+
+    private Ready onReady;
+
+    Speech(Context c, boolean alarmStream, Ready onReady) {
+        this(c, alarmStream);
+        this.onReady = onReady;
+    }
 
     Speech(Context c, boolean alarmStream) {
         tts = new TextToSpeech(c.getApplicationContext(), this);
@@ -31,12 +39,23 @@ final class Speech implements TextToSpeech.OnInitListener {
 
     @Override
     public synchronized void onInit(int status) {
-        if (status != TextToSpeech.SUCCESS) { failed = true; flushFailed(); return; }
+        if (status != TextToSpeech.SUCCESS) {
+            failed = true;
+            if (onReady != null) onReady.run(false, "o motor de voz do Android não arrancou");
+            flushFailed();
+            return;
+        }
+        String lang = "português de Portugal";
         int r = tts.setLanguage(new Locale("pt", "PT"));
         if (r == TextToSpeech.LANG_MISSING_DATA || r == TextToSpeech.LANG_NOT_SUPPORTED) {
+            lang = "português do Brasil";
             r = tts.setLanguage(new Locale("pt", "BR"));
-            if (r == TextToSpeech.LANG_MISSING_DATA || r == TextToSpeech.LANG_NOT_SUPPORTED) tts.setLanguage(new Locale("pt"));
+            if (r == TextToSpeech.LANG_MISSING_DATA || r == TextToSpeech.LANG_NOT_SUPPORTED) {
+                lang = "sem voz portuguesa instalada";
+                tts.setLanguage(new Locale("pt"));
+            }
         }
+        if (onReady != null) onReady.run(true, lang);
         tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
             @Override public void onStart(String id) {}
             @Override public void onDone(String id) { finish(id); }

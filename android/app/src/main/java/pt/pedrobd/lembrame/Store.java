@@ -41,6 +41,22 @@ final class Store {
         prefs(c).edit().putString("actions", a.toString()).commit();
     }
 
+    /** Registo de diagnóstico: as últimas 40 linhas, para perceber onde um aviso falhou. */
+    static synchronized void log(Context c, String msg) {
+        JSONArray a;
+        try { a = new JSONArray(prefs(c).getString("log", "[]")); }
+        catch (JSONException e) { a = new JSONArray(); }
+        a.put(Msg.hm(System.currentTimeMillis()) + "  " + msg);
+        JSONArray keep = new JSONArray();
+        for (int i = Math.max(0, a.length() - 40); i < a.length(); i++) keep.put(a.optString(i));
+        prefs(c).edit().putString("log", keep.toString()).commit();
+    }
+
+    static synchronized JSONArray logLines(Context c) {
+        try { return new JSONArray(prefs(c).getString("log", "[]")); }
+        catch (JSONException e) { return new JSONArray(); }
+    }
+
     static synchronized String takeActions(Context c) {
         String s = prefs(c).getString("actions", "[]");
         prefs(c).edit().putString("actions", "[]").commit();

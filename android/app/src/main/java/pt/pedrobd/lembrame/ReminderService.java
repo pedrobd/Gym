@@ -37,6 +37,30 @@ public class ReminderService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        try {
+            return start(intent != null && intent.getBooleanExtra("test", false));
+        } catch (Throwable t) {
+            Store.log(this, "Erro no serviço: " + t.getClass().getSimpleName() + " " + t.getMessage());
+            fallback(this, false);
+            stopSelf();
+            return START_NOT_STICKY;
+        }
+    }
+
+    /** Sem voz: mostra os avisos que chegaram como notificação com som. */
+    static void fallback(Context c, boolean test) {
+        Notif.channels(c);
+        if (test) {
+            Notif.loud(c, "teste", "Lembrete de teste", "A voz falhou, mas a notificação funciona.");
+            return;
+        }
+        for (JSONObject e : takeDue(c)) {
+            Notif.loud(c, e.optString("rid"), Msg.title(e.optString("kind")), e.optString("task"));
+        }
+        Scheduler.scheduleNext(c);
+    }
+
+    private int start(boolean test) throws Exception {
         Notif.channels(this);
         if (Build.VERSION.SDK_INT >= 29) startForeground(Notif.FG_ID, Notif.speaking(this), ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);
         else startForeground(Notif.FG_ID, Notif.speaking(this));
@@ -49,15 +73,22 @@ public class ReminderService extends Service {
         handler.removeCallbacks(safetyStop);
         handler.postDelayed(safetyStop, 2 * 60 * 1000L);
 
-        List<JSONObject> due = takeDue();
-        Scheduler.scheduleNext(this);
+        List<JSONObject> due;
+        if (test) {
+            due = new ArrayList<>();
+            due.add(new JSONObject().put("rid", "teste").put("kind", "once").put("task", "isto é um teste. Se ouves isto com o ecrã desligado, está tudo a funcionar"));
+        } else {
+            due = takeDue(this);
+            Scheduler.scheduleNext(this);
+        }
+        Store.log(this, "Serviço de voz arrancou (" + due.size() + " avisos)");
         if (due.isEmpty()) { maybeStop(); return START_NOT_STICKY; }
 
         JSONObject s = Store.settings(this);
         boolean alarm = s.optBoolean("alarmVolume", true);
         float rate = (float) s.optDouble("rate", 1.0);
         int repeat = Math.max(1, Math.min(3, s.optInt("repeat", 1)));
-        if (speech == null) speech = new Speech(this, alarm);
+        if (speech == null) speech = new Speech(this, alarm, (ok, info) -> Store.log(this, "Voz: " + info));
         requestFocus(alarm);
 
         long now = System.currentTimeMillis();
@@ -75,6 +106,7 @@ public class ReminderService extends Service {
             final String rid = e.optString("rid");
             MainActivity.dispatch("onFired", rid, e.optString("kind"));
             String text = Msg.build(e, s, now);
+            Store.log(this, "A dizer: " + e.optString("task"));
             for (int i = 0; i < repeat; i++) {
                 final boolean last = i == repeat - 1;
                 outstanding++;
@@ -86,9 +118,9 @@ public class ReminderService extends Service {
     }
 
     /** Tira da lista os avisos que já chegaram; de cada lembrete fica só o mais recente. */
-    private List<JSONObject> takeDue() {
+    private static List<JSONObject> takeDue(Context c) {
         long now = System.currentTimeMillis();
-        JSONArray all = Store.events(this);
+        JSONArray all = Store.events(c);
         JSONArray keep = new JSONArray();
         Map<String, JSONObject> latest = new LinkedHashMap<>();
         for (int i = 0; i < all.length(); i++) {
@@ -101,14 +133,14 @@ public class ReminderService extends Service {
                 if (prev == null || prev.optLong("at") <= at) latest.put(e.optString("rid"), e);
             } else keep.put(e);
         }
-        Store.setEvents(this, keep);
+        Store.setEvents(c, keep);
         return new ArrayList<>(latest.values());
     }
 
     private void post(String rid) { handler.post(() -> done(rid)); }
 
     private void done(String rid) {
-        if (rid != null) MainActivity.dispatch("onSpoken", rid);
+        if (rid != null) { MainActivity.dispatch("onSpoken", rid); Store.log(this, "Voz terminou"); }
         outstanding--;
         maybeStop();
     }

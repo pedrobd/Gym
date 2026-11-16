@@ -81,6 +81,27 @@ final class Notif {
         return PendingIntent.getBroadcast(c, code, i, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
 
+    static final String CH_LOUD = "lembretes-som";
+
+    /** Notificação com som (usada quando a voz falha). */
+    static void loud(Context c, String rid, String title, String text) {
+        NotificationManager nm = c.getSystemService(NotificationManager.class);
+        NotificationChannel ch = new NotificationChannel(CH_LOUD, "Lembretes (sem voz)", NotificationManager.IMPORTANCE_HIGH);
+        ch.setDescription("Usado se a voz não conseguir falar");
+        nm.createNotificationChannel(ch);
+        NotificationCompat.Builder b = new NotificationCompat.Builder(c, CH_LOUD)
+                .setSmallIcon(R.drawable.ic_stat)
+                .setColor(0xFFE2552B)
+                .setContentTitle(title)
+                .setContentText(text)
+                .setCategory(NotificationCompat.CATEGORY_ALARM)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setContentIntent(openApp(c))
+                .setAutoCancel(true);
+        try { NotificationManagerCompat.from(c).notify(idFor(rid), b.build()); }
+        catch (SecurityException ignored) {}
+    }
+
     static void cancel(Context c, String rid) {
         NotificationManagerCompat.from(c).cancel(idFor(rid));
     }

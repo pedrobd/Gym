@@ -113,7 +113,7 @@
           <input id="eEnd" type="time">
         </label>
       </div>
-      <label class="check"><input id="eDeadline" type="checkbox"> É um prazo (avisa 15 min antes e à hora limite)</label>
+      <label class="check"><input id="eDeadline" type="checkbox"> <span>É um prazo (avisa 15 min antes e à hora limite)</span></label>
       <div class="dlg-actions">
         <button type="button" class="btn btn-danger" id="eDelete">Apagar</button>
         <span class="spacer"></span>
@@ -150,9 +150,15 @@
           <option value="3">3 vezes</option>
         </select>
       </label>
-      <label class="check"><input id="sChime" type="checkbox"> Tocar um sinal antes de falar</label>
-      <label class="check" id="sAlarmWrap" hidden><input id="sAlarm" type="checkbox"> Usar o volume do alarme (ouve-se mesmo com o telemóvel em silêncio)</label>
-      <label class="check"><input id="sListen" type="checkbox"> Depois do aviso, ouvir a resposta (<q>feito</q>, <q>adia 15 minutos</q>)</label>
+      <label class="check"><input id="sChime" type="checkbox"> <span>Tocar um sinal antes de falar</span></label>
+      <label class="check" id="sAlarmWrap" hidden><input id="sAlarm" type="checkbox"> <span>Usar o volume do alarme (ouve-se mesmo com o telemóvel em silêncio)</span></label>
+      <label class="check"><input id="sListen" type="checkbox"> <span>Depois do aviso, ouvir a resposta (<q>feito</q>, <q>adia 15 minutos</q>)</span></label>
+      <div id="diagWrap" class="diag" hidden>
+        <h3>Diagnóstico</h3>
+        <p id="diagInfo" class="diag-info"></p>
+        <button type="button" class="btn btn-primary" id="sTestNow">Testar agora (fala daqui a 10 s)</button>
+        <pre id="diagLog" class="diag-log"></pre>
+      </div>
       <div class="dlg-actions">
         <button type="button" class="btn btn-ghost" id="sTest">Testar voz</button>
         <button type="button" class="btn btn-ghost" id="sTestStandby" hidden>Testar com ecrã desligado</button>

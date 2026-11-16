@@ -181,6 +181,14 @@ button { cursor: pointer; }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .dlg-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .spacer { flex: 1; }
+.diag { border-top: 1px solid var(--line); padding-top: 12px; display: grid; gap: 8px; }
+.diag h3 { margin: 0; font-size: 15px; }
+.diag-info { margin: 0; font-size: 13px; color: var(--muted); }
+.diag-info b { color: var(--text); }
+.diag-log {
+  margin: 0; max-height: 200px; overflow: auto; font-size: 12px; line-height: 1.5; white-space: pre-wrap;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px;
+}
 
 @keyframes ring { 0% { transform: scale(.9); opacity: .8; } 100% { transform: scale(1.25); opacity: 0; } }
 @keyframes pulse { 50% { opacity: .35; } }

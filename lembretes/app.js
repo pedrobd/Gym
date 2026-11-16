@@ -253,6 +253,7 @@
 
   // ---------- disparo ----------
   const queue = [];
+  const nativeWatch = {};
   let busy = false;
   let current = null;
 
@@ -268,8 +269,16 @@
       if (ev.kind === 'snooze') r.snoozeAt = null;
       changed = true;
       if (!NATIVE && !queue.some(q => q.r.id === r.id)) queue.push({ r, kind: ev.kind });
+      // Na app: quem fala é o Android. Se a app está à vista e o Android não disser nada em 15 s, falamos nós.
+      if (NATIVE && !document.hidden) nativeWatch[r.id] = { kind: ev.kind, t: now };
     });
     if (changed) { save(); render(); }
+    Object.keys(nativeWatch).forEach(id => {
+      if (now - nativeWatch[id].t < 15000) return;
+      const r = reminders.find(x => x.id === id);
+      if (r && !r.done && !queue.some(q => q.r.id === id)) queue.push({ r, kind: nativeWatch[id].kind });
+      delete nativeWatch[id];
+    });
     if (!busy && queue.length) runQueue();
     updateCountdowns();
   }
@@ -615,6 +624,23 @@
     $('sListen').disabled = !CAN_LISTEN;
     fillVoiceSelect();
     $('settingsDlg').showModal();
+    if (NATIVE) {
+      showDiag();
+      clearInterval(diagTimer);
+      diagTimer = setInterval(() => { if ($('settingsDlg').open) showDiag(); else clearInterval(diagTimer); }, 2000);
+    }
+  }
+  let diagTimer = null;
+  function showDiag() {
+    let d = {};
+    try { d = JSON.parse(NATIVE.diag()); } catch (e) {}
+    const st = d.status || {};
+    const yn = (v) => v ? '✅' : '❌';
+    $('diagInfo').innerHTML = esc(d.device || '') + '<br>' +
+      yn(st.notifications) + ' notificações · ' + yn(st.exact) + ' alarmes exatos · ' + yn(st.battery) + ' sem poupança de bateria · ' + yn(st.tts) + ' voz<br>' +
+      'Avisos marcados no Android: <b>' + (d.events || 0) + '</b>' + (d.next ? ' · próximo às <b>' + esc(d.next) + '</b>' : '');
+    const lines = (d.log || []).slice().reverse();
+    $('diagLog').textContent = lines.length ? lines.join('\n') : 'Ainda sem registos.';
   }
   function readSettings() {
     settings.name = $('sName').value.trim();
@@ -739,6 +765,7 @@
       onSpeakDone(tok) { const f = nativeWaiters[tok]; if (f) { delete nativeWaiters[tok]; f(); } },
       onListen(text) { const f = nativeListen; nativeListen = null; if (f) f(text || ''); },
       onFired(id, kind) {
+        delete nativeWatch[id];
         const r = reminders.find(x => x.id === id);
         if (!r) return;
         r.lastAt = Math.max(r.lastAt || 0, Date.now());
@@ -759,6 +786,12 @@
     $('voiceWrap').hidden = true;
     $('sAlarmWrap').hidden = false;
     $('sTestStandby').hidden = false;
+    $('diagWrap').hidden = false;
+    $('sTestNow').addEventListener('click', () => {
+      NATIVE.testNow();
+      toast('Daqui a 10 segundos deve falar. Podes desligar o ecrã.');
+      showDiag();
+    });
     $('fixBattery').addEventListener('click', () => NATIVE.openBatterySettings());
     $('fixNotif').addEventListener('click', () => NATIVE.openNotificationSettings());
     $('fixAlarm').addEventListener('click', () => NATIVE.openAlarmSettings());

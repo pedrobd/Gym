@@ -42,8 +42,30 @@ public class Bridge {
             Store.setEvents(a, ev != null ? ev : new JSONArray());
             JSONObject s = o.optJSONObject("settings");
             if (s != null) Store.setSettings(a, s);
-        } catch (JSONException ignored) {}
+        } catch (JSONException e) {
+            Store.log(a, "Erro a receber avisos: " + e.getMessage());
+        }
         Scheduler.scheduleNext(a);
+    }
+
+    @JavascriptInterface
+    public void testNow() { Scheduler.scheduleTest(a); }
+
+    /** Tudo o que ajuda a perceber porque é que um aviso não tocou. */
+    @JavascriptInterface
+    public String diag() {
+        JSONObject o = new JSONObject();
+        try {
+            o.put("status", new JSONObject(status()));
+            o.put("device", Build.MANUFACTURER + " " + Build.MODEL + " · Android " + Build.VERSION.RELEASE);
+            o.put("events", Store.events(a).length());
+            JSONArray ev = Store.events(a);
+            long next = Long.MAX_VALUE;
+            for (int i = 0; i < ev.length(); i++) next = Math.min(next, ev.optJSONObject(i).optLong("at"));
+            o.put("next", next == Long.MAX_VALUE ? "" : Msg.hm(next));
+            o.put("log", Store.logLines(a));
+        } catch (JSONException ignored) {}
+        return o.toString();
     }
 
     @JavascriptInterface
