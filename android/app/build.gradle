@@ -1,0 +1,56 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'pt.pedrobd.lembrame'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'pt.pedrobd.lembrame'
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName '1.0'
+    }
+
+    // Chave fixa para que cada nova versão instale por cima da anterior sem perder os lembretes.
+    signingConfigs {
+        release {
+            storeFile file('lembrame.keystore')
+            storePassword 'lembrame'
+            keyAlias 'lembrame'
+            keyPassword 'lembrame'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    sourceSets {
+        main { assets.srcDirs += ["$buildDir/generated/webassets"] }
+    }
+}
+
+dependencies {
+    implementation 'androidx.core:core:1.13.1'
+    implementation 'androidx.webkit:webkit:1.11.0'
+}
+
+// A interface é a mesma da versão web (pasta lembretes/ na raiz do repositório).
+tasks.register('copyWebApp', Copy) {
+    from "$rootDir/../lembretes"
+    include '*.html', '*.js', '*.css', '*.svg'
+    exclude 'sw.js'
+    into "$buildDir/generated/webassets/www"
+}
+preBuild.dependsOn 'copyWebApp'

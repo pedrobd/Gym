@@ -5,13 +5,15 @@
   const SKEY = 'lembretes.settings.v1';
   const MIN = 60e3;
   const $ = (id) => document.getElementById(id);
+  // Dentro da app Android existe window.AndroidBridge: a voz, o microfone e os alarmes passam a ser do telemóvel.
+  const NATIVE = window.AndroidBridge || null;
 
   // ---------- estado ----------
   const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) || d; } catch (e) { return d; } };
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(reminders)); } catch (e) {} };
-  const saveSettings = () => { try { localStorage.setItem(SKEY, JSON.stringify(settings)); } catch (e) {} };
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(reminders)); } catch (e) {} syncNative(); };
+  const saveSettings = () => { try { localStorage.setItem(SKEY, JSON.stringify(settings)); } catch (e) {} syncNative(); };
   let reminders = load(KEY, []);
-  const settings = Object.assign({ name: '', voiceURI: '', rate: 1, defaultInterval: 60, repeat: 1, chime: true, listenAfter: true }, load(SKEY, {}));
+  const settings = Object.assign({ name: '', voiceURI: '', rate: 1, defaultInterval: 60, repeat: 1, chime: true, listenAfter: true, alarmVolume: true }, load(SKEY, {}));
 
   // ---------- horas em texto ----------
   const pad = (n) => String(n).padStart(2, '0');
@@ -90,7 +92,7 @@
 
   // ---------- som ----------
   let audioCtx = null;
-  let unlocked = false;
+  let unlocked = !!NATIVE;
   let onUnlocked = [];
   function unlock() {
     if (unlocked) return;
@@ -137,7 +139,17 @@
   function pickVoice() {
     return voices.find(v => v.voiceURI === settings.voiceURI) || voices[0] || null;
   }
+  let tokSeq = 0;
+  const nativeWaiters = {};
   function speakOnce(text) {
+    if (NATIVE) {
+      return new Promise((res) => {
+        const tok = 't' + (++tokSeq);
+        nativeWaiters[tok] = res;
+        setTimeout(() => { if (nativeWaiters[tok]) { delete nativeWaiters[tok]; res(); } }, 5000 + text.length * 150);
+        NATIVE.speak(text, settings.rate, tok);
+      });
+    }
     return new Promise((res) => {
       if (!('speechSynthesis' in window)) return res();
       const u = new SpeechSynthesisUtterance(text);
@@ -151,8 +163,12 @@
       speechSynthesis.speak(u);
     });
   }
+  function cancelSpeech() {
+    if (NATIVE) NATIVE.stopSpeaking();
+    else if ('speechSynthesis' in window) speechSynthesis.cancel();
+  }
   async function speak(text, times) {
-    if ('speechSynthesis' in window) speechSynthesis.cancel();
+    cancelSpeech();
     for (let i = 0; i < (times || 1); i++) {
       await speakOnce(text);
       if (i < times - 1) await sleep(700);
@@ -161,9 +177,14 @@
   const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
   // ---------- reconhecimento de voz ----------
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const SR = NATIVE ? null : (window.SpeechRecognition || window.webkitSpeechRecognition);
+  const CAN_LISTEN = !!(SR || NATIVE);
   let activeRec = null;
+  let nativeListen = null;
   function listen({ onInterim, maxMs } = {}) {
+    if (NATIVE) {
+      return new Promise((resolve) => { nativeListen = resolve; NATIVE.listen(); });
+    }
     return new Promise((resolve, reject) => {
       if (!SR) return reject(new Error('unsupported'));
       if (activeRec) { try { activeRec.abort(); } catch (e) {} }
@@ -246,7 +267,7 @@
       r.lastAt = ev.at;
       if (ev.kind === 'snooze') r.snoozeAt = null;
       changed = true;
-      if (!queue.some(q => q.r.id === r.id)) queue.push({ r, kind: ev.kind });
+      if (!NATIVE && !queue.some(q => q.r.id === r.id)) queue.push({ r, kind: ev.kind });
     });
     if (changed) { save(); render(); }
     if (!busy && queue.length) runQueue();
@@ -266,7 +287,7 @@
       if (r.done || !current || current.r !== r) continue;
       await chime();
       await speak(message(r, kind), settings.repeat);
-      if (settings.listenAfter && SR && current && current.r === r) await listenForAnswer(r);
+      if (settings.listenAfter && CAN_LISTEN && current && current.r === r) await listenForAnswer(r);
     }
     busy = false;
   }
@@ -323,12 +344,13 @@
 
   // ---------- notificações (para quando a app está noutro separador) ----------
   let swReg = null;
-  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  if (!NATIVE && 'serviceWorker' in navigator && location.protocol !== 'file:') {
     navigator.serviceWorker.register('sw.js').then(reg => { swReg = reg; }).catch(() => {});
     navigator.serviceWorker.addEventListener('message', (e) => handleExternalAction(e.data || {}));
   }
   function notifAllowed() { return 'Notification' in window && Notification.permission === 'granted'; }
   function notify(r, kind) {
+    if (NATIVE) return;
     if (!notifAllowed()) return;
     const title = { final: 'Último aviso', deadline: 'Hora limite', once: 'Está na hora' }[kind] || 'Lembrete';
     const body = r.text + (r.hasDeadline && r.end > Date.now() ? ' · até às ' + hm(r.end) : '');
@@ -340,6 +362,7 @@
     }
   }
   function closeNotif(id) {
+    if (NATIVE) { NATIVE.cancelNotification(id); return; }
     if (swReg && swReg.getNotifications) swReg.getNotifications({ tag: 'lembrete-' + id }).then(ns => ns.forEach(n => n.close())).catch(() => {});
   }
   function handleExternalAction({ action, id }) {
@@ -429,8 +452,8 @@
   async function onMic() {
     unlock();
     if (activeRec && micBusy) { stopListening(); return; }
-    if (!SR) { $('typeInput').focus(); toast('Este browser não percebe voz. Usa o Chrome, o Edge ou o Safari, ou escreve.'); return; }
-    if ('speechSynthesis' in window) speechSynthesis.cancel();
+    if (!CAN_LISTEN) { $('typeInput').focus(); toast('Este browser não percebe voz. Usa o Chrome, o Edge ou o Safari, ou escreve.'); return; }
+    cancelSpeech();
     micBusy = true;
     $('mic').classList.add('listening');
     $('micLabel').textContent = 'A ouvir… fala à vontade';
@@ -588,7 +611,8 @@
     $('sRepeat').value = String(settings.repeat);
     $('sChime').checked = settings.chime;
     $('sListen').checked = settings.listenAfter;
-    $('sListen').disabled = !SR;
+    $('sAlarm').checked = settings.alarmVolume;
+    $('sListen').disabled = !CAN_LISTEN;
     fillVoiceSelect();
     $('settingsDlg').showModal();
   }
@@ -600,6 +624,7 @@
     settings.repeat = parseInt($('sRepeat').value, 10);
     settings.chime = $('sChime').checked;
     settings.listenAfter = $('sListen').checked;
+    settings.alarmVolume = $('sAlarm').checked;
     saveSettings();
   }
 
@@ -633,7 +658,7 @@
   $('alert').addEventListener('click', (e) => {
     const b = e.target.closest('button[data-alert]'); if (!b || !current) return;
     const r = current.r;
-    if ('speechSynthesis' in window) speechSynthesis.cancel();
+    cancelSpeech();
     stopListening();
     const a = b.dataset.alert;
     if (a === 'done') markDone(r, true);
@@ -667,18 +692,105 @@
     updateNotifButton();
   });
 
+  // ---------- ligação à app Android ----------
+  let syncTimer = null;
+  function syncNative() {
+    if (!NATIVE) return;
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(() => {
+      const now = Date.now();
+      const events = [];
+      reminders.filter(r => !r.done).forEach(r => {
+        pending(r).filter(e => e.at > now).slice(0, 60).forEach(e => events.push({
+          rid: r.id, at: e.at, kind: e.kind, task: r.text, end: r.end || 0, hasDeadline: !!r.hasDeadline,
+        }));
+      });
+      NATIVE.sync(JSON.stringify({
+        events,
+        settings: { name: settings.name, rate: settings.rate, repeat: settings.repeat, chime: settings.chime, alarmVolume: settings.alarmVolume },
+      }));
+    }, 200);
+  }
+  function applyNativeActions() {
+    let list = [];
+    try { list = JSON.parse(NATIVE.takeActions() || '[]'); } catch (e) {}
+    if (!list.length) return;
+    list.forEach(a => {
+      const r = reminders.find(x => x.id === a.rid);
+      if (!r) return;
+      if (a.type === 'done') { r.done = true; r.doneAt = a.at || Date.now(); }
+      else if (a.type === 'snooze') { r.snoozeAt = a.until; r.quietUntil = a.until; r.lastAt = Math.max(r.lastAt || 0, Date.now()); }
+      if (current && current.r === r) hideAlert();
+    });
+    save(); render();
+  }
+  function updateNativeNotice() {
+    let st = {};
+    try { st = JSON.parse(NATIVE.status()); } catch (e) {}
+    $('noticeText').innerHTML = st.battery && st.notifications && st.exact
+      ? '<b>Tudo pronto.</b> Os avisos tocam e falam mesmo com o ecrã desligado.'
+      : '<b>Falta um passo</b> para os avisos tocarem com o ecrã desligado:';
+    $('fixBattery').hidden = !!st.battery;
+    $('fixNotif').hidden = !!st.notifications;
+    $('fixAlarm').hidden = !!st.exact;
+  }
+  if (NATIVE) {
+    window.__native = {
+      onSpeakDone(tok) { const f = nativeWaiters[tok]; if (f) { delete nativeWaiters[tok]; f(); } },
+      onListen(text) { const f = nativeListen; nativeListen = null; if (f) f(text || ''); },
+      onFired(id, kind) {
+        const r = reminders.find(x => x.id === id);
+        if (!r) return;
+        r.lastAt = Math.max(r.lastAt || 0, Date.now());
+        if (kind === 'snooze') r.snoozeAt = null;
+        current = { r, kind };
+        showAlert(r, kind);
+        save(); render();
+      },
+      onSpoken(id) {
+        if (current && current.r.id === id && settings.listenAfter && !document.hidden) listenForAnswer(current.r);
+      },
+      onActions() { applyNativeActions(); },
+      onResume() { applyNativeActions(); tick(); syncNative(); updateNativeNotice(); },
+    };
+    document.documentElement.classList.add('native');
+    $('keepAwake').hidden = true;
+    $('enableNotif').hidden = true;
+    $('voiceWrap').hidden = true;
+    $('sAlarmWrap').hidden = false;
+    $('sTestStandby').hidden = false;
+    $('fixBattery').addEventListener('click', () => NATIVE.openBatterySettings());
+    $('fixNotif').addEventListener('click', () => NATIVE.openNotificationSettings());
+    $('fixAlarm').addEventListener('click', () => NATIVE.openAlarmSettings());
+    $('sTestStandby').addEventListener('click', () => {
+      readSettings();
+      $('settingsDlg').close();
+      const r = {
+        id: Math.random().toString(36).slice(2, 10), text: 'Isto é um teste do Lembra-me', interval: null,
+        firstAt: Date.now() + 60e3, end: null, once: true, hasDeadline: false, createdAt: Date.now(), lastAt: 0, done: false,
+      };
+      reminders.push(r); save(); render();
+      speak('Desliga o ecrã agora. Daqui a um minuto vou falar.');
+    });
+  }
+
   // ---------- arranque ----------
   if ('speechSynthesis' in window) {
     loadVoices();
     speechSynthesis.addEventListener ? speechSynthesis.addEventListener('voiceschanged', loadVoices) : (speechSynthesis.onvoiceschanged = loadVoices);
   }
-  if (!SR) {
+  if (!CAN_LISTEN) {
     $('micLabel').textContent = 'Este browser não percebe voz — escreve em baixo';
     $('mic').disabled = true;
   }
-  if (!('speechSynthesis' in window)) toast('Este browser não consegue falar. Usa o Chrome, o Edge ou o Safari.');
-  $('unlock').hidden = false;
-  updateNotifButton();
+  if (!NATIVE) {
+    if (!('speechSynthesis' in window)) toast('Este browser não consegue falar. Usa o Chrome, o Edge ou o Safari.');
+    $('unlock').hidden = false;
+    updateNotifButton();
+  } else {
+    applyNativeActions();
+    updateNativeNotice();
+  }
 
   const qs = new URLSearchParams(location.search);
   if (qs.get('action') && qs.get('id')) { handleExternalAction({ action: qs.get('action'), id: qs.get('id') }); history.replaceState(null, '', location.pathname); }
@@ -689,6 +801,7 @@
   render();
   setInterval(tick, 1000);
   tick();
+  syncNative();
 
   window.__lembretes = { handleInput, get reminders() { return reminders; }, plan, message, confirmation, tick };
 })();

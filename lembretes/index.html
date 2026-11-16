@@ -76,8 +76,13 @@
     </section>
 
     <section id="notice" class="notice">
-      <p><b>Deixa esta página aberta.</b> Os avisos tocam enquanto a app estiver aberta (pode estar noutro separador ou com o ecrã ligado). Se fechares o browser, não toca.</p>
-      <button id="enableNotif" class="btn btn-ghost" hidden>Ativar notificações</button>
+      <p id="noticeText"><b>Deixa esta página aberta.</b> Os avisos tocam enquanto a app estiver aberta (pode estar noutro separador ou com o ecrã ligado). Se fechares o browser, não toca.</p>
+      <div class="notice-actions">
+        <button id="enableNotif" class="btn btn-ghost" hidden>Ativar notificações</button>
+        <button id="fixBattery" class="btn btn-primary" hidden>Permitir funcionar em segundo plano</button>
+        <button id="fixNotif" class="btn btn-ghost" hidden>Ativar notificações</button>
+        <button id="fixAlarm" class="btn btn-ghost" hidden>Permitir alarmes</button>
+      </div>
     </section>
   </main>
 
@@ -124,7 +129,7 @@
       <label>O teu nome (a voz chama-te pelo nome)
         <input id="sName" type="text" placeholder="opcional">
       </label>
-      <label>Voz
+      <label id="voiceWrap">Voz
         <select id="sVoice"></select>
       </label>
       <label>Velocidade da voz <output id="sRateOut"></output>
@@ -146,9 +151,11 @@
         </select>
       </label>
       <label class="check"><input id="sChime" type="checkbox"> Tocar um sinal antes de falar</label>
+      <label class="check" id="sAlarmWrap" hidden><input id="sAlarm" type="checkbox"> Usar o volume do alarme (ouve-se mesmo com o telemóvel em silêncio)</label>
       <label class="check"><input id="sListen" type="checkbox"> Depois do aviso, ouvir a resposta (<q>feito</q>, <q>adia 15 minutos</q>)</label>
       <div class="dlg-actions">
         <button type="button" class="btn btn-ghost" id="sTest">Testar voz</button>
+        <button type="button" class="btn btn-ghost" id="sTestStandby" hidden>Testar com ecrã desligado</button>
         <span class="spacer"></span>
         <button type="submit" class="btn btn-primary">Fechar</button>
       </div>

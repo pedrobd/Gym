@@ -160,6 +160,8 @@ button { cursor: pointer; }
 }
 .notice p { margin: 0 0 8px; }
 .notice b { color: var(--text); }
+.notice-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.notice-actions .btn { white-space: normal; }
 
 /* diálogos */
 .dlg {
