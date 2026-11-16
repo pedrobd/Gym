@@ -36,6 +36,7 @@
     return h + ' e ' + m;
   };
   const sayDuration = (ms) => {
+    if (ms < 59500) { const sec = Math.max(1, Math.round(ms / 1000)); return sec + (sec === 1 ? ' segundo' : ' segundos'); }
     const total = Math.max(1, Math.round(ms / MIN));
     const h = Math.floor(total / 60), m = total % 60;
     const hs = h ? h + (h === 1 ? ' hora' : ' horas') : '';
@@ -43,6 +44,8 @@
     return [hs, ms_].filter(Boolean).join(' e ');
   };
   const sayInterval = (min) => {
+    if (min < 1) { const sec = Math.round(min * 60); return 'de ' + sec + ' em ' + sec + ' segundos'; }
+    if (min === 1) return 'de minuto a minuto';
     if (min === 60) return 'de hora a hora';
     if (min === 30) return 'de meia em meia hora';
     if (min === 15) return 'de quarto em quarto de hora';
@@ -221,7 +224,10 @@
 
   // ---------- mensagens faladas ----------
   function message(r, kind) { return cap(rawMessage(r, kind)); }
+  // "o meu nome" passa a ser o nome das definições
+  const withName = (t) => t.replace(/\b(?:o\s+)?meu\s+nome\b/gi, settings.name || 'o teu nome');
   function rawMessage(r, kind) {
+    if (r.say && kind !== 'final' && kind !== 'deadline') return withName(r.say) + (/[.!?]$/.test(r.say) ? '' : '.');
     const who = settings.name ? settings.name + ', ' : '';
     const task = r.text.replace(/[.!]+$/, '');
     const now = Date.now();
@@ -245,9 +251,13 @@
     const task = lowerFirst(r.text);
     const day = dayWord(r.once ? r.firstAt : r.firstAt);
     if (r.once) return 'Combinado. ' + cap(day + 'às ') + sayTime(r.firstAt) + ' lembro-te de: ' + task + '.';
-    let s = 'Combinado. Vou lembrar-te ' + sayInterval(r.interval) + ': ' + task;
+    let s = r.say
+      ? 'Combinado. Vou dizer ' + withName(r.say) + ', ' + sayInterval(r.interval)
+      : 'Combinado. Vou lembrar-te ' + sayInterval(r.interval) + ': ' + task;
     if (r.hasDeadline) s += ', até às ' + sayTime(r.end);
-    s += '. O primeiro aviso é ' + day + 'às ' + sayTime(r.firstAt) + '.';
+    else if (r.forMs) s += ', durante ' + sayDuration(r.forMs);
+    if (r.interval >= 1) s += '. O primeiro aviso é ' + day + 'às ' + sayTime(r.firstAt) + '.';
+    else s += '. Começo daqui a ' + sayDuration(r.firstAt - Date.now()) + '.';
     return s;
   }
 
@@ -429,7 +439,7 @@
       id: Math.random().toString(36).slice(2, 10),
       text: p.task, interval: p.interval, firstAt: p.firstAt, end: p.end,
       once: p.once, hasDeadline: p.hasDeadline, createdAt: Date.now(), lastAt: 0, done: false,
-      said: text,
+      said: text, say: p.say || null, forMs: p.forMs || null,
     };
     reminders.push(r);
     lastCreated = r;
@@ -503,7 +513,7 @@
     undo: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12.5 8c-2.6 0-5 1-6.9 2.6L2 7v9h9l-3.6-3.6A8 8 0 0 1 20.1 16l2.4-.8A10.5 10.5 0 0 0 12.5 8Z"/></svg>',
     trash: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12ZM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4Z"/></svg>',
   };
-  const shortInterval = (min) => min === 60 ? 'De hora a hora' : min === 30 ? 'De meia em meia hora' : min % 60 === 0 ? 'De ' + (min / 60) + ' em ' + (min / 60) + ' h' : 'De ' + min + ' em ' + min + ' min';
+  const shortInterval = (min) => min < 1 ? 'De ' + Math.round(min * 60) + ' em ' + Math.round(min * 60) + ' s' : min === 1 ? 'De minuto a minuto' : min === 60 ? 'De hora a hora' : min === 30 ? 'De meia em meia hora' : min % 60 === 0 ? 'De ' + (min / 60) + ' em ' + (min / 60) + ' h' : 'De ' + min + ' em ' + min + ' min';
 
   function render() {
     const open = reminders.filter(r => !r.done).sort((a, b) => {
@@ -568,7 +578,7 @@
       if (!r) return;
       const ev = nextEvent(r);
       const b = el.querySelector('b'), sm = el.querySelector('small');
-      const big = ev ? hm(ev.at) : (r.hasDeadline || r.once ? '!' : '—');
+      const big = ev ? bigTime(ev.at, now) : (r.hasDeadline || r.once ? '!' : '—');
       const small = ev ? (dayWord(ev.at) ? dayWord(ev.at).trim() : 'em ' + shortDur(ev.at - now)) : (r.hasDeadline || r.once ? 'Já passou. Fizeste?' : 'sem avisos');
       if (b.textContent !== big) b.textContent = big;
       if (sm.textContent !== small) sm.textContent = small;
@@ -593,7 +603,7 @@
     const label = { final: 'Último aviso', deadline: 'Hora limite', snooze: 'Volto a lembrar', once: 'A seguir' }[bestEv.kind] || 'Próximo aviso';
     setText('nextKind', label);
     setText('nextIn', dayWord(bestEv.at) ? cap(dayWord(bestEv.at).trim()) : 'daqui a ' + shortDur(bestEv.at - now));
-    setText('nextTime', hm(bestEv.at));
+    setText('nextTime', bigTime(bestEv.at, now));
     setText('nextTask', best.text);
     const meta = best.once ? 'Aviso único' : shortInterval(best.interval) + (best.hasDeadline ? ' · prazo às ' + hm(best.end) : '');
     setText('nextMeta', meta);
@@ -604,8 +614,11 @@
     $('nextBarWrap').hidden = !best.hasDeadline;
     if (best.hasDeadline) $('nextBar').style.width = Math.round(progress(best, now) * 100) + '%';
   }
+  // a menos de um minuto, mostra a contagem em segundos em vez da hora
+  const bigTime = (at, now) => at - now < 60e3 ? Math.max(0, Math.ceil((at - now) / 1000)) + ' s' : hm(at);
   const setText = (id, t) => { const el = $(id); if (el.textContent !== t) el.textContent = t; };
   const shortDur = (ms) => {
+    if (ms < 60e3) return Math.max(0, Math.ceil(ms / 1000)) + ' s';
     const m = Math.max(0, Math.ceil(ms / MIN));
     if (m < 60) return m + ' min';
     const h = Math.floor(m / 60), r = m % 60;
@@ -657,7 +670,7 @@
   }
   function saveEdit() {
     const r = editing; if (!r) return;
-    const interval = parseInt($('eInterval').value, 10);
+    const interval = parseFloat($('eInterval').value);
     const ref = r.once ? r.firstAt : (r.end || r.firstAt);
     let start = fromTimeInput($('eStart').value, ref);
     if (start < Date.now() - MIN) start += 864e5;
@@ -818,6 +831,7 @@
       reminders.filter(r => !r.done).forEach(r => {
         pending(r).filter(e => e.at > now).slice(0, 60).forEach(e => events.push({
           rid: r.id, at: e.at, kind: e.kind, task: r.text, end: r.end || 0, hasDeadline: !!r.hasDeadline,
+          say: r.say ? withName(r.say) : '',
         }));
       });
       NATIVE.sync(JSON.stringify({

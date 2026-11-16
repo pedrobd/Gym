@@ -35,6 +35,9 @@
     s = s.replace(/de meia em meia hora/g, 'a cada 30 minutos')
       .replace(/de quarto em quarto de hora/g, 'a cada 15 minutos')
       .replace(/de hora (?:a|em) hora|todas as horas|hora a hora/g, 'a cada 60 minutos')
+      .replace(/de minuto (?:a|em) minuto|todos os minutos|minuto a minuto/g, 'a cada 1 minuto')
+      .replace(/de segundo (?:a|em) segundo/g, 'a cada 10 segundos')
+      .replace(/meio minuto/g, '30 segundos')
       .replace(/(?:um )?quarto de hora/g, '15 minutos')
       .replace(/meia hora/g, '30 minutos')
       .replace(/e um quarto/g, 'e 15')
@@ -42,7 +45,7 @@
     // números por extenso só quando estão num contexto de horas/minutos
     s = s.replace(new RegExp('((?:[àa]s|pelas?|cada|daqui a|dentro de|em|de|at[ée](?: [àa]s?| ao)?|das?|antes das?)\\s+)(' + NUMPHRASE + ')(?=[\\s,.!?])', 'g'),
       (m, pre, num) => pre + phraseToDigits(num));
-    s = s.replace(new RegExp('(\\s)(' + NUMPHRASE + ')(?=\\s+(?:horas?|minutos?|min|h)\\b)', 'g'),
+    s = s.replace(new RegExp('(\\s)(' + NUMPHRASE + ')(?=\\s+(?:horas?|minutos?|min|h|segundos?|seg)\\b)', 'g'),
       (m, pre, num) => pre + phraseToDigits(num));
     s = s.replace(new RegExp('(\\d\\s*(?:h|horas?)?\\s+e\\s+)(' + NUMPHRASE + ')(?=[\\s,.!?])', 'g'),
       (m, pre, num) => pre + phraseToDigits(num));
@@ -65,6 +68,8 @@
     return { h, m: min };
   }
 
+  const toMin = (n, unit) => /^s/.test(unit) ? n / 60 : /^h/.test(unit) ? n * 60 : n;
+
   function parse(input, opts) {
     opts = opts || {};
     const now = opts.now != null ? opts.now : Date.now();
@@ -82,15 +87,20 @@
 
     // intervalo
     let interval = null;
-    let m = cut(/\s(?:de|a cada|cada)\s+(\d+)\s+em\s+\1\s*(minutos?|min|horas?|h)(?=[\s,.!?])/);
-    if (!m) m = cut(/\s(?:a\s+)?cada\s+(\d+)?\s*(minutos?|min|horas?|h)(?=[\s,.!?])/);
+    let m = cut(/\s(?:de|a cada|cada)\s+(\d+)\s+em\s+\1\s*(segundos?|seg|minutos?|min|horas?|h)(?=[\s,.!?])/);
+    if (!m) m = cut(/\s(?:a\s+)?cada\s+(\d+)?\s*(segundos?|seg|minutos?|min|horas?|h)(?=[\s,.!?])/);
     if (m) {
-      const n = m[1] ? parseInt(m[1], 10) : 1;
-      interval = /^h/.test(m[2]) ? n * 60 : n;
+      interval = toMin(m[1] ? parseInt(m[1], 10) : 1, m[2]);
     } else if (cut(/\s(?:várias vezes|varias vezes|de vez em quando|insistentemente|repetidamente)(?=[\s,.!?])/)) {
       interval = defaultInterval;
     }
-    if (interval != null) interval = Math.max(5, Math.min(interval, 12 * 60));
+    if (interval != null) interval = Math.max(10 / 60, Math.min(interval, 12 * 60)); // mínimo 10 segundos
+
+    // "durante 2 minutos", "nas próximas 2 horas", "por 10 minutos"
+    let forMs = null;
+    const dur = cut(/\s(?:durante|por|nos próximos|nas próximas|ao longo de)\s+(\d+)\s*(segundos?|seg|minutos?|min|horas?|h)(?=[\s,.!?])/);
+    if (dur) forMs = toMin(parseInt(dur[1], 10), dur[2]) * 60e3;
+    const fromNow = !!cut(/\s(?:a partir de |começando |desde )?agora(?: mesmo)?(?=[\s,.!?])/);
 
     let period = gp;
     const pm = s.match(/\s(?:de|à|a|durante a|logo à|pela)\s+(manhã|tarde|noite)(?=[\s,.!?])/);
@@ -98,7 +108,7 @@
 
     const deadline = cut(new RegExp('\\s(?:no máximo\\s+)?(?:at[ée]|antes)(?:\\s+(?:d?[àa]s?|ao|aos|de))?\\s+' + TIME));
     const startM = cut(new RegExp('\\s(?:a partir d[ae]s?|desde\\s+[àa]s|come[çc]a(?:ndo|r)?\\s+[àa]s)\\s+' + TIME));
-    const rel = cut(/\s(?:daqui a|dentro de|em)\s+(\d+)\s*(minutos?|min|horas?|h)(?=[\s,.!?])/);
+    const rel = cut(/\s(?:daqui a|dentro de|em)\s+(\d+)\s*(segundos?|seg|minutos?|min|horas?|h)(?=[\s,.!?])/);
     const at = cut(new RegExp('\\s(?:[àa]s|pelas?|para as|para [àa]s|à)\\s+' + TIME));
     if (pm) cut(new RegExp(pm[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
 
@@ -120,7 +130,7 @@
     const hasDeadline = end != null;
     let start = startM ? mk(timeFrom(startM, period)) : null;
     let atT = at ? mk(timeFrom(at, period)) : null;
-    if (rel) atT = now + parseInt(rel[1], 10) * (/^h/.test(rel[2]) ? 3600e3 : 60e3);
+    if (rel) atT = now + toMin(parseInt(rel[1], 10), rel[2]) * 60e3;
     if (!start && atT && interval) { start = atT; atT = null; }
 
     let once = false, firstAt;
@@ -130,6 +140,8 @@
       if (!interval) interval = defaultInterval;
       if (!start && period && atHour(PERIOD[period][0]) > now) start = atHour(PERIOD[period][0]);
       if (!start && dayOffset > 0) start = atHour(9);
+      if (!end && forMs) end = (start || now) + forMs;
+      if (!end && interval < 1) end = (start || now) + 5 * 60e3; // segundos sem duração: só 5 minutos
       if (!end && period) end = atHour(PERIOD[period][1]);
       if (!end) {
         end = atHour(dayEndHour);
@@ -139,7 +151,13 @@
       if (hasDeadline && firstAt >= end) firstAt = Math.max(now + 60e3, end - 15 * 60e3);
     }
 
-    return { task: restoreCase(cleanTask(s), String(input)), interval: once ? null : interval, firstAt, end: once ? null : end, once, hasDeadline };
+    const task = restoreCase(cleanTask(s), String(input));
+    // "diz o meu nome", "diz bebe água": a voz diz exatamente isso, sem "Lembrete:"
+    const sayM = task.match(/^(?:diz|dizer|fala|falar|repete|repetir)(?:-me)?\s+(?:que\s+)?(.+)$/i);
+    return {
+      task, interval: once ? null : interval, firstAt, end: once ? null : end, once, hasDeadline,
+      say: sayM ? sayM[1] : null, forMs: once ? null : forMs, fromNow,
+    };
   }
 
   function cleanTask(s) {

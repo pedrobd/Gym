@@ -15,6 +15,12 @@ final class Msg {
         long end = e.optLong("end", 0);
         boolean dl = e.optBoolean("hasDeadline", false) && end > 0;
         String kind = e.optString("kind", "regular");
+        // "diz o meu nome": a voz diz exatamente o texto pedido
+        String say = e.optString("say", "").trim();
+        if (!say.isEmpty() && !"final".equals(kind) && !"deadline".equals(kind)) {
+            String o = say.matches(".*[.!?]$") ? say : say + ".";
+            return Character.toUpperCase(o.charAt(0)) + o.substring(1);
+        }
         String out;
         switch (kind) {
             case "final":
@@ -64,6 +70,10 @@ final class Msg {
     }
 
     static String duration(long ms) {
+        if (ms < 59500) {
+            long sec = Math.max(1, Math.round(ms / 1000.0));
+            return sec + (sec == 1 ? " segundo" : " segundos");
+        }
         long total = Math.max(1, Math.round(ms / 60000.0));
         long h = total / 60, m = total % 60;
         String hs = h == 0 ? "" : h + (h == 1 ? " hora" : " horas");
