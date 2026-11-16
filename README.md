@@ -18,3 +18,9 @@ Fotos dos exercícios em `img/`, do [free-exercise-db](https://github.com/yuhona
 ## Usar
 
 Abre `index.html` no browser, ou publica com GitHub Pages (Settings → Pages → Deploy from branch).
+
+## Lembra-me (lembretes falados)
+
+Em [`lembretes/`](lembretes/) há uma app à parte: carregas no microfone e dizes, por exemplo, *"lembra-me de hora a hora de ir à InPost até às 16h"*. A app percebe o que tens de fazer, de quanto em quanto tempo e até quando, e lembra-te **em voz alta** (avisa também 15 min antes do prazo e à hora limite). Depois do aviso podes responder por voz: *"feito"*, *"adia 15 minutos"* ou *"apaga"*. Também dá para escrever.
+
+Funciona no Chrome, Edge e Safari, enquanto a página estiver aberta. Com GitHub Pages fica em `…/lembretes/`.
