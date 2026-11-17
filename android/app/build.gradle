@@ -51,7 +51,7 @@ dependencies {
 tasks.register('copyWebApp', Copy) {
     from "$rootDir/../lembretes"
     include '*.html', '*.js', '*.css', '*.svg', 'fonts/*.woff2'
-    exclude 'sw.js'
+    exclude 'sw.js', 'downloads.html'
     into "$buildDir/generated/webassets/www"
 }
 preBuild.dependsOn 'copyWebApp'

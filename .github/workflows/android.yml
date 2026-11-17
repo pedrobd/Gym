@@ -64,6 +64,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # Antes de substituir o ficheiro, guarda quantos downloads já teve (o contador do GitHub recomeça a zero)
+          old=$(gh release view lembra-me --json body,assets 2>/dev/null || echo '{}')
+          cur=$(echo "$old" | jq '[.assets[]?.downloadCount] | add // 0')
+          carried=$(echo "$old" | jq -r '.body // ""' | grep -oP 'Downloads de versões anteriores: \K[0-9]+' || true)
+          PREV_DOWNLOADS=$(( cur + ${carried:-0} ))
+          echo "Downloads acumulados até agora: $PREV_DOWNLOADS"
           gh release delete lembra-me --yes --cleanup-tag || true
           gh release create lembra-me Lembra-me.apk \
             --target "$GITHUB_SHA" \
@@ -75,4 +81,6 @@ jobs:
 
           Para confirmar que o ficheiro é o verdadeiro:
           - SHA-256 do APK: ${APK_SHA256}
-          - Certificado de assinatura (SHA-256): 95:BC:23:51:60:D6:DA:36:85:D5:D7:15:31:9C:FC:53:EF:D1:96:0E:F0:DD:E0:5D:C6:58:17:D3:79:4F:C0:B1"
+          - Certificado de assinatura (SHA-256): 95:BC:23:51:60:D6:DA:36:85:D5:D7:15:31:9C:FC:53:EF:D1:96:0E:F0:DD:E0:5D:C6:58:17:D3:79:4F:C0:B1
+
+          Downloads de versões anteriores: ${PREV_DOWNLOADS}"

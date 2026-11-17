@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Downloads · Lembra-me</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { padding: 0; display: grid; place-items: center; min-height: 100vh; }
+    .box { width: min(420px, calc(100% - 32px)); text-align: center; }
+    .big { font-family: var(--display); font-weight: 800; font-size: 96px; letter-spacing: -.04em; line-height: 1; color: var(--accent); margin: 8px 0; font-variant-numeric: tabular-nums; }
+    .card { background: var(--card); border-radius: 22px; box-shadow: var(--shadow); padding: 28px 22px; }
+    .card p { margin: 6px 0; color: var(--ink-2); }
+    .small { font-size: 13px; color: var(--muted); margin-top: 14px; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div class="card">
+      <p><b>Lembra-me</b> · downloads do APK</p>
+      <div class="big" id="total">…</div>
+      <p id="detail"></p>
+    </div>
+    <p class="small">Conta downloads do ficheiro, não instalações: a mesma pessoa pode descarregar mais do que uma vez (por exemplo, para atualizar). A app não envia dados nenhuns.</p>
+  </div>
+  <script>
+    fetch('https://api.github.com/repos/pedrobd/Gym/releases/tags/lembra-me')
+      .then(r => r.json())
+      .then(rel => {
+        const cur = (rel.assets || []).reduce((n, a) => n + (a.download_count || 0), 0);
+        const m = (rel.body || '').match(/Downloads de versões anteriores: (\d+)/);
+        const prev = m ? parseInt(m[1], 10) : 0;
+        document.getElementById('total').textContent = cur + prev;
+        const when = new Date(rel.published_at || rel.created_at).toLocaleString('pt-PT', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+        document.getElementById('detail').textContent = cur + ' da versão atual (publicada a ' + when + ')' + (prev ? ' + ' + prev + ' de versões anteriores' : '');
+      })
+      .catch(() => { document.getElementById('total').textContent = '?'; document.getElementById('detail').textContent = 'Não consegui contactar o GitHub.'; });
+  </script>
+</body>
+</html>
