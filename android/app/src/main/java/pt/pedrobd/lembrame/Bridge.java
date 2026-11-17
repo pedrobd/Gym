@@ -27,8 +27,15 @@ public class Bridge {
         a.speech.speak(text, rate, token, true, id -> MainActivity.dispatch("onSpeakDone", id));
     }
 
+    /** Cala a voz da interface e também a do alarme (se estiver a falar). */
     @JavascriptInterface
-    public void stopSpeaking() { a.speech.stop(); }
+    public void stopSpeaking() {
+        a.speech.stop();
+        try { a.stopService(new android.content.Intent(a, ReminderService.class)); } catch (Exception ignored) {}
+    }
+
+    @JavascriptInterface
+    public void log(String msg) { Store.log(a, msg); }
 
     @JavascriptInterface
     public void listen(String mode) { a.runOnUiThread(() -> a.listen(mode)); }

@@ -339,7 +339,11 @@
   }
 
   function showAlert(r, kind) {
+    // guardamos no próprio aviso de que lembrete se trata: os botões funcionam sempre, mesmo que algo se perca pelo caminho
+    $('alert').dataset.rid = r.id;
+    $('alert').dataset.kind = kind || 'regular';
     $('alert').hidden = false;
+    $('alert').scrollTop = 0;
     $('alertKicker').textContent = { final: 'Último aviso', deadline: 'Hora limite', snooze: 'Outra vez', once: 'Está na hora' }[kind] || 'Lembrete';
     $('alertTask').textContent = r.text;
     const left = r.hasDeadline && r.end > Date.now() ? 'Tens até às ' + hm(r.end) + ' · faltam ' + sayDuration(r.end - Date.now()) : '';
@@ -795,16 +799,19 @@
   $('clearDone').addEventListener('click', () => { reminders = reminders.filter(r => !r.done); save(); render(); });
 
   $('alert').addEventListener('click', (e) => {
-    const b = e.target.closest('button[data-alert]'); if (!b || !current) return;
-    const r = current.r;
-    cancelSpeech();
-    stopListening();
+    const b = e.target.closest('button[data-alert]'); if (!b) return;
     const a = b.dataset.alert;
+    const rid = $('alert').dataset.rid;
+    const r = (current && current.r) || reminders.find(x => x.id === rid);
+    const kind = (current && current.kind) || $('alert').dataset.kind || 'regular';
+    nativeLog('Botão do aviso: ' + a + (r ? '' : ' (lembrete não encontrado)'));
+    cancelSpeech();   // na app, isto também cala a voz do alarme
+    stopListening();
+    if (!r || a === 'close') { hideAlert(); return; }
     if (a === 'done') markDone(r, true);
     else if (a === 'snooze10') snooze(r, 10, true);
     else if (a === 'snooze30') snooze(r, 30, true);
-    else if (a === 'repeat') speak(message(r, current.kind));
-    else if (a === 'close') hideAlert();
+    else if (a === 'repeat') { current = { r, kind }; speak(message(r, kind)); }
   });
 
   $('eInterval').addEventListener('change', syncEditFields);
@@ -833,6 +840,10 @@
   });
 
   // ---------- ligação à app Android ----------
+  // escreve no registo do Diagnóstico (só na app)
+  function nativeLog(msg) { try { if (NATIVE && NATIVE.log) NATIVE.log(String(msg).slice(0, 200)); } catch (e) {} }
+  window.addEventListener('error', (e) => nativeLog('Erro na interface: ' + e.message + ' (' + (e.lineno || '?') + ')'));
+  window.addEventListener('unhandledrejection', (e) => nativeLog('Erro na interface: ' + ((e.reason && e.reason.message) || e.reason)));
   let syncTimer = null;
   function syncNative() {
     if (!NATIVE) return;

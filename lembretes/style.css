@@ -297,7 +297,8 @@ button { cursor: pointer; }
 
 /* ---------- aviso em ecrã inteiro ---------- */
 .alert {
-  position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; overflow-y: auto;
+  /* flex + margin:auto centra sem cortar: com letra grande, o aviso faz scroll em vez de ficar fora do ecrã */
+  position: fixed; inset: 0; z-index: 50; display: flex; overflow-y: auto; overscroll-behavior: contain;
   padding: calc(24px + env(safe-area-inset-top)) 22px calc(24px + env(safe-area-inset-bottom));
   background: radial-gradient(130% 90% at 50% 0%, var(--accent-2) 0%, var(--accent) 45%, #c93512 100%);
   color: #fff; animation: fade .25s ease-out;
@@ -308,7 +309,9 @@ button { cursor: pointer; }
   border: 0; background: rgba(0,0,0,.16); color: #fff; font-weight: 800; font-size: 15px;
 }
 .alert-close:hover { background: rgba(0,0,0,.26); }
-.alert-inner { width: 100%; max-width: 440px; text-align: center; display: grid; justify-items: center; }
+.alert-inner { width: 100%; max-width: 440px; margin: auto; padding-top: 44px; text-align: center; display: grid; justify-items: center; }
+.alert button { touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+.alert-btn:active, .alert-close:active { transform: scale(.96); background: rgba(255,255,255,.3); }
 .alert-bell {
   position: relative; width: 96px; height: 96px; border-radius: 50%; display: grid; place-items: center;
   background: rgba(255,255,255,.18); margin-bottom: 22px; animation: shake 1.8s ease-in-out infinite;
