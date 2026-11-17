@@ -89,6 +89,7 @@ public class ReminderService extends Service {
         float rate = (float) s.optDouble("rate", 1.0);
         int repeat = Math.max(1, Math.min(3, s.optInt("repeat", 1)));
         if (speech == null) speech = new Speech(this, alarm, (ok, info) -> Store.log(this, "Voz: " + info));
+        speech.setVoice(s.optString("voiceName", ""));
         requestFocus(alarm);
 
         long now = System.currentTimeMillis();

@@ -35,6 +35,12 @@ public class Bridge {
     }
 
     @JavascriptInterface
+    public String voices() { return a.speech.voicesJson(); }
+
+    @JavascriptInterface
+    public void setVoice(String name) { a.speech.setVoice(name); }
+
+    @JavascriptInterface
     public void log(String msg) { Store.log(a, msg); }
 
     @JavascriptInterface

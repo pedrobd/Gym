@@ -13,7 +13,7 @@
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(reminders)); } catch (e) {} syncNative(); };
   const saveSettings = () => { try { localStorage.setItem(SKEY, JSON.stringify(settings)); } catch (e) {} syncNative(); };
   let reminders = load(KEY, []);
-  const settings = Object.assign({ name: '', voiceURI: '', rate: 1, defaultInterval: 60, repeat: 1, chime: true, listenAfter: true, alarmVolume: true }, load(SKEY, {}));
+  const settings = Object.assign({ name: '', voiceURI: '', rate: 1, defaultInterval: 60, repeat: 1, chime: true, listenAfter: true, alarmVolume: true, nativeVoice: '' }, load(SKEY, {}));
 
   // ---------- horas em texto ----------
   const pad = (n) => String(n).padStart(2, '0');
@@ -237,26 +237,34 @@
   function message(r, kind) { return cap(rawMessage(r, kind)); }
   // "o meu nome" passa a ser o nome das definições
   const withName = (t) => t.replace(/\b(?:o\s+)?meu\s+nome\b/gi, settings.name || 'o teu nome');
+  // Frases variadas para soar a uma pessoa e não a um robô (iguais às do Android, em Msg.java).
+  const PHRASES = {
+    regularDl: ['{who}não te esqueças: {task}. Tens até às {time}, ainda faltam {left}.',
+                '{who}só para lembrar: {task}. Faltam {left} para as {time}.',
+                '{hey}{Task}. Ainda tens {left}, até às {time}.'],
+    regular:   ['{who}não te esqueças: {task}.', '{who}só para lembrar: {task}.', '{hey}{Task}.'],
+    final:     ['{who}último aviso! {Task}. Só faltam {left}.', '{who}atenção, está quase na hora: {task}. Tens até às {time}.'],
+    deadline:  ['{who}chegou a hora limite: {task}. Já conseguiste?', '{who}a hora chegou: {task}. Já está feito?'],
+    once:      ['{who}está na hora: {task}.', '{hey}Chegou a hora: {task}.', '{who}agora é a altura: {task}.'],
+    snooze:    ['{who}voltei, como combinado: {task}.', '{who}outra vez eu: {task}.'],
+  };
+  // "Ir à InPost" → "ir à InPost", mas "IKEA" fica "IKEA"
+  const softLower = (t) => /^[A-ZÀ-Ý][a-zà-ÿ]/.test(t) ? t.charAt(0).toLowerCase() + t.slice(1) : t;
   function rawMessage(r, kind) {
     if (r.say && kind !== 'final' && kind !== 'deadline') return withName(r.say) + (/[.!?]$/.test(r.say) ? '' : '.');
-    const who = settings.name ? settings.name + ', ' : '';
-    const task = r.text.replace(/[.!]+$/, '');
     const now = Date.now();
-    switch (kind) {
-      case 'final':
-        return who + 'último aviso! ' + task + '. Faltam ' + sayDuration(r.end - now) + ', tens até às ' + sayTime(r.end) + '.';
-      case 'deadline':
-        return who + 'chegou a hora limite: ' + task + '. Já está feito?';
-      case 'once':
-        return who + 'está na hora: ' + task + '.';
-      case 'snooze':
-        return who + 'voltei a lembrar: ' + task + (r.hasDeadline && r.end > now ? '. Tens até às ' + sayTime(r.end) + '.' : '.');
-      default: {
-        let s = who + 'lembrete: ' + task + '.';
-        if (r.hasDeadline && r.end > now) s += ' Tens até às ' + sayTime(r.end) + ', faltam ' + sayDuration(r.end - now) + '.';
-        return s;
-      }
-    }
+    const task = r.text.replace(/[.!]+$/, '');
+    const dl = r.hasDeadline && r.end > now;
+    const key = kind === 'regular' || !PHRASES[kind] ? (dl ? 'regularDl' : 'regular') : kind;
+    const list = PHRASES[key];
+    let out = list[Math.floor(Math.random() * list.length)];
+    if (kind === 'snooze' && dl) out += ' Tens até às {time}.';
+    return out
+      .replace('{who}', settings.name ? settings.name + ', ' : '')
+      .replace('{hey}', settings.name ? 'Ei, ' + settings.name + '! ' : 'Ei! ')
+      .replace('{task}', softLower(task)).replace('{Task}', cap(task))
+      .replace(/\{time\}/g, r.end ? sayTime(r.end) : '')
+      .replace('{left}', r.end ? sayDuration(r.end - now) : '');
   }
   function confirmation(r) {
     const task = lowerFirst(r.text);
@@ -708,7 +716,25 @@
   }
 
   // ---------- definições ----------
+  // Na app: vozes do Android (as "naturais" usam internet; sem rede, a app usa uma do telemóvel)
+  function fillNativeVoices() {
+    let list = [];
+    try { list = JSON.parse(NATIVE.voices() || '[]'); } catch (e) {}
+    list = list.filter(v => v.installed !== false);
+    list.sort((a, b) => (b.country === 'PT') - (a.country === 'PT') || (b.network - a.network) || (b.quality - a.quality) || a.name.localeCompare(b.name));
+    const count = {};
+    const opts = list.map(v => {
+      const c = v.country === 'PT' ? 'Portugal' : v.country === 'BR' ? 'Brasil' : (v.country || 'Português');
+      count[c] = (count[c] || 0) + 1;
+      const tag = v.network ? ' · natural (usa internet)' : v.quality >= 400 ? ' · alta qualidade' : '';
+      return `<option value="${esc(v.name)}">Voz ${count[c]} · ${c}${tag}</option>`;
+    });
+    $('sVoice').innerHTML = '<option value="">Automática (a do sistema)</option>' + opts.join('');
+    $('sVoice').value = settings.nativeVoice || '';
+    if ($('sVoice').value !== (settings.nativeVoice || '')) $('sVoice').value = '';
+  }
   function fillVoiceSelect() {
+    if (NATIVE) return fillNativeVoices();
     const sel = $('sVoice');
     if (!voices.length) { sel.innerHTML = '<option value="">Voz do sistema</option>'; return; }
     sel.innerHTML = voices.map(v => `<option value="${esc(v.voiceURI)}">${esc(v.name)} (${esc(v.lang)})</option>`).join('');
@@ -746,7 +772,7 @@
   }
   function readSettings() {
     settings.name = $('sName').value.trim();
-    settings.voiceURI = $('sVoice').value;
+    if (NATIVE) settings.nativeVoice = $('sVoice').value; else settings.voiceURI = $('sVoice').value;
     settings.rate = parseFloat($('sRate').value);
     settings.defaultInterval = parseInt($('sInterval').value, 10);
     settings.repeat = parseInt($('sRepeat').value, 10);
@@ -830,7 +856,7 @@
   $('settingsDlg').addEventListener('close', readSettings);
   $('sTest').addEventListener('click', () => {
     readSettings(); unlock();
-    speak((settings.name ? settings.name + ', ' : '') + 'lembrete: ir à InPost. Tens até às 16 horas, faltam 2 horas e 10 minutos.');
+    speak(message({ text: 'Ir à InPost', hasDeadline: true, end: Date.now() + 130 * MIN }, 'regular'));
   });
 
   $('keepAwake').addEventListener('click', () => setAwake(!wantAwake));
@@ -859,7 +885,7 @@
       });
       NATIVE.sync(JSON.stringify({
         events,
-        settings: { name: settings.name, rate: settings.rate, repeat: settings.repeat, chime: settings.chime, alarmVolume: settings.alarmVolume },
+        settings: { name: settings.name, rate: settings.rate, repeat: settings.repeat, chime: settings.chime, alarmVolume: settings.alarmVolume, voiceName: settings.nativeVoice || '' },
       }));
     }, 200);
   }
@@ -916,7 +942,14 @@
     document.documentElement.classList.add('native');
     $('keepAwake').hidden = true;
     $('enableNotif').hidden = true;
-    $('voiceWrap').hidden = true;
+    NATIVE.setVoice(settings.nativeVoice || '');
+    // ao escolher uma voz, ouve logo como soa
+    $('sVoice').addEventListener('change', () => {
+      settings.nativeVoice = $('sVoice').value;
+      NATIVE.setVoice(settings.nativeVoice);
+      saveSettings();
+      speak((settings.name ? 'Olá, ' + settings.name + '! ' : 'Olá! ') + 'É assim que te vou lembrar das coisas.');
+    });
     $('sAlarmWrap').hidden = false;
     $('sTestStandby').hidden = false;
     $('diagWrap').hidden = false;

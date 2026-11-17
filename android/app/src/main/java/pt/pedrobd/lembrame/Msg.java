@@ -21,25 +21,43 @@ final class Msg {
             String o = say.matches(".*[.!?]$") ? say : say + ".";
             return Character.toUpperCase(o.charAt(0)) + o.substring(1);
         }
-        String out;
+        long now2 = now;
+        String key;
         switch (kind) {
-            case "final":
-                out = who + "último aviso! " + task + ". Faltam " + duration(end - now) + ", tens até às " + time(end) + ".";
-                break;
-            case "deadline":
-                out = who + "chegou a hora limite: " + task + ". Já está feito?";
-                break;
-            case "once":
-                out = who + "está na hora: " + task + ".";
-                break;
-            case "snooze":
-                out = who + "voltei a lembrar: " + task + (dl && end > now ? ". Tens até às " + time(end) + "." : ".");
-                break;
-            default:
-                out = who + "lembrete: " + task + ".";
-                if (dl && end > now) out += " Tens até às " + time(end) + ", faltam " + duration(end - now) + ".";
+            case "final": case "deadline": case "once": case "snooze": key = kind; break;
+            default: key = dl && end > now2 ? "regularDl" : "regular";
         }
+        String[] list = PHRASES.get(key);
+        String out = list[RANDOM.nextInt(list.length)];
+        if ("snooze".equals(kind) && dl && end > now2) out += " Tens até às {time}.";
+        out = out.replace("{who}", who)
+                .replace("{hey}", name.isEmpty() ? "Ei! " : "Ei, " + name + "! ")
+                .replace("{task}", softLower(task))
+                .replace("{Task}", task.isEmpty() ? task : Character.toUpperCase(task.charAt(0)) + task.substring(1))
+                .replace("{time}", end > 0 ? time(end) : "")
+                .replace("{left}", end > 0 ? duration(end - now2) : "");
         return out.isEmpty() ? out : Character.toUpperCase(out.charAt(0)) + out.substring(1);
+    }
+
+    private static final java.util.Random RANDOM = new java.util.Random();
+    private static final java.util.Map<String, String[]> PHRASES = new java.util.HashMap<>();
+    static {
+        PHRASES.put("regularDl", new String[]{
+                "{who}não te esqueças: {task}. Tens até às {time}, ainda faltam {left}.",
+                "{who}só para lembrar: {task}. Faltam {left} para as {time}.",
+                "{hey}{Task}. Ainda tens {left}, até às {time}."});
+        PHRASES.put("regular", new String[]{"{who}não te esqueças: {task}.", "{who}só para lembrar: {task}.", "{hey}{Task}."});
+        PHRASES.put("final", new String[]{"{who}último aviso! {Task}. Só faltam {left}.", "{who}atenção, está quase na hora: {task}. Tens até às {time}."});
+        PHRASES.put("deadline", new String[]{"{who}chegou a hora limite: {task}. Já conseguiste?", "{who}a hora chegou: {task}. Já está feito?"});
+        PHRASES.put("once", new String[]{"{who}está na hora: {task}.", "{hey}Chegou a hora: {task}.", "{who}agora é a altura: {task}."});
+        PHRASES.put("snooze", new String[]{"{who}voltei, como combinado: {task}.", "{who}outra vez eu: {task}."});
+    }
+
+    /** "Ir à InPost" → "ir à InPost", mas "IKEA" fica igual. */
+    private static String softLower(String t) {
+        if (t.length() > 1 && Character.isUpperCase(t.charAt(0)) && Character.isLowerCase(t.charAt(1)))
+            return Character.toLowerCase(t.charAt(0)) + t.substring(1);
+        return t;
     }
 
     static String title(String kind) {
