@@ -30,11 +30,28 @@ jobs:
         with:
           gradle-version: '8.14.3'
 
+      - name: Desencriptar a chave de assinatura
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_PASSWORD" ]; then
+            echo "::error::Falta o segredo KEYSTORE_PASSWORD (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 \
+            -in android/app/release.keystore.enc -out android/app/release.keystore \
+            -pass env:KEYSTORE_PASSWORD
+
       - name: Compilar o APK
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         run: gradle -p android assembleRelease --no-daemon --stacktrace
 
       - name: Preparar ficheiro
-        run: cp android/app/build/outputs/apk/release/app-release.apk Lembra-me.apk
+        run: |
+          cp android/app/build/outputs/apk/release/app-release.apk Lembra-me.apk
+          rm -f android/app/release.keystore
+          echo "APK_SHA256=$(sha256sum Lembra-me.apk | cut -d' ' -f1)" >> "$GITHUB_ENV"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -52,4 +69,10 @@ jobs:
             --target "$GITHUB_SHA" \
             --prerelease \
             --title "Lembra-me (app Android)" \
-            --notes "Lembretes falados que tocam mesmo com o ecrã desligado. Descarrega Lembra-me.apk no telemóvel e instala. Versão do commit ${GITHUB_SHA::7}."
+            --notes "Lembretes falados que tocam mesmo com o ecrã desligado. Descarrega Lembra-me.apk no telemóvel e instala.
+
+          Versão do commit ${GITHUB_SHA::7}.
+
+          Para confirmar que o ficheiro é o verdadeiro:
+          - SHA-256 do APK: ${APK_SHA256}
+          - Certificado de assinatura (SHA-256): 95:BC:23:51:60:D6:DA:36:85:D5:D7:15:31:9C:FC:53:EF:D1:96:0E:F0:DD:E0:5D:C6:58:17:D3:79:4F:C0:B1"

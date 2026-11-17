@@ -1,4 +1,7 @@
 /* Lembra-me — uma coisa de cada vez, em grande. */
+/* Letras incluídas na app (funciona sem internet e sem pedidos a terceiros). */
+@font-face { font-family: "Bricolage Grotesque"; src: url("fonts/bricolage-grotesque.woff2") format("woff2"); font-weight: 200 800; font-display: swap; }
+@font-face { font-family: "Manrope"; src: url("fonts/manrope.woff2") format("woff2"); font-weight: 200 800; font-display: swap; }
 :root {
   --bg: #f7f4ef;
   --bg-2: #efeae2;
@@ -366,6 +369,10 @@ button { cursor: pointer; }
 .dlg-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding-top: 4px; }
 .spacer { flex: 1; }
 
+.about { border-top: 1px solid var(--line); padding-top: 12px; font-size: 14px; color: var(--ink-2); }
+.about summary { cursor: pointer; font-family: var(--display); font-weight: 700; font-size: 16px; color: var(--ink); }
+.about p { margin: 8px 0 0; line-height: 1.5; }
+.about b { color: var(--ink); }
 .diag { border-top: 1px solid var(--line); padding-top: 14px; display: grid; gap: 10px; }
 .diag h3 { margin: 0; font-family: var(--display); font-size: 17px; }
 .diag-info { margin: 0; font-size: 13px; color: var(--ink-2); line-height: 1.6; }

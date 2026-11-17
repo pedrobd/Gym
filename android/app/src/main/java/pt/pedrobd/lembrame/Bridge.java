@@ -52,6 +52,12 @@ public class Bridge {
     }
 
     @JavascriptInterface
+    public String version() {
+        try { return a.getPackageManager().getPackageInfo(a.getPackageName(), 0).versionName; }
+        catch (Exception e) { return "?"; }
+    }
+
+    @JavascriptInterface
     public void testNow() { Scheduler.scheduleTest(a); }
 
     /** Tudo o que ajuda a perceber porque é que um aviso não tocou. */

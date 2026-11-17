@@ -10,17 +10,18 @@ android {
         applicationId 'pt.pedrobd.lembrame'
         minSdk 26
         targetSdk 34
-        versionCode 6
-        versionName '1.5'
+        versionCode 7
+        versionName '1.6'
     }
 
-    // Chave fixa para que cada nova versão instale por cima da anterior sem perder os lembretes.
+    // A chave de assinatura não está no repositório em claro: o GitHub Actions desencripta
+    // release.keystore.enc com o segredo KEYSTORE_PASSWORD antes de compilar.
     signingConfigs {
         release {
-            storeFile file('lembrame.keystore')
-            storePassword 'lembrame'
+            storeFile file('release.keystore')
+            storePassword System.getenv('KEYSTORE_PASSWORD') ?: ''
             keyAlias 'lembrame'
-            keyPassword 'lembrame'
+            keyPassword System.getenv('KEYSTORE_PASSWORD') ?: ''
         }
     }
 
@@ -49,7 +50,7 @@ dependencies {
 // A interface é a mesma da versão web (pasta lembretes/ na raiz do repositório).
 tasks.register('copyWebApp', Copy) {
     from "$rootDir/../lembretes"
-    include '*.html', '*.js', '*.css', '*.svg'
+    include '*.html', '*.js', '*.css', '*.svg', 'fonts/*.woff2'
     exclude 'sw.js'
     into "$buildDir/generated/webassets/www"
 }

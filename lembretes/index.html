@@ -11,9 +11,6 @@
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icon.svg">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Manrope:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -235,6 +232,13 @@
         <button type="button" class="btn btn-primary" id="sTestNow">Testar agora (fala daqui a 10 s)</button>
         <pre id="diagLog" class="diag-log"></pre>
       </div>
+      <details class="about">
+        <summary>Sobre e privacidade</summary>
+        <p><b>Lembra-me</b> <span id="appVersion"></span></p>
+        <p>Os teus lembretes ficam guardados <b>só neste telemóvel</b>. A app não tem contas, não tem publicidade e não envia os teus lembretes para lado nenhum.</p>
+        <p>Quando falas para o microfone, o áudio é transformado em texto pelo serviço de voz do Android (normalmente da Google), como num ditado normal. A voz que lê os avisos também é a do Android.</p>
+        <p>Se desinstalares a app, os lembretes são apagados.</p>
+      </details>
       <div class="dlg-actions">
         <button type="button" class="btn btn-ghost" id="sTest">Testar voz</button>
         <button type="button" class="btn btn-ghost" id="sTestStandby" hidden>Testar com ecrã desligado</button>

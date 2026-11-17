@@ -720,6 +720,7 @@
     $('sAlarm').checked = settings.alarmVolume;
     $('sListen').disabled = !CAN_LISTEN;
     fillVoiceSelect();
+    $('appVersion').textContent = NATIVE && NATIVE.version ? 'versão ' + NATIVE.version() : 'versão web';
     $('settingsDlg').showModal();
     if (NATIVE) {
       showDiag();
