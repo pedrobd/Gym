@@ -109,6 +109,8 @@ public class Bridge {
             PowerManager pm = (PowerManager) a.getSystemService(Context.POWER_SERVICE);
             o.put("battery", pm.isIgnoringBatteryOptimizations(a.getPackageName()));
             o.put("tts", a.speech.ok());
+            o.put("noPortuguese", a.speech.noPortuguese());
+            o.put("googleTts", Speech.googleInstalled(a));
         } catch (JSONException ignored) {}
         return o.toString();
     }
@@ -137,6 +139,25 @@ public class Bridge {
         if (Build.VERSION.SDK_INT < 31) return;
         a.runOnUiThread(() -> a.startActivity(new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
                 Uri.parse("package:" + a.getPackageName()))));
+    }
+
+    /** Abre a instalação da voz portuguesa (Google) ou, se não houver o motor da Google, a Play Store. */
+    @JavascriptInterface
+    public void openVoiceInstall() {
+        a.runOnUiThread(() -> {
+            if (Speech.googleInstalled(a)) {
+                try {
+                    a.startActivity(new Intent(android.speech.tts.TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA)
+                            .setPackage("com.google.android.tts"));
+                    return;
+                } catch (Exception ignored) {}
+            }
+            try {
+                a.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.google.android.tts")));
+            } catch (Exception e) {
+                a.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.google.android.tts")));
+            }
+        });
     }
 
     @JavascriptInterface

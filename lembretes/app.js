@@ -905,9 +905,17 @@
   function updateNativeNotice() {
     let st = {};
     try { st = JSON.parse(NATIVE.status()); } catch (e) {}
-    $('noticeText').innerHTML = st.battery && st.notifications && st.exact
-      ? '<b>Tudo pronto.</b> Os avisos tocam e falam mesmo com o ecrã desligado.'
-      : '<b>Falta um passo</b> para os avisos tocarem com o ecrã desligado:';
+    if (st.noPortuguese) {
+      $('noticeText').innerHTML = '<b>O teu telemóvel não tem voz em português.</b> Os avisos tocam e aparecem, mas a voz fica calada (para não falar noutra língua). '
+        + (st.googleTts ? 'Instala a voz <b>Português (Portugal)</b> e escolhe <b>Google</b> como motor de voz.' : 'Instala os <b>Serviços de voz da Google</b> e depois a voz <b>Português (Portugal)</b>.')
+        + ' Depois volta aqui.';
+    } else {
+      $('noticeText').innerHTML = st.battery && st.notifications && st.exact
+        ? '<b>Tudo pronto.</b> Os avisos tocam e falam mesmo com o ecrã desligado.'
+        : '<b>Falta um passo</b> para os avisos tocarem com o ecrã desligado:';
+    }
+    $('fixVoice').hidden = !st.noPortuguese;
+    $('fixVoiceSettings').hidden = !st.noPortuguese;
     $('fixBattery').hidden = !!st.battery;
     $('fixNotif').hidden = !!st.notifications;
     $('fixAlarm').hidden = !!st.exact;
@@ -936,6 +944,7 @@
       },
       onActions() { applyNativeActions(); },
       onResume() { applyNativeActions(); tick(); syncNative(); updateNativeNotice(); },
+      onVoiceReady() { updateNativeNotice(); if (settings.nativeVoice) NATIVE.setVoice(settings.nativeVoice); },
       // botão "voltar" do Android: fecha o que estiver aberto; devolve false se não havia nada para fechar
       onBack() { return closeTopLayer(); },
     };
@@ -961,6 +970,8 @@
     $('fixBattery').addEventListener('click', () => NATIVE.openBatterySettings());
     $('fixNotif').addEventListener('click', () => NATIVE.openNotificationSettings());
     $('fixAlarm').addEventListener('click', () => NATIVE.openAlarmSettings());
+    $('fixVoice').addEventListener('click', () => NATIVE.openVoiceInstall());
+    $('fixVoiceSettings').addEventListener('click', () => NATIVE.openTtsSettings());
     $('sTestStandby').addEventListener('click', () => {
       readSettings();
       $('settingsDlg').close();

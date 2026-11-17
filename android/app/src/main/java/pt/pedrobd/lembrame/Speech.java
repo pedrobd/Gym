@@ -23,10 +23,13 @@ final class Speech implements TextToSpeech.OnInitListener {
     interface Done { void run(String id); }
     interface Ready { void run(boolean ok, String info); }
 
-    private final TextToSpeech tts;
+    private static final String GOOGLE_TTS = "com.google.android.tts";
+
+    private TextToSpeech tts;
     private final Context appContext;
+    private final boolean alarmStream;
     private String voiceName = "";
-    private boolean ready = false, failed = false;
+    private boolean ready = false, failed = false, noPortuguese = false, triedDefault = false;
     private final List<Runnable> waiting = new ArrayList<>();
     private final Map<String, Done> callbacks = new HashMap<>();
 
@@ -39,16 +42,49 @@ final class Speech implements TextToSpeech.OnInitListener {
 
     Speech(Context c, boolean alarmStream) {
         appContext = c.getApplicationContext();
-        tts = new TextToSpeech(appContext, this);
+        this.alarmStream = alarmStream;
+        // Muitas marcas (Xiaomi, Oppo, Huawei…) trazem um motor de voz sem português.
+        // Se o da Google estiver instalado, usamos esse; senão, o do sistema.
+        if (googleInstalled(appContext)) create(GOOGLE_TTS);
+        else { triedDefault = true; create(null); }
+    }
+
+    static boolean googleInstalled(Context c) {
+        try { c.getPackageManager().getPackageInfo(GOOGLE_TTS, 0); return true; }
+        catch (Exception e) { return false; }
+    }
+
+    private void create(String engine) {
+        tts = engine == null ? new TextToSpeech(appContext, this) : new TextToSpeech(appContext, this, engine);
         tts.setAudioAttributes(new AudioAttributes.Builder()
                 .setUsage(alarmStream ? AudioAttributes.USAGE_ALARM : AudioAttributes.USAGE_ASSISTANCE_NAVIGATION_GUIDANCE)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
                 .build());
     }
 
+    /** Tenta o motor do sistema (quando o da Google falhou ou não tem português). */
+    private boolean fallbackToDefault() {
+        if (triedDefault) return false;
+        triedDefault = true;
+        try { tts.shutdown(); } catch (Exception ignored) {}
+        create(null);
+        return true;
+    }
+
+    private static boolean ok(int r) { return r >= TextToSpeech.LANG_AVAILABLE; }
+
+    private static boolean isPt(Locale l) {
+        return l != null && ("pt".equals(l.getLanguage()) || "por".equals(safeIso3(l)));
+    }
+
+    private static String safeIso3(Locale l) {
+        try { return l.getISO3Language(); } catch (Exception e) { return ""; }
+    }
+
     @Override
     public synchronized void onInit(int status) {
         if (status != TextToSpeech.SUCCESS) {
+            if (fallbackToDefault()) return;
             failed = true;
             if (onReady != null) onReady.run(false, "o motor de voz do Android não arrancou");
             flushFailed();
@@ -56,13 +92,22 @@ final class Speech implements TextToSpeech.OnInitListener {
         }
         String lang = "português de Portugal";
         int r = tts.setLanguage(new Locale("pt", "PT"));
-        if (r == TextToSpeech.LANG_MISSING_DATA || r == TextToSpeech.LANG_NOT_SUPPORTED) {
+        if (!ok(r)) {
             lang = "português do Brasil";
             r = tts.setLanguage(new Locale("pt", "BR"));
-            if (r == TextToSpeech.LANG_MISSING_DATA || r == TextToSpeech.LANG_NOT_SUPPORTED) {
-                lang = "sem voz portuguesa instalada";
-                tts.setLanguage(new Locale("pt"));
-            }
+        }
+        // alguns motores dizem que sim mas ficam com outra voz: confirmamos
+        Voice current = null;
+        try { current = tts.getVoice(); } catch (Exception ignored) {}
+        if (!ok(r) || (current != null && !isPt(current.getLocale()))) {
+            if (fallbackToDefault()) return;
+            // Sem voz portuguesa: não falamos com uma voz de outra língua (ex.: chinês).
+            // O aviso continua a tocar o sinal e a mostrar a notificação.
+            noPortuguese = true;
+            failed = true;
+            if (onReady != null) onReady.run(false, "sem voz portuguesa instalada (motor: " + tts.getDefaultEngine() + ")");
+            flushFailed();
+            return;
         }
         applyVoice();
         if (onReady != null) onReady.run(true, lang + (voiceName.isEmpty() ? "" : " · " + voiceName));
@@ -76,6 +121,8 @@ final class Speech implements TextToSpeech.OnInitListener {
         for (Runnable w : waiting) w.run();
         waiting.clear();
     }
+
+    boolean noPortuguese() { return noPortuguese; }
 
     private void finish(String id) {
         Done d;

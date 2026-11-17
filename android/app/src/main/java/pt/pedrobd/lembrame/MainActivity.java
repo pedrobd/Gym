@@ -41,7 +41,7 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Notif.channels(this);
-        speech = new Speech(this, false);
+        speech = newSpeech();
         dictation = new Dictation(this, new Dictation.Out() {
             @Override public void partial(String text) {
                 js("window.__native && __native.onPartial && __native.onPartial(" + JSONObject.quote(text) + ")");
@@ -90,10 +90,19 @@ public class MainActivity extends Activity {
         }
     }
 
+    private Speech newSpeech() {
+        return new Speech(this, false, (ok, info) -> {
+            Store.log(this, "Voz da app: " + info);
+            js("window.__native && __native.onVoiceReady && __native.onVoiceReady()");
+        });
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
         current = new WeakReference<>(this);
+        // a pessoa pode ter acabado de instalar a voz portuguesa: volta a verificar
+        if (speech != null && speech.noPortuguese()) { speech.shutdown(); speech = newSpeech(); }
         if (pageReady) js("window.__native && __native.onResume()");
     }
 
