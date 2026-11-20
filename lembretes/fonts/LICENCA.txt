@@ -1,3 +1,0 @@
-Bricolage Grotesque (Mathieu Triay) e Manrope (Mikhail Sharanda) — SIL Open Font License 1.1.
-https://openfontlicense.org
-Incluídas na app para funcionar sem internet e sem pedidos ao Google Fonts.
