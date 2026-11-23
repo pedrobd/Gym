@@ -60,9 +60,8 @@
   let remote = null; // { col } quando a base de dados está disponível
   let assets = null;
   let currentWorkout = "A";
-  // Programa ativo: "gym" (treinos A/B) ou "home" (kettlebell em casa).
-  let mode = "gym";
-  try { mode = PROGRAMS[localStorage.getItem("gym.mode")] ? localStorage.getItem("gym.mode") : "gym"; } catch {}
+  // Programa ativo: só kettlebell (Ginásio e Casa estão escondidos, ver PROGRAMS).
+  const mode = "kb";
   const slotWorkout = (slot, m = mode) => PROGRAMS[m].workouts[slot];
   // Sessão de força feita nesse dia nesse slot, em qualquer programa.
   const slotSession = (slot, date) =>
@@ -440,7 +439,9 @@
   function renderProgress() {
     const select = $("#progress-exercise");
     if (!select.options.length) {
+      const hiddenWorkouts = Object.values(PROGRAMS).filter((p) => p.hidden).flatMap((p) => p.workouts);
       select.innerHTML = Object.entries(WORKOUTS)
+        .filter(([w]) => !hiddenWorkouts.includes(w))
         .map(
           ([w, def]) =>
             `<optgroup label="${def.name}">${def.exercises.map((ex) => `<option value="${ex.id}">${escapeHtml(ex.name)}</option>`).join("")}</optgroup>`
@@ -1387,26 +1388,9 @@
   // ---------- navegação ----------
   let currentTab = "week";
   function renderModeSwitches() {
-    $$(".mode-switch").forEach((el) => {
-      el.innerHTML = Object.entries(PROGRAMS)
-        .map(
-          ([k, p]) => `<button role="radio" aria-checked="${k === mode}" class="${k === mode ? "on" : ""}" data-mode="${k}">${escapeHtml(p.label)}</button>`
-        )
-        .join("");
-    });
     $$('.tabs button[data-tab="A"], .tabs button[data-tab="B"]').forEach((b) => {
       b.textContent = WORKOUTS[slotWorkout(b.dataset.tab === "A" ? 0 : 1)].short;
     });
-  }
-
-  async function setMode(m, save = true) {
-    if (!PROGRAMS[m] || m === mode) return;
-    mode = m;
-    try { localStorage.setItem("gym.mode", m); } catch {}
-    if (save && remote) remote.col.doc("settings").set({ kind: "settings", mode: m }).catch(() => {});
-    renderModeSwitches();
-    if (currentTab === "A" || currentTab === "B") showTab(currentTab);
-    else refresh();
   }
 
   function showTab(tab, workoutKey) {
@@ -1429,7 +1413,6 @@
     if (isWorkout) {
       currentWorkout = workoutKey || (tab === "W" ? "W" : slotWorkout(tab === "A" ? 0 : 1));
       $("#tab-workout").dataset.workout = tab;
-      $("#tab-workout > .mode-row").hidden = tab === "W";
       $("#save-status").textContent = sessionFor(currentWorkout, $("#session-date").value || today()) ? "A editar o registo desta data." : "";
       renderWorkout();
     } else if (tab === "progress") {
@@ -1448,10 +1431,6 @@
   }
 
   // ---------- eventos ----------
-  document.addEventListener("click", (e) => {
-    const b = e.target.closest("[data-mode]");
-    if (b) setMode(b.dataset.mode);
-  });
   $("#body-date").addEventListener("change", renderBody);
   $("#protein-factor").addEventListener("change", (e) => {
     proteinFactor = Number(e.target.value) || 1.8;
@@ -2004,9 +1983,6 @@
         const fd = docs.find((d) => d.kind === "foods");
         const pf = docs.find((d) => d.kind === "profile");
         const sd = docs.find((d) => d.kind === "shop");
-        const st = docs.find((d) => d.kind === "settings");
-        if (st && PROGRAMS[st.mode] && st.mode !== mode) setMode(st.mode, false);
-        else if (!st && first && mode !== "gym") col.doc("settings").set({ kind: "settings", mode }).catch(() => {});
         const remoteDays = {};
         docs.filter((d) => d.kind === "day").forEach(({ kind, ...d }) => (remoteDays[d.date] = d));
         if (first) {

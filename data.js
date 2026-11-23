@@ -651,8 +651,9 @@ WORKOUTS.KS2 = {
 
 // Programas: o plano da semana usa o treino do programa ativo em cada "slot".
 const PROGRAMS = {
-  gym: { label: "Ginásio", workouts: ["A", "B"] },
-  home: { label: "Casa", workouts: ["KA", "KB"] },
+  // Ginásio e Casa já não aparecem no site (só kettlebell); ficam aqui para o histórico de treinos antigos.
+  gym: { label: "Ginásio", workouts: ["A", "B"], hidden: true },
+  home: { label: "Casa", workouts: ["KA", "KB"], hidden: true },
   kb: { label: "Só 1 KB", workouts: ["KS1", "KS2"] },
 };
 
