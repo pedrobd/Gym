@@ -18,3 +18,7 @@ Fotos dos exercícios em `img/`, do [free-exercise-db](https://github.com/yuhona
 ## Usar
 
 Abre `index.html` no browser, ou publica com GitHub Pages (Settings → Pages → Deploy from branch).
+
+## Mamly
+
+A app de lembretes falados que esteve aqui mudou-se para o seu próprio repositório: [pedrobd/mamly](https://github.com/pedrobd/mamly).
